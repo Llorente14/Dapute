@@ -1,0 +1,33 @@
+/* =============================================================
+   DAPUTE — Forest Brutalist Design Tokens
+   Auto-consumed by Tailwind via @layer base or CSS vars
+   ============================================================= */
+
+:root {
+  /* ── Palette ─────────────────────────────────────── */
+  --color-primary:            #012d1d;   /* Forest Green — structural ink */
+  --color-primary-container:  #cce8d8;
+  --color-secondary:          #3d6651;
+  --color-secondary-container:#b8e0c8;
+  --color-tertiary:           #D4EF70;   /* Acid Lime — highlight / CTA */
+  --color-tertiary-fixed:     #D4EF70;
+  --color-surface:            #f4fbf7;
+  --color-surface-lowest:     #ffffff;   /* Card backgrounds */
+  --color-surface-low:        #e8f3ec;
+
+  /* ── Typography ─────────────────────────────────── */
+  --font-display:   'Epilogue', sans-serif;       /* Headlines */
+  --font-body:      'Manrope', sans-serif;        /* Body copy */
+  --font-ui:        'Space Grotesk', sans-serif;  /* Labels, buttons */
+
+  /* ── Elevation (Neo-Shadow) ──────────────────────── */
+  --shadow-base:    4px 4px 0 0 #012d1d;
+  --shadow-hover:   6px 6px 0 0 #012d1d;
+
+  /* ── Borders ─────────────────────────────────────── */
+  --border-heavy:   3px solid #012d1d;
+  --border-ghost:   3px solid var(--color-surface-low);
+
+  /* ── Radius ──────────────────────────────────────── */
+  --radius:         0px;  /* ZERO — no rounded corners, ever */
+}
