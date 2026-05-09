@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+/* ── Forest Brutalist Design Tokens ─────────────────────── */
+@theme {
+  /* Colors */
+  --color-primary:            #012d1d;
+  --color-primary-container:  #cce8d8;
+  --color-secondary:          #3d6651;
+  --color-secondary-container:#b8e0c8;
+  --color-tertiary:           #D4EF70;
+  --color-surface:            #f4fbf7;
+  --color-surface-lowest:     #ffffff;
+  --color-surface-low:        #e8f3ec;
+
+  /* Fonts */
+  --font-epilogue:     'Epilogue', sans-serif;
+  --font-manrope:      'Manrope', sans-serif;
+  --font-space-grotesk:'Space Grotesk', sans-serif;
+
+  /* Neo-Shadows */
+  --shadow-brutal:     4px 4px 0 0 #012d1d;
+  --shadow-brutal-lg:  6px 6px 0 0 #012d1d;
+
+  /* Border radius — Forest Brutalist: always 0 */
+  --radius: 0px;
+}
