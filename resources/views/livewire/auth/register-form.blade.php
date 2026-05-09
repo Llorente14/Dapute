@@ -90,13 +90,21 @@
             background-color: #c1ecd4;
             outline: none;
         }
+        /* Hide native browser password reveal button (Edge, IE, Chrome) */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+        input[type="password"]::-webkit-credentials-auto-fill-button {
+            display: none;
+        }
     </style>
 
     <main class="flex-grow flex items-center justify-center p-4 sm:p-8 bg-[#f4fbf7] text-on-surface font-body min-h-screen antialiased selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
         <div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 bg-[#f4fbf7] input-border hard-shadow">
             
-            {{-- Left Panel --}}
-            <div class="hidden md:block relative h-full min-h-[600px] border-r-[3px] border-[#012d1d]">
+            {{-- Left Panel – wire:ignore prevents re-render on every keystroke --}}
+            <div wire:ignore class="hidden md:block relative h-full min-h-[600px] border-r-[3px] border-[#012d1d]">
                 <img alt="Architectural Bakery Background" class="absolute inset-0 w-full h-full object-cover filter contrast-125 saturate-50 grayscale-[20%]" data-alt="dramatic architectural shot of artisan bread loaves on steel shelves inside a modern brutalist greenhouse bakery setting with high contrast natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb_4O3tFMwJSj6NEZIDzsZpm8CnWGVobChhlxJYRTnV7YhihEXT-1QaDJYUMYLdFV7xTLyURhw4YJWtaeIei9_HjEinBUsfjgzG2Hk40w4NY32r5r1yRFEbfvG4oRrcaSeKFDcB8tbkplNAxgOhLg2g6f6FGjWpt5jxLqu7xSmivzjFMy3YcdfV-dV80KpxDjudlWIHIQT5lgqyjJUFlCvP7PEvVXflhNixXSGj_LG3pXy51qX9NF7NGTRmzlxxBQ6gaOy8XTYdbfe"/>
                 <div class="absolute inset-0 bg-gradient-to-t from-[#012d1d] via-[#012d1d]/80 via-0% to-transparent to-50%"></div>
                 
@@ -123,11 +131,18 @@
                         Create an account to join the Architectural Cookie Collection. Start by crafting your own profile.
                     </p>
                 </div>
+
+                {{-- Error banner dari Action (misal: email duplikat, Supabase error) --}}
+                @if($actionError)
+                    <div class="mb-4 p-3 bg-[#ffdad6] border border-[#ba1a1a] text-[#93000a] font-body text-sm leading-snug" role="alert">
+                        {{ $actionError }}
+                    </div>
+                @endif
                 
-                <form class="space-y-4">
+                <form wire:submit.prevent="register" class="space-y-4">
                     {{-- Full Name --}}
-                    <div class="space-y-1.5">
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest" for="name">
+                    <div class="relative pb-5">
+                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="name">
                             Full Name
                         </label>
                         <div class="relative">
@@ -136,14 +151,34 @@
                                     person
                                 </span>
                             </div>
-                            <input class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="name" name="name" placeholder="Master Baker" type="text"/>
+                            <input
+                                wire:model.live="full_name"
+                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('full_name') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                id="name"
+                                name="full_name"
+                                placeholder="Master Baker"
+                                type="text"
+                            />
                         </div>
-                        <span class="text-error text-[10px] font-body block min-h-[14px]"></span>
+                        {{-- Inline error: Full Name --}}
+                        @if($full_name !== '' && mb_strlen(trim($full_name)) < 2)
+                            <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                Minimum 2 characters
+                            </p>
+                        @elseif($full_name === '')
+                            @error('full_name')
+                                <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    Minimum 2 characters
+                                </p>
+                            @enderror
+                        @endif
                     </div>
 
                     {{-- Email --}}
-                    <div class="space-y-1.5">
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest" for="email">
+                    <div class="relative pb-5">
+                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="email">
                             Email Address
                         </label>
                         <div class="relative">
@@ -152,15 +187,35 @@
                                     mail
                                 </span>
                             </div>
-                            <input class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="email" name="email" placeholder="baker@greenhouse.com" type="email"/>
+                            <input
+                                wire:model.live="email"
+                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('email') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                id="email"
+                                name="email"
+                                placeholder="baker@greenhouse.com"
+                                type="email"
+                            />
                         </div>
-                        <span class="text-error text-[10px] font-body block min-h-[14px]"></span>
+                        {{-- Inline error: Email --}}
+                        @if($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL))
+                            <p class="absolute -bottom-5 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                Invalid email format
+                            </p>
+                        @elseif($email === '')
+                            @error('email')
+                                <p class="absolute -bottom-5 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    Invalid email format
+                                </p>
+                            @enderror
+                        @endif
                     </div>
 
                     {{-- Phone Number --}}
-                    <div class="space-y-1.5">
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest" for="phone">
-                            Phone Number
+                    <div class="relative pb-5">
+                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="phone">
+                            Phone Number <span class="text-[#717973] font-normal lowercase tracking-normal">(optional)</span>
                         </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -168,44 +223,124 @@
                                     call
                                 </span>
                             </div>
-                            <input class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="phone" name="phone" placeholder="08xxxxxxxxxx" type="tel"/>
+                            <input
+                                wire:model.live="phone_number"
+                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+                                id="phone"
+                                name="phone_number"
+                                placeholder="08xxxxxxxxxx"
+                                type="tel"
+                            />
                         </div>
-                        <span class="text-error text-[10px] font-body block min-h-[14px]"></span>
+                        {{-- Inline error: Phone Number --}}
+                        @error('phone_number')
+                            <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                Invalid phone number
+                            </p>
+                        @enderror
                     </div>
 
                     {{-- Password --}}
-                    <div class="space-y-1.5">
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest" for="password">
+                    <div class="relative pb-5">
+                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="password">
                             Password
                         </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[18px] leading-none">
-                                    lock
-                                </span>
-                            </div>
-                            <input class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="password" name="password" placeholder="••••••••" type="password"/>
+                        <div class="relative group">
+                            <input
+                                wire:model.live="password"
+                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-4 pr-10 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('password') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                id="password"
+                                name="password"
+                                placeholder="••••••••"
+                                type="password"
+                            />
+                            {{-- Eye toggle: only visible on hover --}}
+                            <button
+                                type="button"
+                                tabindex="-1"
+                                aria-label="Toggle password visibility"
+                                onclick="togglePassword('password', 'eye-pw')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer"
+                            >
+                                <span id="eye-pw" class="material-symbols-outlined text-[#717973] hover:text-primary text-[18px] leading-none select-none">visibility_off</span>
+                            </button>
                         </div>
-                        <span class="text-error text-[10px] font-body block min-h-[14px]"></span>
+                        {{-- Inline error: Password (3 levels) --}}
+                        @if($password !== '')
+                            @php
+                                $pwShort  = mb_strlen($password) < 8;
+                                $pwWeak   = !$pwShort && !preg_match('/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@!,\.\?\/]).+$/', $password);
+                            @endphp
+                            @if($pwShort)
+                                <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    Minimum 8 characters
+                                </p>
+                            @elseif($pwWeak)
+                                <p class="absolute -bottom-3 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    Password is too weak. Use letters, numbers, and symbols (@!,.?/).
+                                </p>
+                            @endif
+                        @else
+                            @error('password')
+                                <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        @endif
                     </div>
 
                     {{-- Confirm Password --}}
-                    <div class="space-y-1.5">
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest" for="password_confirmation">
+                    <div class="relative pb-5">
+                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="password_confirmation">
                             Confirm Password
                         </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[18px] leading-none">
-                                    lock
-                                </span>
-                            </div>
-                            <input class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="password_confirmation" name="password_confirmation" placeholder="••••••••" type="password"/>
+                        <div class="relative group">
+                            <input
+                                wire:model.live="password_confirmation"
+                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-4 pr-10 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('password_confirmation') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                id="password_confirmation"
+                                name="password_confirmation"
+                                placeholder="••••••••"
+                                type="password"
+                            />
+                            {{-- Eye toggle: only visible on hover --}}
+                            <button
+                                type="button"
+                                tabindex="-1"
+                                aria-label="Toggle confirm password visibility"
+                                onclick="togglePassword('password_confirmation', 'eye-pc')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer"
+                            >
+                                <span id="eye-pc" class="material-symbols-outlined text-[#717973] hover:text-primary text-[18px] leading-none select-none">visibility_off</span>
+                            </button>
                         </div>
-                        <span class="text-error text-[10px] font-body block min-h-[14px]"></span>
+                        {{-- Inline error: Confirm Password --}}
+                        @if($password_confirmation !== '' && $password_confirmation !== $password)
+                            <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                Passwords do not match
+                            </p>
+                        @elseif($password_confirmation === '')
+                            @error('password_confirmation')
+                                <p class="absolute bottom-0 left-0 flex items-center gap-1 mt-1 font-body text-[10px] text-[#ba1a1a]">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                                    Passwords do not match
+                                </p>
+                            @enderror
+                        @endif
                     </div>
 
-                    <button class="w-full bg-primary text-white font-headline font-bold text-[13px] py-4 uppercase tracking-[0.15em] mt-2 cursor-pointer input-border hard-shadow hover:bg-[#1b4332] transition-colors" type="button">
+                    {{-- Submit button: loading only scoped to 'register' action, not keystrokes --}}
+                    <button
+                        wire:loading.attr="disabled" wire:target="register"
+                        wire:loading.class="animate-pulse opacity-75 cursor-not-allowed" wire:target="register"
+                        class="w-full bg-primary text-white font-headline font-bold text-[13px] py-4 uppercase tracking-[0.15em] mt-2 cursor-pointer input-border hard-shadow hover:bg-[#1b4332] transition-colors"
+                        type="submit"
+                    >
                         SIGN UP
                     </button>
                 </form>
@@ -221,4 +356,16 @@
             </div>
         </div>
     </main>
+
+    <script>
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon  = document.getElementById(iconId);
+            if (!input || !icon) return;
+
+            const isHidden = input.type === 'password';
+            input.type     = isHidden ? 'text' : 'password';
+            icon.textContent = isHidden ? 'visibility' : 'visibility_off';
+        }
+    </script>
 </div>
