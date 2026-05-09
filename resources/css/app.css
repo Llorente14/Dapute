@@ -3,24 +3,63 @@
 /* ── Forest Brutalist Design Tokens ─────────────────────── */
 @theme {
   /* Colors */
-  --color-primary:            #012d1d;
-  --color-primary-container:  #cce8d8;
-  --color-secondary:          #3d6651;
-  --color-secondary-container:#b8e0c8;
-  --color-tertiary:           #D4EF70;
-  --color-surface:            #f4fbf7;
-  --color-surface-lowest:     #ffffff;
-  --color-surface-low:        #e8f3ec;
+  --color-surface-container-lowest: #ffffff;
+  --color-outline: #717973;
+  --color-on-primary-fixed-variant: #274e3d;
+  --color-primary: #012d1d;
+  --color-on-primary-fixed: #002114;
+  --color-primary-container: #1b4332;
+  --color-on-surface-variant: #414844;
+  --color-error-container: #ffdad6;
+  --color-surface: #f4fbf7;
+  --color-primary-fixed-dim: #a5d0b9;
+  --color-on-tertiary-fixed: #171e00;
+  --color-on-primary-container: #86af99;
+  --color-on-secondary: #ffffff;
+  --color-error: #ba1a1a;
+  --color-surface-dim: #d5dcd8;
+  --color-on-tertiary: #ffffff;
+  --color-surface-variant: #dde4e0;
+  --color-outline-variant: #c1c8c2;
+  --color-inverse-surface: #2b322f;
+  --color-tertiary-fixed-dim: #b8d256;
+  --color-inverse-primary: #a5d0b9;
+  --color-on-error: #ffffff;
+  --color-surface-container-highest: #dde4e0;
+  --color-surface-container: #e8efec;
+  --color-on-secondary-fixed-variant: #3f4945;
+  --color-secondary-container: #d8e2dc;
+  --color-secondary-fixed: #dbe5df;
+  --color-primary-fixed: #c1ecd4;
+  --color-on-background: #161d1b;
+  --color-secondary-fixed-dim: #bfc9c3;
+  --color-on-tertiary-container: #98b139;
+  --color-on-secondary-fixed: #151d1a;
+  --color-on-primary: #ffffff;
+  --color-background: #f4fbf7;
+  --color-tertiary-fixed: #d3ee6f;
+  --color-tertiary: #212a00;
+  --color-surface-tint: #3f6653;
+  --color-surface-container-high: #e3eae6;
+  --color-on-error-container: #93000a;
+  --color-surface-container-low: #eef5f1;
+  --color-on-surface: #161d1b;
+  --color-surface-bright: #f4fbf7;
+  --color-on-secondary-container: #5b6560;
+  --color-secondary: #57615c;
+  --color-inverse-on-surface: #ebf2ee;
+  --color-on-tertiary-fixed-variant: #3e4c00;
+  --color-tertiary-container: #354100;
 
   /* Fonts */
-  --font-epilogue:     'Epilogue', sans-serif;
-  --font-manrope:      'Manrope', sans-serif;
-  --font-space-grotesk:'Space Grotesk', sans-serif;
+  --font-headline: 'Epilogue', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-label: 'Space Grotesk', sans-serif;
 
-  /* Neo-Shadows */
-  --shadow-brutal:     4px 4px 0 0 #012d1d;
-  --shadow-brutal-lg:  6px 6px 0 0 #012d1d;
+  /* Shadows */
+  --shadow-brutal: 4px 4px 0px 0px rgba(1, 45, 29, 1);
+  --shadow-brutal-hover: 6px 6px 0px 0px rgba(1, 45, 29, 1);
 
-  /* Border radius — Forest Brutalist: always 0 */
+  /* Border radius */
   --radius: 0px;
 }
