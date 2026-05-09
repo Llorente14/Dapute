@@ -29,7 +29,7 @@
         <!-- Right Side: Forms -->
         <div class="w-full p-8 sm:p-12 lg:p-16 flex flex-col justify-center relative bg-surface-container-lowest">
             <!-- Mobile Brand Header -->
-            <div class="md:hidden mb-12">
+            <div class="md:hidden mb-4">
                 <h1 class="font-headline font-black text-4xl text-primary tracking-tighter">Dapute</h1>
             </div>
             <!-- Header -->
