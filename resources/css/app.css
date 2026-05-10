@@ -63,3 +63,9 @@
   /* Border radius */
   --radius: 0px;
 }
+
+/* ── Global Selection Color ─────────────────────── */
+::selection {
+  background-color: var(--color-tertiary-fixed);
+  color: var(--color-primary);
+}

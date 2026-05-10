@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Livewire\Auth\LoginForm;
 use App\Livewire\Auth\RegisterForm;
 use App\Actions\Auth\LogoutUserAction;
+use App\Livewire\ProfileForm;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,9 +19,7 @@ Route::middleware('guest')->group(function () {
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', function () {
-        return view('profile', ['user' => auth()->user()]);
-    })->name('profile');
+    Route::get('/profile', ProfileForm::class)->name('profile');
 
     Route::get('/catalog', function () {
         // TODO: SCRUM-XX — Halaman Katalog

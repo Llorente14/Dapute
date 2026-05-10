@@ -34,7 +34,7 @@ class LoginForm extends Component
         }
 
         $result = $action->execute($this->email, $this->password);
-        dd($result);
+
         if (!$result['success']) {
             RateLimiter::hit($throttleKey);
             $this->addError('email', $result['message']);
