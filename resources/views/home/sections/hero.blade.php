@@ -25,7 +25,7 @@
                     src="https://lh3.googleusercontent.com/aida-public/AB6AXuAOTMLn37fS6v0WN2vosp2s1ZDkbrie25f3VuhqAzTuCeb2CXq5oW27B2Fy6-G-iuIADzuouIL-OuXFrl0xacTS25LpFlXREYQhgqhy2xkZr3-e3tntu--DTBBJ9S-s47-qO0xSlPh7_nuZ25giVKVBBtGe6GQhaGb0o4aNaW-MM13-fuX2HXGq2F6auPFAt6GBa593w8KEfKnh9mC0a209-7pLKF6X9hQJG7lAzE0oss4PLcT8F80J9FxSRExTRyDs4j2Zk3XXaY0"
                 />
             </div>
-            <div class="absolute -bottom-6 -left-6 bg-tertiary-fixed text-on-tertiary-fixed p-4 md:p-6 border-[3px] border-primary neo-shadow hidden md:block">
+            <div class="absolute -bottom-6 -left-6 bg-tertiary-fixed text-on-tertiary-fixed p-4 md:p-6 border-[3px] border-primary neo-shadow hidden md:block badge-fresh-daily">
                 <p class="font-label font-bold text-xl md:text-2xl uppercase">Fresh Daily</p>
             </div>
         </div>

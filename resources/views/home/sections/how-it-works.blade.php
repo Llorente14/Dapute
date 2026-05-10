@@ -6,7 +6,7 @@
             <h2 class="font-headline font-black text-3xl md:text-5xl text-primary mt-2">From Our Kitchen to Your Door</h2>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 steps-grid">
             {{-- Step 1 --}}
             <div class="bg-surface-container-lowest border-[3px] border-primary neo-shadow p-6 md:p-8 flex flex-col gap-3 md:gap-4">
                 <span class="font-headline font-black text-5xl md:text-7xl text-primary/20 leading-none">01</span>

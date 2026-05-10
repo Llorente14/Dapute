@@ -142,5 +142,87 @@
 
     @include('home.sections.footer')
 
+    {{-- GSAP Desktop Animations --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            gsap.registerPlugin(ScrollTrigger);
+            let mm = gsap.matchMedia();
+
+            // Desktop only animations (1024px and up)
+            mm.add("(min-width: 1024px)", () => {
+                
+                // 1. Scroll Animation: Our Collection (Products)
+                if (document.querySelector('.product-grid')) {
+                    gsap.from(".product-grid > div", {
+                        scrollTrigger: {
+                            trigger: ".product-grid",
+                            start: "top 85%", // Starts animation when the top of the grid hits 85% down the viewport
+                        },
+                        y: 60,
+                        x: -40,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.15, // Elements appear one after another
+                        ease: "power2.out"
+                    });
+                }
+
+                // 2. Scroll Animation: How It Works
+                if (document.querySelector('.steps-grid')) {
+                    gsap.from(".steps-grid > div", {
+                        scrollTrigger: {
+                            trigger: ".steps-grid",
+                            start: "top 85%",
+                        },
+                        y: 60,
+                        x: -40,
+                        opacity: 0,
+                        duration: 0.8,
+                        stagger: 0.2, // Slightly slower stagger for these wider cards
+                        ease: "power2.out"
+                    });
+                }
+
+                // 3. FRESH DAILY Badge continuous wobble
+                if (document.querySelector('.badge-fresh-daily')) {
+                    gsap.set('.badge-fresh-daily', { rotation: -3 });
+                    gsap.to('.badge-fresh-daily', {
+                        rotation: 3,
+                        yoyo: true,
+                        repeat: -1,
+                        duration: 2,
+                        ease: "sine.inOut",
+                        transformOrigin: "center center"
+                    });
+                }
+
+                // 4. Footer Input Focus Animation
+                const footerInput = document.querySelector('.footer-input');
+                if (footerInput) {
+                    footerInput.addEventListener('focus', () => {
+                        gsap.to(footerInput, {
+                            scale: 1.02,
+                            y: -2,
+                            boxShadow: "4px 4px 0px 0px #012d1d",
+                            duration: 0.2,
+                            ease: "power2.out"
+                        });
+                    });
+                    
+                    footerInput.addEventListener('blur', () => {
+                        gsap.to(footerInput, {
+                            scale: 1,
+                            y: 0,
+                            boxShadow: "none",
+                            duration: 0.2,
+                            ease: "power2.in"
+                        });
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>
