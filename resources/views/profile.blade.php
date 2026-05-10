@@ -1,4 +1,4 @@
-<x-layouts.app>
+<div>
 
 <style>
     /* ── Page Load: staggered fade-in slide-up ── */
@@ -84,6 +84,24 @@
     }
 </style>
 
+{{-- ═══ Toast Notification ═══ --}}
+@if($showToast)
+<div
+    wire:poll.3s="dismissToast"
+    class="fixed top-6 right-6 z-[200] flex items-center gap-3 neo-border px-6 py-4 neo-shadow font-label font-bold uppercase tracking-wider
+    {{ $toastType === 'success' ? 'bg-primary text-on-primary' : 'bg-error text-on-error' }}"
+    style="animation: fadeUp 0.4s ease forwards;"
+>
+    <span class="material-symbols-outlined text-xl">
+        {{ $toastType === 'success' ? 'check_circle' : 'error' }}
+    </span>
+    <span>{{ $toastMessage }}</span>
+    <button wire:click="dismissToast" class="ml-4 hover:opacity-70 transition-opacity cursor-pointer">
+        <span class="material-symbols-outlined text-lg">close</span>
+    </button>
+</div>
+@endif
+
 <!-- Main Content Canvas -->
 <div class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
@@ -115,15 +133,20 @@
                 </div>
                 <div class="bg-surface-container-lowest neo-border p-6 md:p-8 neo-shadow flex flex-col gap-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- First Name (DEMO ERROR STATE) --}}
-                        <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 input-error">
+                        {{-- First Name --}}
+                        <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('first_name') ? 'input-error' : '' }}">
                             <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">First Name</label>
-                            <input name="first_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('first_name', $user->name ?? '') }}"/>
+                            <input wire:model="first_name" name="first_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" placeholder="First name"/>
+                            @error('first_name')
+                                <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
+                                    <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                         {{-- Last Name --}}
                         <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('last_name') ? 'input-error' : '' }}">
                             <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Last Name</label>
-                            <input name="last_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('last_name') }}"/>
+                            <input wire:model="last_name" name="last_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" placeholder="Last name"/>
                             @error('last_name')
                                 <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
                                     <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
@@ -134,20 +157,34 @@
                     {{-- Email Address (read-only) --}}
                     <div class="flex flex-col gap-2 p-2 -m-2">
                         <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Email Address</label>
-                        <input class="w-full bg-transparent border-0 border-b-[3px] border-outline pb-2 text-lg font-body focus:outline-none focus:ring-0 text-on-surface-variant font-semibold cursor-not-allowed" type="email" value="{{ $user->email ?? '' }}" readonly disabled/>
+                        <input wire:model="email" class="w-full bg-transparent border-0 border-b-[3px] border-outline pb-2 text-lg font-body focus:outline-none focus:ring-0 text-on-surface-variant font-semibold cursor-not-allowed" type="email" readonly disabled/>
                     </div>
                     {{-- Phone Number --}}
                     <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('phone_number') ? 'input-error' : '' }}">
                         <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Phone Number</label>
-                        <input name="phone_number" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="tel" value="{{ old('phone_number', $user->phone_number ?? '') }}" placeholder="+62 8..."/>
+                        <input wire:model="phone_number" name="phone_number" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="tel" placeholder="+62 8..."/>
                         @error('phone_number')
                             <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
                                 <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
                             </p>
                         @enderror
                     </div>
-                    <button type="submit" class="mt-4 neo-border bg-primary text-on-primary font-label font-bold uppercase px-6 py-4 neo-shadow neo-shadow-hover transition-all w-full md:w-auto self-start">
-                        Update Details
+                    {{-- Address (Alamat lengkap untuk Biteship) --}}
+                    <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('address') ? 'input-error' : '' }}">
+                        <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Alamat Lengkap</label>
+                        <textarea wire:model="address" name="address" rows="3" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors resize-none" placeholder="Alamat lengkap untuk pengiriman..."></textarea>
+                        @error('address')
+                            <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
+                                <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                    <button wire:click.prevent="updateProfile" type="button" class="mt-4 neo-border bg-primary text-on-primary font-label font-bold uppercase px-6 py-4 neo-shadow neo-shadow-hover transition-all w-full md:w-auto self-start">
+                        <span wire:loading.remove wire:target="updateProfile">Update Details</span>
+                        <span wire:loading wire:target="updateProfile" class="flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                            Menyimpan…
+                        </span>
                     </button>
                 </div>
             </section>
@@ -373,4 +410,4 @@
     });
 </script>
 
-</x-layouts.app>
+</div>

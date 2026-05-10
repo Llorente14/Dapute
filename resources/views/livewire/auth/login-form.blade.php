@@ -46,7 +46,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
                             <span class="material-symbols-outlined" data-icon="mail">mail</span>
                         </span>
-                        <input wire:model.live="email" class="w-full bg-surface-container-lowest border-[2px] @error('email') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all" id="email" name="email" placeholder="*****@gmail.com" type="email"/>
+                        <input wire:model="email" wire:key="email-input" class="w-full bg-surface-container-lowest border-[2px] @error('email') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all" id="email" name="email" placeholder="*****@gmail.com" type="email"/>
                     </div>
                     @error('email')
                         <p class="absolute -bottom-1 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
@@ -66,7 +66,7 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
                             <span class="material-symbols-outlined" data-icon="lock">lock</span>
                         </span>
-                        <input wire:model.live="password" class="w-full bg-surface-container-lowest border-[2px] @error('password') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all" id="password" name="password" placeholder="••••••••" type="password"/>
+                        <input wire:model="password" wire:key="password-input" class="w-full bg-surface-container-lowest border-[2px] @error('password') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all" id="password" name="password" placeholder="••••••••" type="password"/>
                         {{-- Eye toggle: only visible on hover --}}
                         <button
                             type="button"

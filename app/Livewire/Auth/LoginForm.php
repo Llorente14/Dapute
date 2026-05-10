@@ -7,41 +7,33 @@ use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Actions\Auth\LoginUserAction;
 
 #[Layout('layouts.guest')]
 class LoginForm extends Component
 {
-    #[Validate('required|email', message: [
-        'required' => 'Email address is required.',
-        'email' => 'Invalid email address.',
-    ])]
+    #[Validate('required', message: 'Email address is required.')]
+    #[Validate('email', message: 'Invalid email address.')]
     public string $email = '';
 
-    #[Validate('required', message: [
-        'required' => 'Password is required.',
-    ])]
+    #[Validate('required', message: 'Password is required.')]
     public string $password = '';
 
 
-    public function login()
+    public function login(LoginUserAction $action)
     {
         $this->validate();
 
-        // Check if user exists first to give specific email error as requested
-        $user = User::where('email', $this->email)->first();
-        
-        if (!$user) {
-            $this->addError('email', 'Invalid email address.');
+        $result = $action->execute($this->email, $this->password);
+
+        if (!$result['success']) {
+            $this->addError('email', $result['message']);
+            $this->addError('password', 'Periksa kembali password Anda.');
             return;
         }
 
-        // Attempt login
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            $this->addError('password', 'Invalid password.');
-            return;
-        }
+        Auth::loginUsingId($result['user']['id']);
 
-        // Redirect on success
         return redirect()->intended('/');
     }
 
