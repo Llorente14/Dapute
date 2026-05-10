@@ -2,57 +2,40 @@
 
 namespace App\Livewire\Auth;
 
+use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use App\Actions\Auth\LoginUserAction;
 
 #[Layout('layouts.guest')]
 class LoginForm extends Component
 {
-    // ─── Public properties bound to form fields ───────────────────────────────
-
-    #[Validate('required|email', message: [
-        'required' => 'Email address is required.',
-        'email'    => 'Invalid email format.',
-    ])]
+    #[Validate('required', message: 'Email address is required.')]
+    #[Validate('email', message: 'Invalid email address.')]
     public string $email = '';
 
-    #[Validate('required', message: [
-        'required' => 'Password is required.',
-    ])]
+    #[Validate('required', message: 'Password is required.')]
     public string $password = '';
 
-    /** Pesan error dari Action (misal: password salah, akun nonaktif) */
-    public string $actionError = '';
 
-    // ─── Submit ───────────────────────────────────────────────────────────────
-
-    /**
-     * Login handler — SCRUM-28 (Rendy) akan meng-wire method ini
-     * ke LoginUserAction untuk autentikasi via Supabase Auth.
-     *
-     * Flow yang diharapkan:
-     * 1. $this->validate()
-     * 2. $result = $action->execute($this->email, $this->password)
-     * 3. Jika gagal: $this->actionError = $result['message']
-     * 4. Jika sukses: redirect ke /catalog
-     */
-    public function login(): void
+    public function login(LoginUserAction $action)
     {
-        $this->actionError = '';
         $this->validate();
 
-        // TODO: SCRUM-28 — Wire ke LoginUserAction
-        // $result = $action->execute($this->email, $this->password);
-        // if (! $result['success']) {
-        //     $this->actionError = $result['message'];
-        //     return;
-        // }
-        // session()->flash('success', 'Login berhasil!');
-        // $this->redirect('/catalog', navigate: false);
-    }
+        $result = $action->execute($this->email, $this->password);
 
-    // ─── View ─────────────────────────────────────────────────────────────────
+        if (!$result['success']) {
+            $this->addError('email', $result['message']);
+            $this->addError('password', 'Periksa kembali password Anda.');
+            return;
+        }
+
+        Auth::loginUsingId($result['user']['id']);
+
+        return redirect()->intended('/');
+    }
 
     public function render()
     {

@@ -11,7 +11,7 @@ class UpdateProfileAction
      */
     public function execute(string $userId, array $data): array
     {
-        $updateData = array_intersect_key($data, array_flip(['full_name', 'phone_number']));
+        $updateData = array_intersect_key($data, array_flip(['full_name', 'phone_number', 'address']));
 
         if (empty($updateData)) {
             return [
