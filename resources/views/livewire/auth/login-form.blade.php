@@ -37,6 +37,21 @@
                 <h2 class="font-headline font-black text-3xl sm:text-4xl text-primary tracking-tight mb-2 uppercase">Access</h2>
                 <p class="font-body text-on-surface-variant">Enter your credentials to continue.</p>
             </div>
+
+            {{-- Error banner dari Action (misal: password salah, akun nonaktif) --}}
+            @if($actionError)
+                <div class="mb-4 p-4 bg-error-container border-[3px] border-error text-on-error-container font-body text-sm leading-snug animate-slide-down" role="alert">
+                    {{ $actionError }}
+                </div>
+            @endif
+
+            {{-- Success flash dari Register redirect --}}
+            @if(session('success'))
+                <div class="mb-4 p-4 bg-tertiary-fixed border-[3px] border-primary text-primary font-body text-sm leading-snug animate-slide-down" role="status">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <!-- Login Form (Active) -->
             <form wire:submit.prevent="login" class="space-y-6">
                 {{-- Email Field --}}
