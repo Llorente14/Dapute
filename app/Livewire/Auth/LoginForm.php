@@ -2,8 +2,6 @@
 
 namespace App\Livewire\Auth;
 
-use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -11,9 +9,11 @@ use Livewire\Component;
 #[Layout('layouts.guest')]
 class LoginForm extends Component
 {
+    // ─── Public properties bound to form fields ───────────────────────────────
+
     #[Validate('required|email', message: [
         'required' => 'Email address is required.',
-        'email' => 'Invalid email address.',
+        'email'    => 'Invalid email format.',
     ])]
     public string $email = '';
 
@@ -22,28 +22,37 @@ class LoginForm extends Component
     ])]
     public string $password = '';
 
+    /** Pesan error dari Action (misal: password salah, akun nonaktif) */
+    public string $actionError = '';
 
-    public function login()
+    // ─── Submit ───────────────────────────────────────────────────────────────
+
+    /**
+     * Login handler — SCRUM-28 (Rendy) akan meng-wire method ini
+     * ke LoginUserAction untuk autentikasi via Supabase Auth.
+     *
+     * Flow yang diharapkan:
+     * 1. $this->validate()
+     * 2. $result = $action->execute($this->email, $this->password)
+     * 3. Jika gagal: $this->actionError = $result['message']
+     * 4. Jika sukses: redirect ke /catalog
+     */
+    public function login(): void
     {
+        $this->actionError = '';
         $this->validate();
 
-        // Check if user exists first to give specific email error as requested
-        $user = User::where('email', $this->email)->first();
-        
-        if (!$user) {
-            $this->addError('email', 'Invalid email address.');
-            return;
-        }
-
-        // Attempt login
-        if (!Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
-            $this->addError('password', 'Invalid password.');
-            return;
-        }
-
-        // Redirect on success
-        return redirect()->intended('/');
+        // TODO: SCRUM-28 — Wire ke LoginUserAction
+        // $result = $action->execute($this->email, $this->password);
+        // if (! $result['success']) {
+        //     $this->actionError = $result['message'];
+        //     return;
+        // }
+        // session()->flash('success', 'Login berhasil!');
+        // $this->redirect('/catalog', navigate: false);
     }
+
+    // ─── View ─────────────────────────────────────────────────────────────────
 
     public function render()
     {

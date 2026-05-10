@@ -114,17 +114,12 @@
                     <h2 class="font-headline text-3xl font-bold tracking-tight text-primary uppercase">Personal Info</h2>
                 </div>
                 <div class="bg-surface-container-lowest neo-border p-6 md:p-8 neo-shadow flex flex-col gap-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- First Name (DEMO ERROR STATE) --}}
-                        <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 input-error">
-                            <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">First Name</label>
-                            <input name="first_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('first_name', $user->name ?? '') }}"/>
-                        </div>
-                        {{-- Last Name --}}
-                        <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('last_name') ? 'input-error' : '' }}">
-                            <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Last Name</label>
-                            <input name="last_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('last_name') }}"/>
-                            @error('last_name')
+                    <div class="grid grid-cols-1 gap-6">
+                        {{-- Full Name --}}
+                        <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('full_name') ? 'input-error' : '' }}">
+                            <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
+                            <input name="full_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('full_name', $user->full_name ?? '') }}" placeholder="Your full name"/>
+                            @error('full_name')
                                 <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
                                     <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
                                 </p>
