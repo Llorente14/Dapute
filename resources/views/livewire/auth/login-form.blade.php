@@ -28,7 +28,7 @@
     </style>
 
     <main
-        class="w-full max-w-[1000px] grid md:grid-cols-2 gap-8 md:gap-0 bg-surface-container-lowest border-[3px] border-primary shadow-brutal m-auto">
+        class="w-full max-w-[1200px] grid md:grid-cols-2 gap-8 md:gap-0 bg-surface-container-lowest border-[3px] border-primary shadow-brutal m-auto">
         <!-- Left Side: Image / Brand Anchor -->
         <div
             class="hidden md:block w-full h-full min-h-[600px] border-r-[3px] border-primary relative overflow-hidden bg-surface-container-low">
@@ -38,36 +38,36 @@
             <div
                 class="absolute inset-0 bg-gradient-to-t from-primary/90 to-primary-container/40 p-12 flex flex-col justify-end">
                 <h2
-                    class="font-headline font-black text-5xl text-surface-container-lowest tracking-tighter leading-tight mb-4">
+                    class="font-headline font-black text-7xl text-surface-container-lowest tracking-tighter leading-tight mb-4">
                     Dapute</h2>
-                <p class="font-body text-surface-container-highest text-lg max-w-sm">Architectural baking. Raw
+                <p class="font-body text-surface-container-highest text-xl max-w-md">Architectural baking. Raw
                     ingredients. Structural honesty.</p>
             </div>
         </div>
         <!-- Right Side: Forms -->
-        <div class="w-full p-8 sm:p-12 lg:p-16 flex flex-col justify-center relative bg-surface-container-lowest">
+        <div class="w-full p-8 sm:p-14 lg:p-20 flex flex-col justify-center relative bg-surface-container-lowest">
             <!-- Mobile Brand Header -->
             <div class="md:hidden mb-4">
-                <h1 class="font-headline font-black text-4xl text-primary tracking-tighter">Dapute</h1>
+                <h1 class="font-headline font-black text-5xl text-primary tracking-tighter">Dapute</h1>
             </div>
             <!-- Header -->
             <div class="mb-10">
-                <h2 class="font-headline font-black text-3xl sm:text-4xl text-primary tracking-tight mb-2 uppercase">
+                <h2 class="font-headline font-black text-4xl sm:text-5xl text-primary tracking-tight mb-2 uppercase">
                     Access</h2>
-                <p class="font-body text-on-surface-variant">Enter your credentials to continue.</p>
+                <p class="font-body text-lg text-on-surface-variant">Enter your credentials to continue.</p>
             </div>
             <!-- Login Form (Active) -->
             <form wire:submit.prevent="login" class="space-y-6">
                 {{-- Email Field --}}
                 <div class="relative pb-7">
-                    <label class="block font-label font-bold text-sm text-primary uppercase tracking-wider mb-2"
+                    <label class="block font-label font-bold text-base text-primary uppercase tracking-wider mb-2"
                         for="email">Email Address</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
-                            <span class="material-symbols-outlined" data-icon="mail">mail</span>
+                            <span class="material-symbols-outlined text-[24px]" data-icon="mail">mail</span>
                         </span>
                         <input wire:model="email" wire:key="email-input"
-                            class="w-full bg-surface-container-lowest border-[2px] @error('email') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all"
+                            class="w-full bg-surface-container-lowest border-[2px] @error('email') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-lg px-5 py-5 pl-14 focus:outline-none transition-all"
                             id="email" name="email" placeholder="*****@gmail.com" type="email" />
                     </div>
                     @error('email')
@@ -82,24 +82,24 @@
                 {{-- Password Field --}}
                 <div class="relative pb-7">
                     <div class="flex justify-between items-baseline mb-2">
-                        <label class="block font-label font-bold text-sm text-primary uppercase tracking-wider"
+                        <label class="block font-label font-bold text-base text-primary uppercase tracking-wider"
                             for="password">Password</label>
-                        <a class="font-label font-bold text-xs text-primary underline decoration-2 underline-offset-4 hover:text-primary-container"
+                        <a class="font-label font-bold text-sm text-primary underline decoration-2 underline-offset-4 hover:text-primary-container"
                             href="#">Forgot Password?</a>
                     </div>
                     <div class="relative group">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
-                            <span class="material-symbols-outlined" data-icon="lock">lock</span>
+                            <span class="material-symbols-outlined text-[24px]" data-icon="lock">lock</span>
                         </span>
                         <input wire:model="password" wire:key="password-input"
-                            class="w-full bg-surface-container-lowest border-[2px] @error('password') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body px-4 py-4 pl-12 focus:outline-none transition-all"
+                            class="w-full bg-surface-container-lowest border-[2px] @error('password') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-lg px-5 py-5 pl-14 focus:outline-none transition-all"
                             id="password" name="password" placeholder="••••••••" type="password" />
                         {{-- Eye toggle: only visible on hover --}}
                         <button type="button" tabindex="-1" aria-label="Toggle password visibility"
                             onclick="togglePassword('password', 'eye-pw')"
                             class="absolute inset-y-0 right-0 pr-4 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer">
                             <span id="eye-pw"
-                                class="material-symbols-outlined text-outline hover:text-primary text-[20px] leading-none select-none">visibility_off</span>
+                                class="material-symbols-outlined text-outline hover:text-primary text-[24px] leading-none select-none">visibility_off</span>
                         </button>
                     </div>
                     @error('password')
@@ -113,7 +113,7 @@
 
                 <div class="pt-4">
                     <button
-                        class="w-full bg-primary text-on-primary border-[3px] border-primary font-label font-bold text-lg uppercase tracking-wider py-4 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-[2px] hover:-translate-x-[2px] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none flex items-center justify-center gap-2"
+                        class="w-full bg-primary text-on-primary border-[3px] border-primary font-label font-bold text-xl uppercase tracking-wider py-5 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-[2px] hover:-translate-x-[2px] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none flex items-center justify-center gap-2"
                         type="submit">
                         <span>Sign In</span>
                     </button>
