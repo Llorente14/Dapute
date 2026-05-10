@@ -99,24 +99,33 @@
             <p class="font-[var(--font-body)] text-sm text-[#3d6651]">
                 Menampilkan <span class="font-bold text-[#012d1d]">{{ $products->count() }}</span> produk
             </p>
-            {{-- Sort dropdown (UI only) --}}
+            {{-- Sort dropdown (Custom Alpine UI) --}}
             <div class="flex items-center gap-2">
                 <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
                     Urutkan:
                 </span>
-                <select class="bg-[#e8f3ec] border-[3px] border-[#012d1d] px-3 py-1.5
-                               font-[var(--font-ui)] text-xs text-[#012d1d] uppercase tracking-wider
-                               focus:outline-none focus:shadow-[4px_4px_0_0_#012d1d] focus:bg-white
-                               transition-shadow duration-150 cursor-pointer appearance-none pr-8"
-                        style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%23012d1d%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3E%3C/svg%3E');
-                               background-position: right 8px center;
-                               background-repeat: no-repeat;
-                               background-size: 16px;">
-                    <option>Terbaru</option>
-                    <option>Harga Terendah</option>
-                    <option>Harga Tertinggi</option>
-                    <option>Nama A-Z</option>
-                </select>
+                <div x-data="{ open: false, selected: 'Terbaru', options: ['Terbaru', 'Harga Terendah', 'Harga Tertinggi', 'Nama A-Z'] }" class="relative">
+                    <button @click="open = !open" @click.outside="open = false" type="button"
+                            class="bg-[#e8f3ec] border-[3px] border-[#012d1d] px-3 py-1.5
+                                   font-[var(--font-ui)] text-xs text-[#012d1d] uppercase tracking-wider
+                                   focus:outline-none focus:shadow-[4px_4px_0_0_#012d1d] focus:bg-white
+                                   transition-shadow duration-150 cursor-pointer flex items-center justify-between w-[170px]">
+                        <span x-text="selected"></span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke="#012d1d" stroke-width="2" class="w-4 h-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''"><path stroke-linecap="square" stroke-linejoin="miter" d="M6 8l4 4 4-4"/></svg>
+                    </button>
+
+                    <div x-show="open" style="display: none;"
+                         x-transition.opacity.duration.150ms
+                         class="absolute z-10 w-full mt-1 bg-white border-[3px] border-[#012d1d] shadow-[4px_4px_0_0_#012d1d]">
+                        <template x-for="option in options" :key="option">
+                            <div @click="selected = option; open = false"
+                                 class="px-3 py-2 font-[var(--font-ui)] text-xs uppercase tracking-wider cursor-pointer transition-colors"
+                                 :class="selected === option ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white'">
+                                <span x-text="option"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -21,7 +21,7 @@
                 bg-white border-[3px] border-[#012d1d]
                 shadow-[4px_4px_0_0_#012d1d]
                 flex items-start gap-3 p-4
-                transform translate-x-[calc(100%+24px)]
+                transform translate-x-[120%]
                 transition-all duration-300 ease-out overflow-hidden"
          role="alert">
 
@@ -64,6 +64,8 @@
     const DURATION   = 3500;
 
     window.addEventListener('show-toast', function (e) {
+        console.log('[Toast System] Event received:', e.detail);
+        
         const { title = 'Berhasil!', subtitle = '', type = 'success' } = e.detail || {};
 
         // Clone template
@@ -114,7 +116,7 @@
 
     function dismissToast(toast) {
         if (!toast || !toast.parentNode) return;
-        toast.style.transform = 'translateX(calc(100% + 24px))';
+        toast.style.transform = 'translateX(120%)';
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
     }
