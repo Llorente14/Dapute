@@ -7,12 +7,11 @@ use Livewire\Attributes\Layout;
 use App\Actions\Auth\UpdateProfileAction;
 use Illuminate\Support\Facades\Auth;
 
-#[Layout('components.layouts.app')]
+#[Layout('layouts.app')]
 class ProfileForm extends Component
 {
     public string $email = '';
-    public string $first_name = '';
-    public string $last_name = '';
+    public string $full_name = '';
     public string $phone_number = '';
     public string $address = '';
 
@@ -25,9 +24,7 @@ class ProfileForm extends Component
         $user = Auth::user();
         if ($user) {
             $this->email = $user->email ?? '';
-            $names = explode(' ', $user->full_name ?? $user->name ?? '', 2);
-            $this->first_name = $names[0] ?? '';
-            $this->last_name = $names[1] ?? '';
+            $this->full_name = $user->full_name ?? $user->name ?? '';
             $this->phone_number = $user->phone_number ?? '';
             $this->address = $user->address ?? '';
         }
@@ -36,16 +33,13 @@ class ProfileForm extends Component
     public function updateProfile(UpdateProfileAction $action)
     {
         $this->validate([
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
+            'full_name' => 'required|string|max:200',
             'phone_number' => 'required|string|max:20',
             'address' => 'required|string|max:500',
         ]);
 
-        $fullName = trim($this->first_name . ' ' . $this->last_name);
-
         $result = $action->execute((string) Auth::id(), [
-            'full_name' => $fullName,
+            'full_name' => $this->full_name,
             'phone_number' => $this->phone_number,
             'address' => $this->address,
         ]);

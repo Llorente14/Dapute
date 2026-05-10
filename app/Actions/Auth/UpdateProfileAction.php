@@ -2,7 +2,7 @@
 
 namespace App\Actions\Auth;
 
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class UpdateProfileAction
 {
@@ -21,9 +21,22 @@ class UpdateProfileAction
         }
 
         try {
-            DB::table('users')
-                ->where('id', $userId)
-                ->update($updateData);
+            $supabaseUrl = config('services.supabase.url');
+            $serviceRoleKey = config('services.supabase.service_role_key');
+
+            $response = Http::withHeaders([
+                'apikey' => $serviceRoleKey,
+                'Authorization' => "Bearer {$serviceRoleKey}",
+                'Content-Type' => 'application/json',
+                'Prefer' => 'return=minimal'
+            ])->patch("{$supabaseUrl}/rest/v1/users?id=eq.{$userId}", $updateData);
+
+            if (!$response->successful()) {
+                return [
+                    'success' => false,
+                    'message' => 'Gagal memperbarui profil: ' . $response->body(),
+                ];
+            }
 
             return [
                 'success' => true,

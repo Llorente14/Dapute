@@ -12,8 +12,8 @@ class LogoutUserAction
      */
     public function execute(): array
     {
-        $supabaseUrl = env('SUPABASE_URL');
-        $supabaseKey = env('SUPABASE_ANON_KEY');
+        $supabaseUrl = config('services.supabase.url');
+        $supabaseKey = config('services.supabase.anon_key');
         $token = Session::get('supabase_token');
 
         if ($token) {

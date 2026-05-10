@@ -13,9 +13,9 @@ class LoginUserAction
      */
     public function execute(string $email, string $password): array
     {
-        $supabaseUrl = env('SUPABASE_URL');
-        $supabaseKey = env('SUPABASE_ANON_KEY');
-
+        $supabaseUrl = config('services.supabase.url');
+        $supabaseKey = config('services.supabase.anon_key');
+        dd($email, $password, strlen($password));
         $response = Http::withHeaders([
             'apikey' => $supabaseKey,
             'Content-Type' => 'application/json',
@@ -23,7 +23,7 @@ class LoginUserAction
             'email' => $email,
             'password' => $password,
         ]);
-
+        dd($response->status(), $response->json());
         if (!$response->successful()) {
             return [
                 'success' => false,

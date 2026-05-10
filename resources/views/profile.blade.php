@@ -136,7 +136,7 @@
                         {{-- Full Name --}}
                         <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('full_name') ? 'input-error' : '' }}">
                             <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Full Name</label>
-                            <input name="full_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" value="{{ old('full_name', $user->full_name ?? '') }}" placeholder="Your full name"/>
+                            <input wire:model="full_name" name="full_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="text" placeholder="Your full name"/>
                             @error('full_name')
                                 <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
                                     <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}

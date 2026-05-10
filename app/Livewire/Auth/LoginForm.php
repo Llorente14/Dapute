@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use App\Models\User;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
@@ -24,17 +25,29 @@ class LoginForm extends Component
     {
         $this->validate();
 
-        $result = $action->execute($this->email, $this->password);
+        $throttleKey = strtolower($this->email) . '|' . request()->ip();
 
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            $this->addError('email', "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.");
+            return;
+        }
+
+        $result = $action->execute($this->email, $this->password);
+        dd($result);
         if (!$result['success']) {
+            RateLimiter::hit($throttleKey);
             $this->addError('email', $result['message']);
             $this->addError('password', 'Periksa kembali password Anda.');
             return;
         }
 
-        Auth::loginUsingId($result['user']['id']);
+        RateLimiter::clear($throttleKey);
 
-        return redirect()->intended('/');
+        Auth::loginUsingId($result['user']['id'], false);
+        session()->regenerate();
+
+        return redirect()->intended(route('catalog'));
     }
 
     public function render()
