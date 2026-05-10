@@ -116,16 +116,18 @@
          Komponen navbar dikerjakan terpisah.
          Sematkan di sini nanti: @include('components.navbar') atau <x-navbar />
     ═══════════════════════════════════════════════════════════════════════════ --}}
-    <header class="fixed top-0 w-full bg-[#f4fbf7]/80 backdrop-blur-md z-50 border-b-[3px] border-primary flex justify-between items-center px-8 h-20 shadow-[4px_4px_0px_0px_#012d1d]">
-        {{-- Navbar placeholder — will be replaced by navbar component --}}
-        <div class="text-3xl font-headline font-black tracking-tighter text-primary">DAPUTE</div>
-        <nav class="hidden md:flex gap-8 items-center">
-            <a class="text-primary border-b-[3px] border-primary pb-1 font-bold font-label uppercase tracking-widest" href="/">Home</a>
-            <a class="text-primary/70 font-medium font-label uppercase tracking-widest hover:bg-secondary-container transition-transform active:translate-y-[-2px]" href="/catalog">Catalog</a>
-            <a class="text-primary/70 font-medium font-label uppercase tracking-widest hover:bg-secondary-container transition-transform active:translate-y-[-2px]" href="#how-it-works">How It Works</a>
-        </nav>
-        <div class="flex gap-6 items-center">
-            <a href="/login" class="text-primary font-label font-bold uppercase tracking-widest hover:bg-secondary-container px-4 py-2 transition-colors">Sign In</a>
+    <header class="fixed top-0 w-full bg-[#f4fbf7]/80 backdrop-blur-md z-50 border-b-[3px] border-primary flex justify-center items-center h-20 shadow-[4px_4px_0px_0px_#012d1d]">
+        <div class="flex justify-between items-center w-full max-w-[1200px] px-4 md:px-8">
+            {{-- Navbar placeholder — will be replaced by navbar component --}}
+            <div class="text-3xl font-headline font-black tracking-tighter text-primary">DAPUTE</div>
+            <nav class="hidden md:flex gap-8 items-center">
+                <a class="text-primary border-b-[3px] border-primary pb-1 font-bold font-label uppercase tracking-widest" href="/">Home</a>
+                <a class="text-primary/70 font-medium font-label uppercase tracking-widest hover:bg-secondary-container transition-transform active:translate-y-[-2px]" href="/catalog">Catalog</a>
+                <a class="text-primary/70 font-medium font-label uppercase tracking-widest hover:bg-secondary-container transition-transform active:translate-y-[-2px]" href="#how-it-works">How It Works</a>
+            </nav>
+            <div class="flex gap-6 items-center">
+                <a href="/login" class="text-primary font-label font-bold uppercase tracking-widest hover:bg-secondary-container px-4 py-2 transition-colors">Sign In</a>
+            </div>
         </div>
     </header>
 

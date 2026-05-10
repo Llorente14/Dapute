@@ -1,6 +1,6 @@
 {{-- ═══ HOW IT WORKS SECTION ════════════════════════════════════════════════════ --}}
 <section id="how-it-works" class="py-12 md:py-24 px-4 md:px-8 bg-surface-container-low border-y-[3px] border-primary">
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-[1200px] mx-auto">
         <div class="text-center mb-8 md:mb-16">
             <span class="font-label text-tertiary font-bold tracking-widest uppercase text-xs md:text-base">Simple Process</span>
             <h2 class="font-headline font-black text-3xl md:text-5xl text-primary mt-2">From Our Kitchen to Your Door</h2>

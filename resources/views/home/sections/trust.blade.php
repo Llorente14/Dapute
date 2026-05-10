@@ -1,6 +1,6 @@
 {{-- ═══ WHY DAPUTE? / TRUST SECTION ════════════════════════════════════════════ --}}
 <section class="bg-primary text-on-primary py-12 md:py-24 border-y-[3px] border-primary">
-    <div class="max-w-7xl mx-auto px-4 md:px-8">
+    <div class="max-w-[1200px] mx-auto px-4 md:px-8">
         <h2 class="font-headline font-black text-3xl md:text-5xl text-center mb-8 md:mb-16">Why Dapute?</h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-16">

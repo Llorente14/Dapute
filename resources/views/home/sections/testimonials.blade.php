@@ -1,5 +1,5 @@
 {{-- ═══ TESTIMONIALS SECTION ════════════════════════════════════════════════════ --}}
-<section class="py-12 md:py-24 px-4 md:px-8 max-w-7xl mx-auto overflow-hidden">
+<section class="py-12 md:py-24 px-4 md:px-8 max-w-[1200px] mx-auto overflow-hidden">
     <h2 class="font-headline font-black text-3xl md:text-5xl text-primary text-center mb-8 md:mb-16">What Our Customers Say</h2>
 
     <div class="grid md:grid-cols-3 gap-8">

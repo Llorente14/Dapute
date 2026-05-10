@@ -1,6 +1,6 @@
 {{-- ═══ FOOTER ════════════════════════════════════════════════════════════════════ --}}
 <footer class="bg-secondary-container text-primary border-t-[3px] border-primary w-full">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-12 px-8 py-16 max-w-[1200px] mx-auto">
         {{-- Brand --}}
         <div class="space-y-6">
             <div class="text-3xl font-headline font-black tracking-tighter text-primary">DAPUTE</div>

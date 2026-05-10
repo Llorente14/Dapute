@@ -1,6 +1,6 @@
 {{-- ═══ HERO SECTION ═══════════════════════════════════════════════════════════ --}}
 <section class="relative min-h-[600px] md:min-h-[870px] flex items-center px-4 md:px-8 py-12 md:py-0 border-b-[3px] border-primary overflow-hidden">
-    <div class="grid grid-cols-1 md:grid-cols-2 w-full max-w-7xl mx-auto gap-8 md:gap-12 items-center">
+    <div class="grid grid-cols-1 md:grid-cols-2 w-full max-w-[1200px] mx-auto gap-8 md:gap-12 items-center">
         <div class="z-10 order-1">
             <h1 class="font-headline font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-primary leading-[0.9] tracking-tighter mb-4 md:mb-6">
                 Artisan Cookies, Baked to Order

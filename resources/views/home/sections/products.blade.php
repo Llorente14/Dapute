@@ -9,7 +9,7 @@
     $products = collect(); // Placeholder kosong — skeleton akan tampil
 @endphp
 
-<section class="py-12 md:py-20 px-4 md:px-8 max-w-7xl mx-auto">
+<section class="py-12 md:py-20 px-4 md:px-8 max-w-[1200px] mx-auto">
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 md:mb-16 gap-4 md:gap-8">
         <div>
             <span class="font-label text-tertiary font-bold tracking-widest uppercase text-xs md:text-base">Our Collection</span>
