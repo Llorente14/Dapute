@@ -20,6 +20,9 @@
         {{ $slot }}
     </main>
 
+    {{-- Toast Notification Component --}}
+    <x-ui.toast />
+
     @livewireScripts
 </body>
 </html>

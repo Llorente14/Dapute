@@ -116,23 +116,32 @@
 
                 {{-- ── Quantity + Add to Cart ─────────────── --}}
                 <div class="flex items-stretch gap-4 mt-2">
-                    {{-- Quantity Selector (compact) --}}
+                    {{-- Quantity Selector (editable input, min=1, max=99) --}}
                     <div class="flex items-center border-[3px] border-[#012d1d] bg-white">
                         <button type="button"
+                                onclick="const i=this.parentElement.querySelector('input');let v=parseInt(i.value)||1;if(v>1){i.value=v-1;}"
                                 class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors">
                             −
                         </button>
-                        <span class="w-9 h-9 flex items-center justify-center font-[var(--font-display)] font-bold text-sm text-[#012d1d] border-x-[3px] border-[#012d1d]">
-                            1
-                        </span>
+                        <input type="number"
+                               value="1"
+                               min="1"
+                               max="99"
+                               oninput="let v=parseInt(this.value);if(isNaN(v)||v<1)this.value=1;else if(v>99)this.value=99;"
+                               class="w-10 h-9 text-center font-[var(--font-display)] font-bold text-sm text-[#012d1d]
+                                      border-x-[3px] border-[#012d1d] bg-white
+                                      focus:outline-none focus:bg-[#e8f3ec] transition-colors"
+                        >
                         <button type="button"
+                                onclick="const i=this.parentElement.querySelector('input');let v=parseInt(i.value)||1;if(v<99){i.value=v+1;}"
                                 class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors">
                             +
                         </button>
                     </div>
 
-                    {{-- Add to Cart Button --}}
+                    {{-- Add to Cart Button (with toast trigger) --}}
                     <button type="button"
+                            onclick="window.dispatchEvent(new CustomEvent('show-toast',{detail:{title:'{{ $product->cake_name }}',subtitle:'ditambahkan ke keranjang',type:'cart'}}))"
                             class="flex-1 flex items-center justify-center gap-2.5
                                    px-5 py-2.5 bg-[#012d1d] text-white
                                    border-[3px] border-[#012d1d]

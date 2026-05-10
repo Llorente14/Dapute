@@ -104,9 +104,9 @@
                 <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
                     Urutkan:
                 </span>
-                <select class="bg-white border-[3px] border-[#012d1d] px-3 py-1.5
+                <select class="bg-[#e8f3ec] border-[3px] border-[#012d1d] px-3 py-1.5
                                font-[var(--font-ui)] text-xs text-[#012d1d] uppercase tracking-wider
-                               focus:outline-none focus:shadow-[4px_4px_0_0_#012d1d]
+                               focus:outline-none focus:shadow-[4px_4px_0_0_#012d1d] focus:bg-white
                                transition-shadow duration-150 cursor-pointer appearance-none pr-8"
                         style="background-image: url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3E%3Cpath stroke=%27%23012d1d%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3E%3C/svg%3E');
                                background-position: right 8px center;
@@ -181,9 +181,10 @@
                                         Rp {{ number_format($product->price, 0, ',', '.') }}
                                     </p>
 
-                                    {{-- Add to Cart button (UI only) --}}
+                                    {{-- Add to Cart button (UI only, triggers toast) --}}
                                     <button type="button"
                                             title="Tambah ke Keranjang"
+                                            onclick="window.dispatchEvent(new CustomEvent('show-toast',{detail:{title:'{{ $product->cake_name }}',subtitle:'ditambahkan ke keranjang',type:'cart'}}))"
                                             class="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center
                                                    bg-[#012d1d] text-white
                                                    border-[3px] border-[#012d1d]
