@@ -9,8 +9,8 @@ class ProductGrid extends Component
 {
     public function render()
     {
-        // Dummy data — no DB query
-        $products = app(FetchActiveProductsAction::class)();
+
+        $products = app(FetchActiveProductsAction::class)->execute();
 
         return view('livewire.catalog.product-grid', [
             'products' => $products,

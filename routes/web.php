@@ -22,9 +22,7 @@ Route::middleware('auth')->group(function () {
         return view('profile', ['user' => auth()->user()]);
     })->name('profile');
 
-    // ── Catalog (Customer-facing) ──────────────────────────────
-    Route::get('/catalog', \App\Livewire\Catalog\ProductGrid::class)->name('catalog.index');
-    Route::get('/catalog/{id}', \App\Livewire\Catalog\ProductDetail::class)->name('catalog.show');
+
 
     Route::post('/logout', function (LogoutUserAction $action) {
         $action->execute();
@@ -34,3 +32,6 @@ Route::middleware('auth')->group(function () {
         return redirect('/login');
     })->name('logout');
 });
+// ── Catalog (Customer-facing) ──────────────────────────────
+Route::get('/catalog', \App\Livewire\Catalog\ProductGrid::class)->name('catalog.index');
+Route::get('/catalog/{id}', \App\Livewire\Catalog\ProductDetail::class)->name('catalog.show');

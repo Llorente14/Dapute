@@ -19,13 +19,13 @@ class FetchActiveProductsAction
         try {
             $query = DB::table('products')
                 ->select([
-                    'id', 
-                    'cake_name', 
-                    'description', 
-                    'price', 
-                    'weight_grams', 
-                    'image_url', 
-                    'is_active', 
+                    'id',
+                    'cake_name',
+                    'description',
+                    'price',
+                    'weight_grams',
+                    'image_url',
+                    'is_active',
                     'created_at'
                 ])
                 ->where('is_active', true);
@@ -39,14 +39,13 @@ class FetchActiveProductsAction
                     'id'           => $item->id,
                     'cake_name'    => $item->cake_name,
                     'description'  => $item->description,
-                    'price'        => (int) $item->price,          
-                    'weight_grams' => (int) $item->weight_grams,   
+                    'price'        => (int) $item->price,
+                    'weight_grams' => (int) $item->weight_grams,
                     'image_url'    => $item->image_url,
-                    'is_active'    => (bool) $item->is_active,     
+                    'is_active'    => (bool) $item->is_active,
                     'created_at'   => $item->created_at,
                 ];
             })->toArray();
-
         } catch (\Exception $e) {
             Log::error("Gagal fetch produk: " . $e->getMessage());
             return [];
