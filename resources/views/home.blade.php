@@ -133,7 +133,7 @@
 
     <main class="pt-20">
         @include('home.sections.hero')
-        @include('home.sections.products')
+        @livewire('landing-page')
         @include('home.sections.how-it-works')
         @include('home.sections.trust')
         @include('home.sections.cta-banner')

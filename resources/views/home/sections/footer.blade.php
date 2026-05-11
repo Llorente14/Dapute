@@ -35,18 +35,61 @@
         </div>
 
         {{-- Newsletter --}}
-        <div class="space-y-6">
+        <div class="space-y-6" x-data="{ 
+            email: '', 
+            isSubmitting: false, 
+            showToast: false,
+            submit() {
+                if(!this.email || this.isSubmitting) return;
+                this.isSubmitting = true;
+                setTimeout(() => {
+                    this.isSubmitting = false;
+                    this.email = '';
+                    this.showToast = true;
+                    setTimeout(() => this.showToast = false, 4000);
+                }, 800);
+            }
+        }">
             <h4 class="font-label font-bold uppercase tracking-widest text-primary">Newsletter</h4>
-            <div class="flex neo-shadow">
+            <div class="flex neo-shadow" :class="{ 'opacity-70': isSubmitting }">
                 <input
+                    x-model="email"
+                    :disabled="isSubmitting"
                     class="bg-surface-container-lowest border-[3px] border-primary p-3 w-full font-body focus:outline-none focus:ring-0 focus:border-primary footer-input transition-colors duration-200"
                     placeholder="Your email" type="email" aria-label="Email for newsletter" />
                 <button
-                    class="bg-primary text-on-primary px-4 border-[3px] border-l-0 border-primary font-label uppercase tracking-widest font-bold hover:bg-primary/90 transition-colors"
+                    @click="submit()"
+                    :disabled="!email || isSubmitting"
+                    class="bg-primary text-on-primary w-14 border-[3px] border-l-0 border-primary font-label uppercase tracking-widest font-bold transition-colors flex items-center justify-center disabled:bg-primary/60 disabled:cursor-not-allowed hover:bg-primary/90"
                     aria-label="Subscribe to newsletter">
-                    <span class="material-symbols-outlined">arrow_forward</span>
+                    <span x-show="!isSubmitting" class="material-symbols-outlined">arrow_forward</span>
+                    <span x-show="isSubmitting" class="material-symbols-outlined animate-spin" style="display: none;">progress_activity</span>
                 </button>
             </div>
+
+            {{-- Toast Notification --}}
+            <template x-teleport="body">
+                <div 
+                    x-show="showToast"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 translate-y-8"
+                    style="display: none;"
+                    class="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-50 bg-[#D4EF70] border-[3px] border-[#012d1d] shadow-[4px_4px_0_0_#012d1d] p-4 flex items-start gap-4 max-w-sm"
+                >
+                    <span class="material-symbols-outlined text-[#012d1d] text-2xl animate-bounce">check_circle</span>
+                    <div class="flex-1">
+                        <p class="font-label font-bold text-[#012d1d] uppercase tracking-widest text-sm mb-1">Berhasil</p>
+                        <p class="font-body text-[#012d1d] text-sm">Terima kasih! Kami akan segera menghubungi Anda.</p>
+                    </div>
+                    <button @click="showToast = false" class="text-[#012d1d] hover:opacity-70">
+                        <span class="material-symbols-outlined text-xl">close</span>
+                    </button>
+                </div>
+            </template>
         </div>
     </div>
 
