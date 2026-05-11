@@ -35,7 +35,16 @@ class FetchActiveProductsAction
             }
 
             return $query->get()->map(function ($item) {
-                return (array) $item;
+                return [
+                    'id'           => $item->id,
+                    'cake_name'    => $item->cake_name,
+                    'description'  => $item->description,
+                    'price'        => (int) $item->price,          
+                    'weight_grams' => (int) $item->weight_grams,   
+                    'image_url'    => $item->image_url,
+                    'is_active'    => (bool) $item->is_active,     
+                    'created_at'   => $item->created_at,
+                ];
             })->toArray();
 
         } catch (\Exception $e) {
