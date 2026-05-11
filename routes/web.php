@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Actions\Auth\LogoutUserAction;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('home');
 });
 
 // ─── Guest Routes ─────────────────────────────────────────────────────────────
@@ -22,10 +22,9 @@ Route::middleware('auth')->group(function () {
         return view('profile', ['user' => auth()->user()]);
     })->name('profile');
 
-    Route::get('/catalog', function () {
-        // TODO: SCRUM-XX — Halaman Katalog
-        return view('welcome'); // Placeholder
-    })->name('catalog');
+    // ── Catalog (Customer-facing) ──────────────────────────────
+    Route::get('/catalog', \App\Livewire\Catalog\ProductGrid::class)->name('catalog.index');
+    Route::get('/catalog/{id}', \App\Livewire\Catalog\ProductDetail::class)->name('catalog.show');
 
     Route::post('/logout', function (LogoutUserAction $action) {
         $action->execute();

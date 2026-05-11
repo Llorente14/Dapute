@@ -63,3 +63,37 @@
   /* Border radius */
   --radius: 0px;
 }
+
+/* ── Text Selection — Acid Lime highlight ───────────────── */
+::selection {
+  background-color: #D4EF70;
+  color: #012d1d;
+}
+::-moz-selection {
+  background-color: #D4EF70;
+  color: #012d1d;
+}
+
+/* ── Native <option> styling (limited browser support) ──── */
+select option {
+  background-color: #ffffff;
+  color: #012d1d;
+  font-family: 'Space Grotesk', sans-serif;
+  padding: 8px 12px;
+}
+select option:checked,
+select option:hover {
+  background-color: #012d1d;
+  color: #ffffff;
+}
+
+/* ── Hide number input spinners ─────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
