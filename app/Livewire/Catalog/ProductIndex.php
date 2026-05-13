@@ -4,11 +4,11 @@ namespace App\Livewire\Catalog;
 
 use Livewire\Component;
 
-class ProductCrudForm extends Component
+class ProductIndex extends Component
 {
     public function render()
     {
-        return view('livewire.catalog.product-crud-form')
+        return view('livewire.catalog.product-index')
             ->layout('layouts.admin');
     }
 }
