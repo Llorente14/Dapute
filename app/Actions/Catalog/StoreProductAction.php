@@ -13,9 +13,9 @@ class StoreProductAction
     /**
      * Menyimpan produk baru ke database dan mengunggah gambar ke Supabase Storage.
      * 
-     * @param array $data Data produk (cake_name, description, price, weight_grams, is_active)
-     * @param UploadedFile|null $image File gambar produk
-     * @return array Status keberhasilan dan ID produk atau pesan error
+     * @param array
+     * @param UploadedFile|null 
+     * @return array
      */
     public function execute(array $data, ?UploadedFile $image = null): array
     {
@@ -51,27 +51,24 @@ class StoreProductAction
                   ->post("{$supabaseUrl}/storage/v1/object/product-images/{$path}");
 
                 if (!$upload->successful()) {
-                    // Jika upload gagal, hentikan proses (Rollback logic)
                     return ['success' => false, 'message' => 'Gagal mengunggah gambar ke Storage.'];
                 }
 
-                // Ambil Public URL jika upload berhasil
                 $imageUrl = "{$supabaseUrl}/storage/v1/object/public/product-images/{$path}";
             }
 
             // 3. INSERT row baru ke tabel 'products'
             DB::table('products')->insert([
-                'id'           => $newId, // Menggunakan UUID yang sudah di-generate
+                'id'           => $newId,
                 'cake_name'    => $data['cake_name'],
                 'description'  => $data['description'] ?? null,
                 'price'        => (int) $data['price'],
                 'weight_grams' => (int) $data['weight_grams'],
                 'image_url'    => $imageUrl,
-                'is_active'    => $data['is_active'] ?? true, // Default true
+                'is_active'    => $data['is_active'] ?? true,
                 'created_at'   => now(),
             ]);
 
-            // Return format wajib
             return [
                 'success' => true, 
                 'product_id' => (string) $newId
