@@ -180,7 +180,7 @@
         <!-- Desktop nav section, ganti bagian icon-right: -->
         <div class="flex items-center gap-1 text-[#012d1d]">
             @if ($isLoggedIn)
-                <button class="nav-icon-btn-sm">
+                <button class="nav-icon-btn-sm" onclick="window.dispatchEvent(new CustomEvent('open-cart'))">
                     <span class="material-symbols-outlined">shopping_cart</span>
                 </button>
                 <a href="/profile"
@@ -201,7 +201,7 @@
 
     {{-- Mobile Bottom Nav --}}
     <nav
-        class="md:hidden fixed bottom-0 left-0 w-full z-50 grid h-16 bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-4' : 'grid-cols-3' }}">
+        class="md:hidden fixed bottom-0 left-0 w-full z-50 grid h-16 bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-5' : 'grid-cols-4' }}">
         <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $currentPath === '/' ? 'active' : 'opacity-60' }}"
             href="/">
             <span class="material-symbols-outlined mb-1 text-xl">home</span>
@@ -214,6 +214,11 @@
         </a>
 
         @if ($isLoggedIn)
+            <button class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full opacity-60"
+                onclick="window.dispatchEvent(new CustomEvent('open-cart'))">
+                <span class="material-symbols-outlined mb-1 text-xl">shopping_cart</span>
+                <span class="font-label font-bold text-[10px] uppercase">Cart</span>
+            </button>
             <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ str_starts_with($currentPath, 'orders') ? 'active' : 'opacity-60' }}"
                 href="/orders">
                 <span class="material-symbols-outlined mb-1 text-xl">local_shipping</span>
@@ -234,6 +239,7 @@
         @endif
     </nav>
 
+    <x-ui.cart-drawer />
     <x-ui.toast />
     @stack('scripts')
     @livewireScripts
