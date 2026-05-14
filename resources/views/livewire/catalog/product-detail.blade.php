@@ -119,30 +119,33 @@
                     {{-- Quantity Selector (editable input, min=0, max=99) --}}
                     <div class="flex items-center border-[3px] border-[#012d1d] bg-white">
                         <button type="button"
-                                onclick="const i=this.nextElementSibling; let v=parseInt(i.value)||0; if(v>0) i.value=v-1;"
-                                class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors">
+                                wire:click="decrementQty"
+                                class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors disabled:opacity-40"
+                                @disabled($quantity <= 1)>
                             −
                         </button>
                         <input type="number"
-                               value="1"
-                               min="0"
+                               wire:model="quantity"
+                               min="1"
                                max="99"
-                               oninput="let v = parseInt(this.value); if(!isNaN(v)) { if(v > 99) this.value = 99; else if (v < 0) this.value = 0; }"
-                               onblur="if(this.value === '') this.value = 0;"
+                               oninput="if(this.value > 99) this.value = 99;"
+                               onblur="if(this.value === '' || this.value < 1) this.value = 1; @this.set('quantity', this.value);"
                                class="w-10 h-9 text-center font-[var(--font-display)] font-bold text-sm text-[#012d1d]
                                       border-x-[3px] border-[#012d1d] bg-white
                                       focus:outline-none focus:bg-[#e8f3ec] transition-colors"
                         >
                         <button type="button"
-                                onclick="const i=this.previousElementSibling; let v=parseInt(i.value)||0; if(v<99) i.value=v+1;"
-                                class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors">
+                                wire:click="incrementQty"
+                                class="w-9 h-9 flex items-center justify-center font-[var(--font-ui)] font-bold text-sm text-[#012d1d] hover:bg-[#e8f3ec] transition-colors disabled:opacity-40"
+                                @disabled($quantity >= 99)>
                             +
                         </button>
                     </div>
 
                     {{-- Add to Cart Button (with toast trigger) --}}
                     <button type="button"
-                            onclick="window.dispatchEvent(new CustomEvent('show-toast',{detail:{title:'{{ $product->cake_name }}',subtitle:'ditambahkan ke keranjang',type:'cart'}}))"
+                            wire:click="addToCart"
+                            wire:loading.attr="disabled"
                             class="flex-1 flex items-center justify-center gap-2.5
                                    px-5 py-2.5 bg-[#012d1d] text-white
                                    border-[3px] border-[#012d1d]
@@ -151,12 +154,17 @@
                                    hover:bg-[#023d28]
                                    active:shadow-[2px_2px_0_0_#012d1d] active:translate-x-[2px] active:translate-y-[2px]
                                    transition-all duration-150
-                                   font-[var(--font-ui)] uppercase tracking-widest text-xs font-bold">
-                        {{-- Cart Icon --}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="square" stroke-linejoin="miter" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                        </svg>
-                        Tambah ke Keranjang
+                                   font-[var(--font-ui)] uppercase tracking-widest text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+                        
+                        <span wire:loading.remove wire:target="addToCart" class="flex items-center gap-2.5">
+                            {{-- Cart Icon --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="square" stroke-linejoin="miter" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                            </svg>
+                            Tambah ke Keranjang
+                        </span>
+                        
+                        <svg wire:loading wire:target="addToCart" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </div>
             </div>
