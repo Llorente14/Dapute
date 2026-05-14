@@ -7,7 +7,7 @@
         imageError: null,
         isUploading: false,
         confirmDelete: false,
-        isActive: @js($is_active),
+        isActive: $wire.entangle('is_active'),
         handleImage(e) {
             this.imageError = null;
             const file = e.target.files[0];
@@ -297,13 +297,7 @@
                     </p>
                 </div>
 
-                {{-- Hidden checkbox: syncs Alpine isActive <-> Livewire is_active --}}
-                <input
-                    type="checkbox"
-                    wire:model="is_active"
-                    x-model="isActive"
-                    class="hidden"
-                >
+                {{-- Toggle automatically syncs with Livewire via $wire.entangle --}}
 
                 <button
                     id="toggle-is-active"
