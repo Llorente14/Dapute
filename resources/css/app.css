@@ -2,6 +2,103 @@
 
 /* ── Forest Brutalist Design Tokens ─────────────────────── */
 @theme {
+    /* ── Primary palette ── */
+    --color-primary: #012d1d;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #1b4332;
+    --color-on-primary-container: #86af99;
+    --color-primary-fixed: #c1ecd4;
+    --color-primary-fixed-dim: #a5d0b9;
+
+    /* ── Secondary palette ── */
+    --color-secondary: #57615c;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #d8e2dc;
+    --color-on-secondary-container: #5b6560;
+    --color-secondary-fixed: #dbe5df;
+    --color-secondary-fixed-dim: #bfc9c3;
+
+    /* ── Tertiary palette (lime accent) ── */
+    --color-tertiary: #212a00;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #354100;
+    --color-on-tertiary-container: #98b139;
+    --color-tertiary-fixed: #d3ee6f;
+    --color-tertiary-fixed-dim: #b8d256;
+
+    /* ── Surface ── */
+    --color-surface: #f4fbf7;
+    --color-surface-dim: #d5dcd8;
+    --color-surface-bright: #f4fbf7;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #eef5f1;
+    --color-surface-container: #e8efec;
+    --color-surface-container-high: #e3eae6;
+    --color-surface-container-highest: #dde4e0;
+    --color-surface-variant: #dde4e0;
+    --color-surface-lowest: #ffffff;
+
+    /* ── On-surface ── */
+    --color-on-surface: #161d1b;
+    --color-on-surface-variant: #414844;
+    --color-on-background: #161d1b;
+    --color-background: #f4fbf7;
+
+    /* ── Outline ── */
+    --color-outline: #717973;
+    --color-outline-variant: #c1c8c2;
+
+    /* ── Error ── */
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    /* ── Inverse ── */
+    --color-inverse-surface: #2b322f;
+    --color-inverse-on-surface: #ebf2ee;
+    --color-inverse-primary: #a5d0b9;
+
+    /* ── Fonts ── */
+    --font-epilogue: "Epilogue", sans-serif;
+    --font-manrope: "Manrope", sans-serif;
+    --font-space-grotesk: "Space Grotesk", sans-serif;
+    --font-headline: "Epilogue", sans-serif;
+    --font-body: "Manrope", sans-serif;
+    --font-label: "Space Grotesk", sans-serif;
+
+    /* ── Shadows (offset/brutalist) ── */
+    --shadow-brutal: 4px 4px 0 0 #012d1d;
+    --shadow-brutal-lg: 6px 6px 0 0 #012d1d;
+
+    /* ── Border radius — always 0 ── */
+    --radius: 0px;
+
+    /* ── Animations ── */
+    --animate-fade-up: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    --animate-pop-in: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+    @keyframes fadeUp {
+        0% {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes popIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
     /* Colors */
     --color-surface-container-lowest: #ffffff;
     --color-outline: #717973;
