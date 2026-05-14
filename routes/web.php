@@ -18,9 +18,7 @@ Route::middleware('guest')->group(function () {
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', function () {
-        return view('profile', ['user' => auth()->user()]);
-    })->name('profile');
+    Route::get('/profile', \App\Livewire\ProfileForm::class)->name('profile');
 
 
 

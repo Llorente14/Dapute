@@ -7,13 +7,12 @@ use Livewire\Component;
 
 class ProductGrid extends Component
 {
-    public function render()
+    public function render(FetchActiveProductsAction $fetchActiveProducts)
     {
-
-        $products = app(FetchActiveProductsAction::class)->execute();
+        $products = $fetchActiveProducts->execute();
 
         return view('livewire.catalog.product-grid', [
-            'products' => $products,
+            'totalCount' => count($products),
         ])->layout('layouts.app');
     }
 }

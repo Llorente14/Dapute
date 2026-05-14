@@ -47,7 +47,7 @@ class LoginForm extends Component
         Auth::loginUsingId($result['user']['id'], false);
         session()->regenerate();
 
-        return redirect()->intended(route('catalog'));
+        return redirect()->intended(route('catalog.index'));
     }
 
     public function render()

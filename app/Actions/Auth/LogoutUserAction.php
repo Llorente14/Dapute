@@ -29,10 +29,10 @@ class LogoutUserAction
 
         Session::forget('supabase_token');
         Session::forget('user_id');
-        
+
 
         return [
-            'success' => true, 
+            'success' => true,
             'message' => 'Berhasil keluar.'
         ];
     }
