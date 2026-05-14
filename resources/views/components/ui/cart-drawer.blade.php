@@ -1,3 +1,25 @@
+<style>
+    .qty-btn:hover {
+        background-color: #d8e2dc;
+    }
+    .qty-btn:active {
+        background-color: #bfc9c3;
+    }
+    .qty-btn.pressed {
+        background-color: #012d1d;
+        color: #f4fbf7;
+        transform: scale(0.88);
+    }
+    .qty-btn.pressed span {
+        color: #f4fbf7;
+    }
+    /* Hide native number spinner arrows */
+    .qty-input::-webkit-outer-spin-button,
+    .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .qty-input[type=number] { -moz-appearance: textfield; }
+    .qty-input:focus { background-color: #eef5f1; }
+</style>
+
 <div x-data="cartDrawer()"
      x-on:open-cart.window="isOpen = true"
      x-on:keydown.escape.window="isOpen = false"
@@ -11,7 +33,7 @@
          style="display: none;"></div>
 
     <!-- Cart Sidebar -->
-    <aside class="fixed top-0 right-0 h-full w-full max-w-[460px] bg-[#f4fbf7] border-l-[3px] border-[#012d1d] z-50 shadow-[-8px_0px_0px_0px_rgba(1,45,29,1)] flex flex-col"
+    <aside class="fixed top-0 right-0 h-full w-full max-w-[460px] bg-[#f4fbf7] border-l-[2px] border-[#012d1d] z-50 shadow-[-4px_0px_0px_0px_rgba(1,45,29,1)] flex flex-col"
            x-show="isOpen"
            x-transition:enter="transition transform ease-out duration-300"
            x-transition:enter-start="translate-x-full"
@@ -55,16 +77,38 @@
 
                                 <div class="flex justify-between items-end mt-4">
                                     <!-- Quantity Control -->
-                                    <div class="flex items-center border-[2px] border-[#012d1d] bg-[#f4fbf7] h-[28px]">
-                                        <button @click="updateQuantity(index, -1)" class="w-[28px] h-[28px] flex items-center justify-center text-[#012d1d] hover:bg-[#d8e2dc] transition-colors border-r-[2px] border-[#012d1d]">
-                                            <span class="material-symbols-outlined text-[16px]" style="font-weight: bold;" data-icon="remove">remove</span>
+                                    <div class="flex items-stretch border-[2px] border-[#012d1d] bg-[#f4fbf7] overflow-hidden" style="height:32px">
+                                        <!-- Decrease button -->
+                                        <button
+                                            @click="updateQuantity(index, -1); flashBtn($event.currentTarget)"
+                                            class="qty-btn w-[32px] flex items-center justify-center text-[#012d1d] border-r-[2px] border-[#012d1d] select-none"
+                                            style="transition: background 80ms, transform 80ms, box-shadow 80ms;"
+                                        >
+                                            <span class="material-symbols-outlined" style="font-size:15px; font-weight:700;">remove</span>
                                         </button>
-                                        <span class="font-label font-bold text-[14px] w-[28px] text-center text-[#012d1d]" x-text="item.quantity"></span>
-                                        <button @click="updateQuantity(index, 1)" class="w-[28px] h-[28px] flex items-center justify-center text-[#012d1d] hover:bg-[#d8e2dc] transition-colors border-l-[2px] border-[#012d1d]">
-                                            <span class="material-symbols-outlined text-[16px]" style="font-weight: bold;" data-icon="add">add</span>
+                                        <!-- Quantity input (editable) -->
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="99"
+                                            :value="item.quantity"
+                                            @focus="$event.target.select()"
+                                            @input="if ($event.target.value.length > 2) $event.target.value = $event.target.value.slice(0, 2)"
+                                            @blur="setQuantityFromInput($event, index)"
+                                            @keydown.enter="$event.target.blur()"
+                                            @keydown.escape="$event.target.value = item.quantity; $event.target.blur()"
+                                            class="qty-input font-label font-bold text-[14px] min-w-[36px] w-[36px] text-center text-[#012d1d] bg-transparent border-none outline-none"
+                                        />
+                                        <!-- Increase button -->
+                                        <button
+                                            @click="updateQuantity(index, 1); flashBtn($event.currentTarget)"
+                                            class="qty-btn w-[32px] flex items-center justify-center text-[#012d1d] border-l-[2px] border-[#012d1d] select-none"
+                                            style="transition: background 80ms, transform 80ms, box-shadow 80ms;"
+                                        >
+                                            <span class="material-symbols-outlined" style="font-size:15px; font-weight:700;">add</span>
                                         </button>
                                     </div>
-                                    <span class="font-label font-bold text-[#012d1d] text-lg" x-text="formatRupiah(item.price * item.quantity)"></span>
+                                    <span class="font-label font-bold text-[#012d1d] text-[15px]" x-text="formatRupiah(item.price * item.quantity)"></span>
                                 </div>
                             </div>
                         </div>
@@ -146,13 +190,31 @@
             
             updateQuantity(index, change) {
                 const newQuantity = this.items[index].quantity + change;
-                if (newQuantity > 0) {
+                if (newQuantity >= 1 && newQuantity <= 99) {
                     this.items[index].quantity = newQuantity;
                 }
             },
             
             removeItem(index) {
                 this.items.splice(index, 1);
+            },
+            
+            flashBtn(el) {
+                el.classList.add('pressed');
+                setTimeout(() => el.classList.remove('pressed'), 150);
+            },
+            
+            setQuantityFromInput(event, index) {
+                const val = parseInt(event.target.value);
+                if (!isNaN(val) && val >= 1 && val <= 99) {
+                    this.items[index].quantity = val;
+                } else if (!isNaN(val) && val > 99) {
+                    this.items[index].quantity = 99;
+                    event.target.value = 99;
+                } else {
+                    // Reset to previous valid value
+                    event.target.value = this.items[index].quantity;
+                }
             },
             
             formatRupiah(amount) {
