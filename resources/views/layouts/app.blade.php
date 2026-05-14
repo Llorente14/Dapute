@@ -180,8 +180,10 @@
         <!-- Desktop nav section, ganti bagian icon-right: -->
         <div class="flex items-center gap-1 text-[#012d1d]">
             @if ($isLoggedIn)
-                <button class="nav-icon-btn-sm">
+                <button class="nav-icon-btn-sm relative" onclick="window.dispatchEvent(new CustomEvent('open-cart'))" x-data="{ count: 0 }" x-on:cart-count-updated.window="count = $event.detail.count">
                     <span class="material-symbols-outlined">shopping_cart</span>
+                    <span x-show="count > 0" x-text="count" style="display: none;" class="absolute -top-1.5 -right-1.5 bg-[#D4EF70] text-[#012d1d] text-[10px] font-black w-[18px] h-[18px] flex items-center justify-center border-[2px] border-[#012d1d] rounded-none">
+                    </span>
                 </button>
                 <a href="/profile"
                     class="nav-icon-btn-sm {{ str_starts_with($currentPath, 'profile') ? 'active' : '' }}">
@@ -201,7 +203,7 @@
 
     {{-- Mobile Bottom Nav --}}
     <nav
-        class="md:hidden fixed bottom-0 left-0 w-full z-50 grid h-16 bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-4' : 'grid-cols-3' }}">
+        class="md:hidden fixed bottom-0 left-0 w-full z-50 grid h-16 bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-5' : 'grid-cols-4' }}">
         <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $currentPath === '/' ? 'active' : 'opacity-60' }}"
             href="/">
             <span class="material-symbols-outlined mb-1 text-xl">home</span>
@@ -214,6 +216,13 @@
         </a>
 
         @if ($isLoggedIn)
+            <button class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full opacity-60 relative"
+                onclick="window.dispatchEvent(new CustomEvent('open-cart'))" x-data="{ count: 0 }" x-on:cart-count-updated.window="count = $event.detail.count">
+                <span class="material-symbols-outlined mb-1 text-xl">shopping_cart</span>
+                <span class="font-label font-bold text-[10px] uppercase">Cart</span>
+                <span x-show="count > 0" x-text="count" style="display: none;" class="absolute top-1 right-2 bg-[#D4EF70] text-[#012d1d] text-[10px] font-black w-[16px] h-[16px] flex items-center justify-center border-[2px] border-[#012d1d] rounded-none">
+                </span>
+            </button>
             <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ str_starts_with($currentPath, 'orders') ? 'active' : 'opacity-60' }}"
                 href="/orders">
                 <span class="material-symbols-outlined mb-1 text-xl">local_shipping</span>
@@ -234,6 +243,7 @@
         @endif
     </nav>
 
+    <livewire:transaction.cart-drawer />
     <x-ui.toast />
     @stack('scripts')
     @livewireScripts
