@@ -103,17 +103,17 @@
 @endif
 
 <!-- Main Content Canvas -->
-<div class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+<div class="flex-1 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
 
     <!-- Header Section -->
     <header class="anim-in d1 mb-12 border-b-[3px] border-primary pb-6 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-            <h1 class="font-headline text-5xl md:text-7xl font-black tracking-tighter text-primary uppercase leading-none">Profile</h1>
-            <p class="font-body text-xl text-on-surface-variant mt-4 max-w-2xl">Manage your greenhouse details, structural addresses, and review recent botanical acquisitions.</p>
+            <h1 class="font-headline text-4xl md:text-6xl font-black tracking-tighter text-primary uppercase leading-none">Profile</h1>
+            <p class="font-body text-lg text-on-surface-variant mt-4 max-w-2xl">Manage your greenhouse details, structural addresses, and review recent botanical acquisitions.</p>
         </div>
         <form action="/logout" method="POST" class="self-start md:self-auto">
             @csrf
-            <button type="submit" class="neo-border bg-tertiary-fixed text-primary font-label font-bold uppercase px-6 py-3 neo-shadow neo-shadow-hover transition-all flex items-center gap-2">
+            <button type="submit" class="neo-border bg-tertiary-fixed text-primary font-label font-bold uppercase px-6 py-3 neo-shadow neo-shadow-hover transition-all flex items-center gap-2 cursor-pointer hover:-translate-y-1">
                 <span class="material-symbols-outlined">logout</span>
                 Sign Out
             </button>
@@ -128,8 +128,8 @@
             <!-- Personal Information -->
             <section class="anim-in d2">
                 <div class="flex items-center gap-4 mb-6">
-                    <span class="material-symbols-outlined text-3xl text-primary">person</span>
-                    <h2 class="font-headline text-3xl font-bold tracking-tight text-primary uppercase">Personal Info</h2>
+                    <span class="material-symbols-outlined text-2xl text-primary">person</span>
+                    <h2 class="font-headline text-2xl font-bold tracking-tight text-primary uppercase">Personal Info</h2>
                 </div>
                 <div class="bg-surface-container-lowest neo-border p-6 md:p-8 neo-shadow flex flex-col gap-6">
                     <div class="grid grid-cols-1 gap-6">
@@ -159,16 +159,7 @@
                             </p>
                         @enderror
                     </div>
-                    {{-- Address (Alamat lengkap untuk Biteship) --}}
-                    <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('address') ? 'input-error' : '' }}">
-                        <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Alamat Lengkap</label>
-                        <textarea wire:model="address" name="address" rows="3" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors resize-none" placeholder="Alamat lengkap untuk pengiriman..."></textarea>
-                        @error('address')
-                            <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
-                                <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
-                            </p>
-                        @enderror
-                    </div>
+
                     <button wire:click.prevent="updateProfile" type="button" class="mt-4 neo-border bg-primary text-on-primary font-label font-bold uppercase px-6 py-4 neo-shadow neo-shadow-hover transition-all w-full md:w-auto self-start">
                         <span wire:loading.remove wire:target="updateProfile">Update Details</span>
                         <span wire:loading wire:target="updateProfile" class="flex items-center gap-2">
@@ -183,8 +174,8 @@
             <section class="anim-in d3">
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-4">
-                        <span class="material-symbols-outlined text-3xl text-primary">location_on</span>
-                        <h2 class="font-headline text-3xl font-bold tracking-tight text-primary uppercase">Addresses</h2>
+                        <span class="material-symbols-outlined text-2xl text-primary">location_on</span>
+                        <h2 class="font-headline text-2xl font-bold tracking-tight text-primary uppercase">Addresses</h2>
                     </div>
                     <button onclick="openAddressModal('new')" class="text-primary font-label font-bold uppercase hover:bg-secondary-container px-4 py-2 transition-colors border-[3px] border-transparent hover:border-primary flex items-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined">add</span>
@@ -221,8 +212,8 @@
         <div class="lg:col-span-5 anim-in d4">
             <section class="bg-surface-container-highest neo-border p-6 md:p-8 neo-shadow h-full flex flex-col">
                 <div class="flex items-center gap-4 mb-8 border-b-[3px] border-primary pb-4">
-                    <span class="material-symbols-outlined text-3xl text-primary">receipt_long</span>
-                    <h2 class="font-headline text-3xl font-bold tracking-tight text-primary uppercase">Recent Orders</h2>
+                    <span class="material-symbols-outlined text-2xl text-primary">receipt_long</span>
+                    <h2 class="font-headline text-2xl font-bold tracking-tight text-primary uppercase">Recent Orders</h2>
                 </div>
                 <div class="flex flex-col gap-6 flex-1">
                     <!-- Order Item 1 -->

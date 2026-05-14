@@ -5,6 +5,7 @@ use App\Livewire\Auth\RegisterForm;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Actions\Auth\LogoutUserAction;
+use App\Livewire\ProfileForm;
 
 Route::get('/', function () {
     return view('home');
@@ -18,8 +19,7 @@ Route::middleware('guest')->group(function () {
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', \App\Livewire\ProfileForm::class)->name('profile');
-
+    Route::get('/profile', ProfileForm::class)->name('profile');
 
 
     Route::post('/logout', function (LogoutUserAction $action) {
