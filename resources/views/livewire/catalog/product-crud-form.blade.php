@@ -5,6 +5,7 @@
         fileName: null,
         fileSize: null,
         imageError: null,
+        isUploading: false,
         confirmDelete: false,
         isActive: @js($is_active),
         handleImage(e) {
@@ -14,23 +15,33 @@
             const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             if (!validTypes.includes(file.type)) {
                 this.imageError = 'Format hanya JPG, PNG, atau WebP';
-                this.resetPreviewState(); e.target.value = ''; e.stopImmediatePropagation(); return;
+                this.resetPreviewState(); e.target.value = ''; return;
             }
             if (file.size > 2 * 1024 * 1024) {
                 this.imageError = 'Ukuran gambar maksimal 2MB';
-                this.resetPreviewState(); e.target.value = ''; e.stopImmediatePropagation(); return;
+                this.resetPreviewState(); e.target.value = ''; return;
             }
+            // Show local preview immediately
             this.fileName = file.name;
             const sizeKB = Math.round(file.size / 1024);
             this.fileSize = sizeKB >= 1024 ? (sizeKB / 1024).toFixed(1) + ' MB' : sizeKB + ' KB';
             const r = new FileReader();
             r.onload = ev => { this.imagePreview = ev.target.result; };
             r.readAsDataURL(file);
+            // Upload to Livewire via JS API (bypasses wire:model conflict)
+            this.isUploading = true;
+            $wire.upload(
+                'photo',
+                file,
+                () => { this.isUploading = false; },
+                () => { this.isUploading = false; this.imageError = 'Upload gagal, coba lagi.'; this.resetPreviewState(); }
+            );
         },
         resetPreviewState() { this.imagePreview = null; this.fileName = null; this.fileSize = null; },
         resetImage() {
             this.resetPreviewState(); this.imageError = null;
             if (this.$refs.imgInput) this.$refs.imgInput.value = '';
+            $wire.set('photo', null);
         }
     }"
 >
@@ -240,9 +251,13 @@
                 </div>
 
                 {{-- File Info and Errors below preview --}}
-                <div class="mt-1" x-show="fileName || imageError" x-cloak>
+                <div class="mt-1" x-show="fileName || imageError || isUploading" x-cloak>
+                    <p x-show="isUploading" class="font-label text-[#012d1d] text-xs font-bold flex items-center gap-1">
+                        <svg class="animate-spin h-3 w-3 inline" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                        Uploading...
+                    </p>
                     <p x-show="imageError" class="font-label text-[#ba1a1a] text-sm font-bold" x-text="imageError"></p>
-                    <p x-show="fileName && !imageError" class="font-body text-[#414844] text-xs font-bold">
+                    <p x-show="fileName && !imageError && !isUploading" class="font-body text-[#414844] text-xs font-bold">
                         <span x-text="fileName"></span> &middot; <span x-text="fileSize"></span>
                     </p>
                 </div>
@@ -250,15 +265,14 @@
                     <p class="font-label text-xs text-[#ba1a1a] font-bold">{{ $message }}</p>
                 @enderror
 
-                {{-- Hidden file input --}}
+                {{-- Hidden file input — NO wire:model, upload handled by $wire.upload() in handleImage() --}}
                 <input
                     id="input-image"
                     type="file"
-                    wire:model="photo"
                     accept="image/jpeg,image/png,image/webp"
                     class="hidden"
                     x-ref="imgInput"
-                    @change.capture="handleImage($event)"
+                    @change="handleImage($event)"
                 >
             </div>
         </section>

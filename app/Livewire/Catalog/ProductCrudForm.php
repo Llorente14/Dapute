@@ -80,6 +80,7 @@ class ProductCrudForm extends Component
             'is_active'    => DB::raw("'{$isActive}'::boolean"),
         ];
 
+
         if ($this->isEditMode) {
             // ── UPDATE: handle image replacement via Supabase Storage
             $imageUrl = $this->existingImageUrl;
@@ -89,19 +90,27 @@ class ProductCrudForm extends Component
                 $serviceKey  = env('SUPABASE_SERVICE_ROLE_KEY');
 
                 $extension    = $this->photo->getClientOriginalExtension();
-                $safeFilename = Str::slug(pathinfo($this->photo->getClientOriginalName(), PATHINFO_FILENAME)) . '.' . $extension;
+                // Add timestamp suffix so the path is unique and CDN cache is bypassed
+                $baseName     = Str::slug(pathinfo($this->photo->getClientOriginalName(), PATHINFO_FILENAME));
+                $safeFilename = $baseName . '-' . time() . '.' . $extension;
                 $path         = "products/{$this->productId}/{$safeFilename}";
 
                 $upload = Http::withHeaders([
                     'Authorization' => "Bearer {$serviceKey}",
                     'Content-Type'  => $this->photo->getMimeType(),
+                    'x-upsert'      => 'true',   // allow overwrite existing file
                 ])->withBody(file_get_contents($this->photo->getRealPath()), $this->photo->getMimeType())
-                  ->post("{$supabaseUrl}/storage/v1/object/product-images/{$path}");
+                    ->post("{$supabaseUrl}/storage/v1/object/product-images/{$path}");
 
                 if ($upload->successful()) {
                     $imageUrl = "{$supabaseUrl}/storage/v1/object/public/product-images/{$path}";
                 } else {
-                    Log::warning('ProductCrudForm: image upload failed on update', ['status' => $upload->status()]);
+                    Log::error('ProductCrudForm: image upload failed on update', [
+                        'status'   => $upload->status(),
+                        'response' => $upload->body(),
+                    ]);
+                    $this->addError('photo', 'Gagal mengunggah gambar, coba lagi.');
+                    return;
                 }
             }
 
@@ -110,7 +119,6 @@ class ProductCrudForm extends Component
                 ->update(array_merge($data, ['image_url' => $imageUrl]));
 
             session()->flash('success', 'Produk berhasil diperbarui.');
-
         } else {
             // ── CREATE: delegate to StoreProductAction (handles Supabase Storage upload)
             $uploadedFile = $this->photo

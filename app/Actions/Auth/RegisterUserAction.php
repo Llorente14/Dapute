@@ -48,7 +48,7 @@ class RegisterUserAction
 
         $authResponse = Http::withHeaders([
             'apikey'       => $supabaseKey,
-            'Authorization'=> "Bearer {$supabaseKey}",
+            'Authorization' => "Bearer {$supabaseKey}",
             'Content-Type' => 'application/json',
         ])->post("{$supabaseUrl}/auth/v1/signup", [
             'email'    => $data['email'],
@@ -82,7 +82,7 @@ class RegisterUserAction
                 'phone_number' => $data['phone_number'] ?? null,
                 'email'        => $data['email'],
                 'role'         => 'customer',
-                'is_active'    => true,
+                'is_active'    => DB::raw('true'),
                 'created_at'   => now(),
             ];
 
@@ -93,7 +93,6 @@ class RegisterUserAction
                 'message' => 'Pendaftaran berhasil.',
                 'user'    => $newUser,
             ];
-
         } catch (\Exception $e) {
             return [
                 'success' => false,
