@@ -48,9 +48,15 @@
 
 {{-- ══ FLASH MESSAGE ══════════════════════════════════════════════════════ --}}
 @if (session()->has('success'))
-<div class="border-[3px] border-[#012d1d] bg-[#d3ee6f] px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(1,45,29,1)]">
-    <span class="material-symbols-outlined text-[#012d1d]">check_circle</span>
-    <p class="font-label font-bold text-sm text-[#012d1d] uppercase tracking-wide">{{ session('success') }}</p>
+<div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" x-transition.opacity.duration.500ms
+     class="border-[3px] border-[#012d1d] bg-[#d3ee6f] px-5 py-3 flex items-center justify-between gap-3 shadow-[4px_4px_0px_0px_rgba(1,45,29,1)]">
+    <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-[#012d1d]">check_circle</span>
+        <p class="font-label font-bold text-sm text-[#012d1d] uppercase tracking-wide">{{ session('success') }}</p>
+    </div>
+    <button @click="show = false" type="button" class="text-[#012d1d] hover:text-[#ba1a1a] transition-colors flex items-center" title="Close notification">
+        <span class="material-symbols-outlined text-base font-bold">close</span>
+    </button>
 </div>
 @endif
 
@@ -317,7 +323,7 @@
         </section>
 
         {{-- ACTIONS --}}
-        <div class="flex flex-col gap-3 opacity-0 animate-fade-up [animation-delay:600ms]">
+        <div class="flex gap-4 opacity-0 animate-fade-up [animation-delay:600ms]">
 
             {{-- SAVE --}}
             <button
@@ -325,7 +331,7 @@
                 type="submit"
                 wire:loading.attr="disabled"
                 wire:target="save"
-                class="w-full flex items-center justify-center gap-2
+                class="flex-1 flex items-center justify-center gap-2
                        bg-[#012d1d] text-white border-[3px] border-[#012d1d]
                        font-label font-bold text-sm uppercase tracking-wider px-6 py-4
                        hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0px_0px_rgba(1,45,29,1)]
@@ -333,17 +339,13 @@
                        active:translate-y-0 active:translate-x-0 active:shadow-none
                        disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 disabled:translate-x-0 disabled:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)]"
             >
-                <span class="flex items-center gap-2" wire:loading.remove wire:target="save">
-                    <span class="material-symbols-outlined text-lg">save</span>
-                    {{ $isEditMode ? 'Save Changes' : 'Save Product' }}
-                </span>
-                <span class="flex items-center gap-2" wire:loading wire:target="save">
-                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    Saving...
-                </span>
+                <span wire:loading.remove wire:target="save" class="material-symbols-outlined text-lg">save</span>
+                <svg wire:loading wire:target="save" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <span wire:loading.remove wire:target="save">{{ $isEditMode ? 'Save Changes' : 'Save Product' }}</span>
+                <span wire:loading wire:target="save">Saving...</span>
             </button>
 
             {{-- DELETE (only in edit mode) --}}
@@ -352,16 +354,15 @@
                 id="btn-delete-product"
                 type="button"
                 @click="confirmDelete = true"
-                class="w-full flex items-center justify-center gap-2
+                class="flex-none flex items-center justify-center px-5
                        bg-[#ffffff] text-[#ba1a1a] border-[3px] border-[#ba1a1a]
-                       font-label font-bold text-sm uppercase tracking-wider px-6 py-3.5
                        hover:bg-[#ba1a1a] hover:text-white
                        transition-all duration-200 shadow-[4px_4px_0px_0px_#ba1a1a]
                        hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0px_0px_#ba1a1a]
                        active:translate-y-0 active:translate-x-0 active:shadow-none"
+                title="Delete Product"
             >
-                <span class="material-symbols-outlined text-base">delete</span>
-                Delete Product
+                <span class="material-symbols-outlined text-2xl">delete</span>
             </button>
             @endif
 

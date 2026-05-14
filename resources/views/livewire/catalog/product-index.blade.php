@@ -1,5 +1,6 @@
 <div x-data="{
         showAddProduct: false,
+        confirmDelete: null,
         imagePreview: null,
         fileName: null,
         fileSize: null,
@@ -36,9 +37,15 @@
 
     {{-- ══ FLASH MESSAGE ══════════════════════════════════════════════════════ --}}
     @if (session()->has('success'))
-    <div class="border-[3px] border-[#012d1d] bg-[#d3ee6f] px-5 py-3 flex items-center gap-3 shadow-[4px_4px_0px_0px_rgba(1,45,29,1)]">
-        <span class="material-symbols-outlined text-[#012d1d]">check_circle</span>
-        <p class="font-label font-bold text-sm text-[#012d1d] uppercase tracking-wide">{{ session('success') }}</p>
+    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" x-transition.opacity.duration.500ms
+         class="border-[3px] border-[#012d1d] bg-[#d3ee6f] px-5 py-3 flex items-center justify-between gap-3 shadow-[4px_4px_0px_0px_rgba(1,45,29,1)]">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[#012d1d]">check_circle</span>
+            <p class="font-label font-bold text-sm text-[#012d1d] uppercase tracking-wide">{{ session('success') }}</p>
+        </div>
+        <button @click="show = false" type="button" class="text-[#012d1d] hover:text-[#ba1a1a] transition-colors flex items-center" title="Close notification">
+            <span class="material-symbols-outlined text-base font-bold">close</span>
+        </button>
     </div>
     @endif
 
@@ -150,6 +157,18 @@
                 >
                     <span class="material-symbols-outlined text-sm">edit</span>
                 </a>
+                <button
+                    type="button"
+                    @click="confirmDelete = '{{ $product->id }}'"
+                    aria-label="Delete"
+                    class="bg-[#ffffff] border-[3px] border-[#ba1a1a] p-2 text-[#ba1a1a]
+                           hover:bg-[#ba1a1a] hover:text-[#ffffff] transition-all duration-300
+                           flex items-center justify-center shadow-[2px_2px_0px_0px_#ba1a1a]
+                           hover:shadow-[4px_4px_0px_0px_#ba1a1a] hover:-translate-y-0.5
+                           active:translate-y-0 active:translate-x-0 active:shadow-none"
+                >
+                    <span class="material-symbols-outlined text-sm">delete</span>
+                </button>
             </div>
         </div>
         @empty
@@ -187,5 +206,67 @@
         @endif
 
     </section>
+    </div>
+
+    {{-- ══ DELETE CONFIRMATION DIALOG ═══════════════════════════════════════ --}}
+    <div
+        x-show="confirmDelete !== null"
+        x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-300"
+        style="background:rgba(1,45,29,0.82);"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="confirmDelete = null"
+    >
+        <div
+            class="border-[3px] border-[#012d1d] bg-[#ffffff] w-full max-w-md p-8 shadow-[8px_8px_0px_0px_rgba(1,45,29,1)]"
+            @click.stop
+            x-transition:enter="transition ease-out duration-300 delay-100"
+            x-transition:enter-start="opacity-0 scale-90 translate-y-8"
+            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+        >
+            <div class="w-12 h-12 border-[3px] border-[#ba1a1a] bg-[#ffdad6] flex items-center justify-center mb-5 shadow-[2px_2px_0px_0px_#ba1a1a]">
+                <span class="material-symbols-outlined text-[#ba1a1a] text-xl">warning</span>
+            </div>
+
+            <h3 class="font-headline font-black text-[#012d1d] text-2xl uppercase tracking-wide mb-2">Delete Product?</h3>
+            <p class="font-body text-[#414844] text-sm leading-relaxed mb-6">
+                This action <strong class="text-[#012d1d]">cannot be undone</strong>.
+                The product will be permanently removed from all Dapute storefronts.
+            </p>
+
+            <div class="flex gap-3">
+                <button
+                    type="button"
+                    @click="confirmDelete = null"
+                    class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#f4fbf7] text-[#012d1d]
+                           font-label font-bold text-xs uppercase tracking-wider
+                           hover:bg-[#dde4e0] hover:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:-translate-y-0.5 transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    wire:click="delete(confirmDelete)"
+                    wire:loading.attr="disabled"
+                    @click="confirmDelete = null"
+                    class="flex-1 py-3 border-[3px] border-[#ba1a1a] bg-[#ba1a1a] text-white
+                           font-label font-bold text-xs uppercase tracking-wider
+                           hover:bg-[#93000a] hover:border-[#93000a] transition-all duration-200
+                           hover:shadow-[4px_4px_0px_0px_#ba1a1a] hover:-translate-y-0.5
+                           shadow-[2px_2px_0px_0px_#ba1a1a] flex items-center justify-center gap-1.5"
+                >
+                    <span class="material-symbols-outlined text-sm">delete_forever</span>
+                    Yes, Delete
+                </button>
+            </div>
+        </div>
     </div>
 </div>
