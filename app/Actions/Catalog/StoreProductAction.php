@@ -58,6 +58,8 @@ class StoreProductAction
             }
 
             // 3. INSERT row baru ke tabel 'products'
+            $isActive = ($data['is_active'] ?? true) ? 'true' : 'false';
+
             DB::table('products')->insert([
                 'id'           => $newId,
                 'cake_name'    => $data['cake_name'],
@@ -65,7 +67,7 @@ class StoreProductAction
                 'price'        => (int) $data['price'],
                 'weight_grams' => (int) $data['weight_grams'],
                 'image_url'    => $imageUrl,
-                'is_active'    => $data['is_active'] ?? true,
+                'is_active'    => DB::raw("'{$isActive}'::boolean"),
                 'created_at'   => now(),
             ]);
 

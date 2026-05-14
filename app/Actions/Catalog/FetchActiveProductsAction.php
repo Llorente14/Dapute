@@ -8,7 +8,6 @@ class FetchActiveProductsAction
 {
     public function __invoke(): Collection
     {
-        // TODO: return active products from DB
-        return collect();
+        return \App\Models\Product::active()->latest()->get();
     }
 }

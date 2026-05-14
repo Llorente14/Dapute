@@ -16,6 +16,7 @@ Route::get('/', function () {
 | Spatie permission sudah terpasang di composer.json.
 */
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/products', ProductIndex::class)->name('products.index');
-    Route::get('/edit',     ProductCrudForm::class)->name('products.edit');
+    Route::get('/products',              ProductIndex::class)->name('products.index');
+    Route::get('/products/create',       ProductCrudForm::class)->name('products.create');
+    Route::get('/products/{productId}/edit', ProductCrudForm::class)->name('products.edit');
 });
