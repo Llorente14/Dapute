@@ -13,6 +13,8 @@ class CatalogFilter extends Component
     #[Url(except: '')]
     public $search = '';
 
+    public $sort = 'Terbaru';
+
     public function addToCart(UpdateCartAction $action, string $productId)
     {
         if (!Auth::check()) {
@@ -29,7 +31,7 @@ class CatalogFilter extends Component
 
     public function render(FetchActiveProductsAction $fetchActiveProducts)
     {
-        $products = $fetchActiveProducts->execute($this->search);
+        $products = $fetchActiveProducts->execute($this->search, $this->sort);
 
         return view('livewire.catalog-filter', [
             'products' => $products,

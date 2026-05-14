@@ -103,11 +103,13 @@ class UpdateCartAction
     {
         // Return kolom id sebagai cart_item_id
         return DB::table('carts')
-            ->where('user_id', $userId)
-            ->select('id as cart_item_id', 'product_id', 'cake_name_snapshot', 'price_snapshot', 'image_url_snapshot', 'quantity')
+            ->join('products', 'carts.product_id', '=', 'products.id')
+            ->where('carts.user_id', $userId)
+            ->select('carts.id as cart_item_id', 'carts.product_id', 'carts.cake_name_snapshot', 'carts.price_snapshot', 'carts.image_url_snapshot', 'carts.quantity', 'products.weight_grams')
             ->get()
             ->map(function($item) {
                 $item->price_snapshot = (int) $item->price_snapshot;
+                $item->weight_grams = (int) $item->weight_grams;
                 return (array) $item;
             })
             ->toArray();

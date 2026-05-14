@@ -123,8 +123,8 @@
                         <span class="font-label font-bold text-[#012d1d]">{{ 'Rp ' . number_format($subtotal, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-label font-bold uppercase text-[#012d1d]">ONGKOS KIRIM</span>
-                        <span class="font-body italic text-[14px] text-[#012d1d]">Dihitung saat checkout</span>
+                        <span class="font-label font-bold uppercase text-[#012d1d]">TOTAL BERAT (G)</span>
+                        <span class="font-body font-bold text-[14px] text-[#012d1d]">{{ number_format($totalWeight, 0, ',', '.') }}g</span>
                     </div>
                 </div>
 

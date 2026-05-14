@@ -36,30 +36,36 @@
                         <div class="group bg-surface-container-lowest border-[3px] border-primary neo-shadow p-4 md:p-6 transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_#012d1d] h-full flex flex-col relative">
                             
                             {{-- Badge --}}
-                            <div class="absolute top-6 left-6 z-10 px-2 py-1 text-[10px] font-label font-bold border-[3px] border-primary" style="background-color: {{ $product['badge_color'] }}">
-                                {{ $product['badge'] }}
-                            </div>
+                            @if($product['is_active'])
+                                <div class="absolute top-6 left-6 z-10 px-2 py-1 text-[10px] font-label font-bold border-[3px] border-primary bg-[#D4EF70]">
+                                    AKTIF
+                                </div>
+                            @endif
                             
-                            <div class="aspect-square mb-4 md:mb-6 border-[3px] border-primary overflow-hidden">
+                            <a href="/catalog/{{ $product['id'] }}" class="aspect-square mb-4 md:mb-6 border-[3px] border-primary overflow-hidden block">
                                 <img
                                     alt="{{ $product['cake_name'] }}"
                                     class="w-full h-full object-cover group-hover:scale-105 transition-transform"
                                     src="{{ $product['image_url'] }}"
-                                    onerror="this.src='https://placehold.co/400x400?text=No+Image'"
+                                    onerror="this.src='https://placehold.co/400x400/012d1d/D4EF70?text=DAPUTE'"
                                 />
-                            </div>
-                            <p class="font-label font-bold text-primary mb-1">Rp {{ number_format($product['price'], 0, ',', '.') }}</p>
-                            <h3 class="font-headline font-black text-xl md:text-2xl text-primary mb-2 md:mb-4">{{ $product['cake_name'] }}</h3>
+                            </a>
+                            <p class="font-label font-bold text-primary mb-1">{{ $product['price'] }}</p>
+                            <a href="/catalog/{{ $product['id'] }}">
+                                <h3 class="font-headline font-black text-xl md:text-2xl text-primary mb-2 md:mb-4 hover:text-secondary-container transition-colors">{{ $product['cake_name'] }}</h3>
+                            </a>
                             <div class="flex justify-between items-center mt-auto gap-2">
-                                <p class="font-body text-sm text-primary/70">{{ $product['description'] }}</p>
+                                <p class="font-body text-sm text-primary/70 line-clamp-2">{{ $product['description'] }}</p>
                                 
                                 {{-- Add to Cart Button --}}
                                 <button 
                                     wire:click="addToCart('{{ $product['id'] }}')"
-                                    title="Coming soon"
-                                    class="w-10 h-10 bg-primary text-on-primary flex items-center justify-center neo-shadow shrink-0 opacity-50 cursor-not-allowed transition-colors"
+                                    wire:loading.attr="disabled"
+                                    title="Tambah ke Keranjang"
+                                    class="w-10 h-10 bg-primary text-on-primary flex items-center justify-center neo-shadow shrink-0 transition-all hover:bg-[#023d28] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none relative disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <span class="material-symbols-outlined">add</span>
+                                    <span wire:loading.remove wire:target="addToCart('{{ $product['id'] }}')" class="material-symbols-outlined">add</span>
+                                    <svg wire:loading wire:target="addToCart('{{ $product['id'] }}')" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 </button>
                             </div>
                         </div>
@@ -68,18 +74,8 @@
             </div>
         @else
             <div class="text-center py-20 text-primary/60 font-body">
-                No products found for this filter.
+                Tidak ada produk untuk filter ini.
             </div>
         @endif
     </div>
-
-    {{-- Toast Notification Script (Listening to Livewire event) --}}
-    <script>
-        document.addEventListener('livewire:initialized', () => {
-            Livewire.on('cart-unavailable', (event) => {
-                const msg = event[0]?.message || event?.message || 'Cart feature coming soon!';
-                alert(msg);
-            });
-        });
-    </script>
 </section>

@@ -10,6 +10,7 @@ class CartDrawer extends Component
 {
     public $items = [];
     public $subtotal = 0;
+    public $totalWeight = 0;
     public $cartCount = 0;
 
     protected $listeners = [
@@ -35,6 +36,10 @@ class CartDrawer extends Component
         
         $this->subtotal = collect($this->items)->sum(function($item) {
             return $item['price_snapshot'] * $item['quantity'];
+        });
+
+        $this->totalWeight = collect($this->items)->sum(function($item) {
+            return $item['weight_grams'] * $item['quantity'];
         });
 
         // dispatch event to update badge in navbar

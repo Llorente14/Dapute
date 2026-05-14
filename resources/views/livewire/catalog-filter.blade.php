@@ -67,7 +67,7 @@
                 <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
                     Urutkan:
                 </span>
-                <div x-data="{ open: false, selected: 'Terbaru', options: ['Terbaru', 'Harga Terendah', 'Harga Tertinggi', 'Nama A-Z'] }" class="relative">
+                <div x-data="{ open: false, selected: $wire.entangle('sort').live, options: ['Terbaru', 'Harga Terendah', 'Harga Tertinggi', 'Nama A-Z'] }" class="relative">
                     <button @click="open = !open" @click.outside="open = false" type="button"
                             class="bg-[#e8f3ec] border-[3px] border-[#012d1d] px-3 py-1.5
                                    font-[var(--font-ui)] text-xs text-[#012d1d] uppercase tracking-wider
