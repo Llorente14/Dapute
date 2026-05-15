@@ -36,6 +36,7 @@ Route::middleware('guest')->group(function () {
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
+    Route::get('/checkout', \App\Livewire\Transaction\CheckoutForm::class)->name('checkout');
     Route::get('/profile', ProfileForm::class)->name('profile');
 
 
