@@ -17,8 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/webhook.php'));
         },
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'role.owner' => \App\Http\Middleware\RoleOwner::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
