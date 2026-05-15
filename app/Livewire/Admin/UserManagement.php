@@ -8,9 +8,15 @@ use App\Actions\Auth\AdminUpdateUserAction;
 use App\Actions\Auth\AdminDeleteUserAction;
 use App\Models\User;
 use Livewire\Component;
+use Livewire\Attributes\Url;
 
 class UserManagement extends Component
 {
+    #[Url(except: '')]
+    public $search = '';
+
+    #[Url(except: 'All Roles')]
+    public $filterRole = 'All Roles';
     public $create_full_name = '';
     public $create_email = '';
     public $create_phone_number = '';
@@ -141,7 +147,25 @@ class UserManagement extends Component
 
     public function render()
     {
-        $users = User::orderBy('created_at', 'desc')->get();
+        $query = User::query();
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('full_name', 'ilike', '%' . $this->search . '%')
+                  ->orWhere('email', 'ilike', '%' . $this->search . '%')
+                  ->orWhere('phone_number', 'ilike', '%' . $this->search . '%');
+            });
+        }
+
+        if ($this->filterRole !== 'All Roles') {
+            if ($this->filterRole === 'Employee') {
+                $query->where('role', 'staff');
+            } else {
+                $query->where('role', strtolower($this->filterRole));
+            }
+        }
+
+        $users = $query->orderBy('created_at', 'desc')->get();
         return view('livewire.dashboard.user-management-table', [
             'users' => $users
         ])->layout('layouts.admin');

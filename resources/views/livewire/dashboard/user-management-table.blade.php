@@ -93,11 +93,11 @@
 <div class="flex flex-col sm:flex-row gap-4 opacity-0 animate-[fadeUp_0.5s_ease_0.15s_forwards] relative z-50">
     <div class="flex-1 flex border-[3px] border-[#012d1d] bg-white focus-within:shadow-[4px_4px_0_0_#012d1d] transition-all">
         <span class="flex items-center px-4 text-[#012d1d]"><span class="material-symbols-outlined">search</span></span>
-        <input type="text" placeholder="Search by name, email, or phone number..."
+        <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search by name, email, or phone number..."
             class="flex-1 bg-transparent px-2 py-3 font-body text-sm text-[#012d1d] focus:outline-none placeholder:text-[#717973]">
     </div>
     <div class="relative z-10"
-         x-data="{ open: false, selected: 'All Roles', options: ['All Roles','Admin','Employee','Customer'] }">
+         x-data="{ open: false, options: ['All Roles','Admin','Employee','Customer'] }">
         <button @click="open = !open" @click.outside="open = false" type="button"
             class="z-10 bg-white border-[3px] border-[#012d1d] px-4 py-3
                    font-label font-bold text-xs text-[#012d1d] uppercase tracking-wider
@@ -105,7 +105,7 @@
                    shadow-[4px_4px_0_0_#012d1d] hover:shadow-[6px_6px_0_0_#012d1d]
                    transition-all duration-150 cursor-pointer
                    flex items-center justify-between gap-6 w-full sm:w-52">
-            <span x-text="selected"></span>
+            <span x-text="$wire.filterRole"></span>
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20" stroke="#012d1d" stroke-width="2"
                  class="w-4 h-4 shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''">
                 <path stroke-linecap="square" stroke-linejoin="miter" d="M6 8l4 4 4-4"/>
@@ -121,9 +121,9 @@
              x-transition:leave-end="opacity-0 -translate-y-2"
              class="absolute right-0 z-[100] w-full mt-1 bg-white border-[3px] border-[#012d1d] shadow-[4px_4px_0_0_#012d1d]">
             <template x-for="option in options" :key="option">
-                <div @click="selected = option; open = false"
+                <div @click="$wire.set('filterRole', option); open = false"
                      class="px-4 py-3 font-label font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
-                     :class="selected === option
+                     :class="$wire.filterRole === option
                         ? 'bg-[#012d1d] text-white'
                         : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white'">
                     <span x-text="option"></span>
@@ -175,7 +175,7 @@
                             $roleOptions = [
                                 'owner' => 'Owner',
                                 'admin' => 'Admin',
-                                'staff' => 'Karyawan',
+                                'staff' => 'Employee',
                                 'customer' => 'Customer'
                             ];
                             $currentLabel = $roleOptions[$user->role] ?? ucfirst($user->role);
@@ -222,12 +222,10 @@
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] hover:bg-[#012d1d] hover:text-white transition-all shadow-[2px_2px_0_0_#012d1d] hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#012d1d] active:translate-y-0 active:shadow-none">
                             <span class="material-symbols-outlined" style="font-size:18px">edit</span>
                         </button>
-                        @if($user->role === 'staff' || $user->role === 'employee' || $user->role === 'admin')
                         <button wire:click="resetUserPassword('{{ $user->id }}')" wire:loading.attr="disabled" title="Reset Password"
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] hover:bg-[#414844] hover:text-white hover:border-[#414844] transition-all shadow-[2px_2px_0_0_#012d1d] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none disabled:opacity-50">
                             <span class="material-symbols-outlined" style="font-size:18px">lock_reset</span>
                         </button>
-                        @endif
                         <button @click="openDelete('{{ $user->id }}', '{{ $user->full_name }}')" title="Hapus"
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#ba1a1a] bg-white text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-[2px_2px_0_0_#ba1a1a] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none">
                             <span class="material-symbols-outlined" style="font-size:18px">delete</span>
@@ -321,7 +319,7 @@
                     <select wire:model="edit_role" class="w-full appearance-none bg-[#eef5f1] border-[3px] border-[#012d1d] px-4 py-3 pr-10 font-label font-bold text-sm text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[4px_4px_0_0_#012d1d] transition-all cursor-pointer">
                         <option value="owner">Owner</option>
                         <option value="admin">Admin</option>
-                        <option value="staff">Employee (Staff)</option>
+                        <option value="staff">Employee</option>
                         <option value="customer">Customer</option>
                     </select>
                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#012d1d]">expand_more</span>
