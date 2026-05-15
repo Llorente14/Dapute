@@ -3,7 +3,20 @@
         showCreate: false,
         showEdit:   false,
         showDelete: false,
-        activeToggle: { 1: true, 2: true, 3: false, 4: true, 5: true },
+        showConfirmStatus: false,
+        confirmStatusUser: null,
+        confirmStatusValue: null,
+        openConfirmStatus(id, value) { this.confirmStatusUser = id; this.confirmStatusValue = value; this.showConfirmStatus = true; },
+        showConfirmRole: false,
+        confirmRoleUser: null,
+        confirmRoleValue: null,
+        currentRoleSelect: null,
+        openConfirmRole(id, value, selectEl) { 
+            this.confirmRoleUser = id; 
+            this.confirmRoleValue = value; 
+            this.currentRoleSelect = selectEl;
+            this.showConfirmRole = true; 
+        },
         deleteName: '',
         openDelete(name) { this.deleteName = name; this.showDelete = true; }
     }"
@@ -136,55 +149,64 @@
             </tr>
         </thead>
         <tbody class="divide-y divide-[#012d1d]/10">
-            @php
-            $users = [
-                ['id'=>1,'name'=>'Budi Santoso','email'=>'budi@dapute.com','phone'=>'08123456789','role'=>'admin','active'=>true,'joined'=>'12 Jan 2024'],
-                ['id'=>2,'name'=>'Siti Rahayu','email'=>'siti@dapute.com','phone'=>'08987654321','role'=>'employee','active'=>true,'joined'=>'3 Mar 2024'],
-                ['id'=>3,'name'=>'Andi Wijaya','email'=>'andi@gmail.com','phone'=>'08111222333','role'=>'customer','active'=>false,'joined'=>'20 Apr 2024'],
-                ['id'=>4,'name'=>'Dewi Lestari','email'=>'dewi@gmail.com','phone'=>'08555666777','role'=>'customer','active'=>true,'joined'=>'5 Jun 2024'],
-                ['id'=>5,'name'=>'Rudi Hartono','email'=>'rudi@dapute.com','phone'=>'08777888999','role'=>'employee','active'=>true,'joined'=>'1 Sep 2024'],
-            ];
-            @endphp
             @foreach($users as $i => $user)
-            <tr class="row-anim hover:bg-[#f4fbf7] transition-colors group relative">
+            <tr class="row-anim hover:bg-[#f4fbf7] transition-colors group relative" wire:key="user-{{ $user->id }}">
                 <td class="w-1 p-0"><span class="absolute left-0 top-0 h-full w-0 bg-[#d3ee6f] group-hover:w-1 transition-all duration-200"></span></td>
                 {{-- Pengguna --}}
                 <td class="px-6 py-4">
-                    <p class="font-headline font-bold text-base text-[#012d1d] leading-tight">{{ $user['name'] }}</p>
-                    <p class="font-body text-xs text-[#717973] mt-0.5">ID #{{ $user['id'] }}</p>
+                    <p class="font-headline font-bold text-base text-[#012d1d] leading-tight">{{ $user->full_name }}</p>
                 </td>
                 {{-- Kontak --}}
                 <td class="px-6 py-4">
-                    <p class="font-body text-sm text-[#012d1d]">{{ $user['email'] }}</p>
-                    <p class="font-body text-xs text-[#717973] mt-0.5">{{ $user['phone'] }}</p>
+                    <p class="font-body text-sm text-[#012d1d]">{{ $user->email }}</p>
+                    <p class="font-body text-xs text-[#717973] mt-0.5">{{ $user->phone_number }}</p>
                 </td>
                 {{-- Role --}}
                 <td class="px-6 py-4 text-center">
-                    @php
-                        $badge = match($user['role']) {
-                            'admin'    => 'bg-[#012d1d] text-white border-[#012d1d]',
-                            'employee' => 'bg-[#d3ee6f] text-[#212a00] border-[#012d1d]',
-                            default    => 'bg-[#dde4e0] text-[#414844] border-[#012d1d]',
-                        };
-                    @endphp
-                    <span class="inline-block px-3 py-1 font-label font-bold text-[10px] uppercase tracking-widest border-[2px] {{ $badge }}">
-                        {{ $user['role'] }}
-                    </span>
+                    <div class="relative inline-block w-full max-w-[120px] text-left" x-data="{ open: false }">
+                        @php
+                            $roleOptions = [
+                                'owner' => 'Owner',
+                                'admin' => 'Admin',
+                                'staff' => 'Karyawan',
+                                'customer' => 'Customer'
+                            ];
+                            $currentLabel = $roleOptions[$user->role] ?? ucfirst($user->role);
+                        @endphp
+                        
+                        <button @click="open = !open" @click.outside="open = false" type="button"
+                            wire:loading.attr="disabled"
+                            class="w-full bg-[#eef5f1] border-[2px] border-[#012d1d] px-2 py-1 font-label font-bold text-[10px] uppercase tracking-widest text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#012d1d] transition-all cursor-pointer flex items-center justify-between gap-1 disabled:opacity-50">
+                            <span>{{ $currentLabel }}</span>
+                            <span class="material-symbols-outlined text-[14px] transition-transform duration-200" :class="open ? 'rotate-180' : ''">expand_more</span>
+                        </button>
+
+                        <div x-show="open" style="display:none;"
+                             x-transition.opacity.duration.150ms
+                             class="absolute left-0 z-[100] w-full mt-1 bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
+                            @foreach($roleOptions as $val => $label)
+                                <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
+                                     class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
+                                    <span>{{ $label }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
                 </td>
                 {{-- Joined --}}
                 <td class="px-6 py-4">
-                    <p class="font-body text-sm text-[#012d1d]">{{ $user['joined'] }}</p>
+                    <p class="font-body text-sm text-[#012d1d]">{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</p>
                     <p class="font-body text-[10px] text-[#717973] mt-0.5 uppercase tracking-wide">Joined</p>
                 </td>
-                {{-- Toggle --}}
-                <td class="px-6 py-4 text-center">
-                    <button
-                        @click="activeToggle[{{ $user['id'] }}] = !activeToggle[{{ $user['id'] }}]"
-                        class="relative inline-flex w-14 h-7 border-[3px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d] hover:shadow-[3px_3px_0_0_#012d1d] transition-all cursor-pointer focus:outline-none"
-                        :style="activeToggle[{{ $user['id'] }}] ? 'background:#d3ee6f' : 'background:#dde4e0'">
-                        <span class="absolute top-[2px] w-5 h-5 border-[3px] border-[#012d1d] transition-all duration-200 pointer-events-none"
-                            :style="activeToggle[{{ $user['id'] }}] ? 'left:calc(100% - 1.375rem); background:#012d1d' : 'left:1px; background:#717973'"></span>
-                    </button>
+                {{-- Status --}}
+                <td class="px-6 py-4 text-center flex flex-col items-center justify-center gap-2">
+                    @if($user->is_active)
+                        <span class="inline-block px-3 py-0.5 font-label font-bold text-[10px] uppercase tracking-widest border-[2px] bg-[#d3ee6f] text-[#212a00] border-[#012d1d]">Active</span>
+                        <button type="button" @click="openConfirmStatus('{{ $user->id }}', false)" wire:loading.attr="disabled" class="text-[10px] border-[2px] border-[#012d1d] px-2 py-0.5 bg-white text-[#012d1d] hover:bg-gray-100 uppercase font-bold transition-colors">Suspend</button>
+                    @else
+                        <span class="inline-block px-3 py-0.5 font-label font-bold text-[10px] uppercase tracking-widest border-[2px] bg-[#ffdad6] text-[#ba1a1a] border-[#ba1a1a]">Suspended</span>
+                        <button type="button" @click="openConfirmStatus('{{ $user->id }}', true)" wire:loading.attr="disabled" class="text-[10px] border-[2px] border-[#012d1d] px-2 py-0.5 bg-white text-[#012d1d] hover:bg-gray-100 uppercase font-bold transition-colors">Aktifkan</button>
+                    @endif
                 </td>
                 {{-- Aksi --}}
                 <td class="px-6 py-4">
@@ -193,13 +215,13 @@
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] hover:bg-[#012d1d] hover:text-white transition-all shadow-[2px_2px_0_0_#012d1d] hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_#012d1d] active:translate-y-0 active:shadow-none">
                             <span class="material-symbols-outlined" style="font-size:18px">edit</span>
                         </button>
-                        @if($user['role'] === 'employee')
+                        @if($user->role === 'staff' || $user->role === 'employee' || $user->role === 'admin')
                         <button title="Reset Password"
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] hover:bg-[#414844] hover:text-white hover:border-[#414844] transition-all shadow-[2px_2px_0_0_#012d1d] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none">
                             <span class="material-symbols-outlined" style="font-size:18px">lock_reset</span>
                         </button>
                         @endif
-                        <button @click="openDelete('{{ $user['name'] }}')" title="Hapus"
+                        <button @click="openDelete('{{ $user->full_name }}')" title="Hapus"
                             class="w-9 h-9 flex items-center justify-center border-[3px] border-[#ba1a1a] bg-white text-[#ba1a1a] hover:bg-[#ba1a1a] hover:text-white transition-all shadow-[2px_2px_0_0_#ba1a1a] hover:-translate-y-0.5 active:translate-y-0 active:shadow-none">
                             <span class="material-symbols-outlined" style="font-size:18px">delete</span>
                         </button>
@@ -319,6 +341,50 @@
             <button @click="showDelete=false" class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#f4fbf7] text-[#012d1d] font-label font-bold text-xs uppercase tracking-wider hover:bg-[#dde4e0] transition-all shadow-[2px_2px_0_0_#012d1d]">Cancel</button>
             <button @click="showDelete=false" class="flex-1 py-3 border-[3px] border-[#ba1a1a] bg-[#ba1a1a] text-white font-label font-bold text-xs uppercase tracking-wider hover:bg-[#93000a] hover:border-[#93000a] transition-all shadow-[2px_2px_0_0_#ba1a1a] flex items-center justify-center gap-1.5">
                 <span class="material-symbols-outlined text-sm">delete_forever</span>Yes, Delete
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- ══ MODAL: CONFIRM STATUS ══════════════════════════════════════════════ --}}
+<div x-show="showConfirmStatus" x-cloak @keydown.escape.window="showConfirmStatus=false"
+     x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style="background:rgba(55,65,81,0.60);">
+    <div class="border-[3px] border-[#012d1d] bg-white w-full max-w-md p-8 shadow-[8px_8px_0_0_#012d1d]"
+         x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+         @click.stop>
+        <div class="w-12 h-12 border-[3px] border-[#012d1d] bg-[#dde4e0] flex items-center justify-center mb-5 shadow-[2px_2px_0_0_#012d1d]">
+            <span class="material-symbols-outlined text-[#012d1d] text-xl">info</span>
+        </div>
+        <h3 class="font-headline font-black text-[#012d1d] text-2xl uppercase tracking-tighter mb-2">Konfirmasi Status</h3>
+        <p class="font-body text-[#414844] text-sm mb-6">Apakah Anda yakin ingin <span x-text="confirmStatusValue ? 'mengaktifkan' : 'menskrors (suspend)'"></span> pengguna ini?</p>
+        <div class="flex gap-3">
+            <button @click="showConfirmStatus=false" class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#f4fbf7] text-[#012d1d] font-label font-bold text-xs uppercase tracking-wider hover:bg-[#dde4e0] transition-all shadow-[2px_2px_0_0_#012d1d]">Batal</button>
+            <button wire:loading.attr="disabled" @click="$wire.toggleUserStatus(confirmStatusUser, confirmStatusValue); showConfirmStatus=false" class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#012d1d] text-white font-label font-bold text-xs uppercase tracking-wider hover:bg-[#1b4332] transition-all shadow-[2px_2px_0_0_#012d1d] flex items-center justify-center gap-1.5 disabled:opacity-50">
+                <span class="material-symbols-outlined text-sm">check_circle</span>Ya, Lanjutkan
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- ══ MODAL: CONFIRM ROLE ══════════════════════════════════════════════ --}}
+<div x-show="showConfirmRole" x-cloak @keydown.escape.window="showConfirmRole=false"
+     x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+     x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm" style="background:rgba(55,65,81,0.60);">
+    <div class="border-[3px] border-[#012d1d] bg-white w-full max-w-md p-8 shadow-[8px_8px_0_0_#012d1d]"
+         x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+         @click.stop>
+        <div class="w-12 h-12 border-[3px] border-[#012d1d] bg-[#dde4e0] flex items-center justify-center mb-5 shadow-[2px_2px_0_0_#012d1d]">
+            <span class="material-symbols-outlined text-[#012d1d] text-xl">manage_accounts</span>
+        </div>
+        <h3 class="font-headline font-black text-[#012d1d] text-2xl uppercase tracking-tighter mb-2">Konfirmasi Role</h3>
+        <p class="font-body text-[#414844] text-sm mb-6">Apakah Anda yakin ingin mengubah hak akses pengguna ini menjadi <strong class="text-[#012d1d] uppercase" x-text="confirmRoleValue"></strong>?</p>
+        <div class="flex gap-3">
+            <button @click="showConfirmRole=false" class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#f4fbf7] text-[#012d1d] font-label font-bold text-xs uppercase tracking-wider hover:bg-[#dde4e0] transition-all shadow-[2px_2px_0_0_#012d1d]">Batal</button>
+            <button wire:loading.attr="disabled" @click="$wire.updateUserRole(confirmRoleUser, confirmRoleValue); showConfirmRole=false" class="flex-1 py-3 border-[3px] border-[#012d1d] bg-[#012d1d] text-white font-label font-bold text-xs uppercase tracking-wider hover:bg-[#1b4332] transition-all shadow-[2px_2px_0_0_#012d1d] flex items-center justify-center gap-1.5 disabled:opacity-50">
+                <span class="material-symbols-outlined text-sm">check_circle</span>Ya, Ubah
             </button>
         </div>
     </div>
