@@ -14,7 +14,7 @@ class FetchActiveProductsAction
      * @param string|null
      * @return array
      */
-    public function execute(?string $search = null): array
+    public function execute(?string $search = null, ?string $sort = 'Terbaru'): array
     {
         try {
             $query = DB::table('products')
@@ -28,10 +28,32 @@ class FetchActiveProductsAction
                     'is_active',
                     'created_at'
                 ])
-                ->where('is_active', true);
+                ->whereRaw('is_active = true');
 
             if (!empty($search)) {
                 $query->where('cake_name', 'ILIKE', '%' . $search . '%');
+            }
+
+            switch ($sort) {
+                case 'Harga Terendah':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'Harga Tertinggi':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'Nama A-Z':
+                    $query->orderBy('cake_name', 'asc');
+                    break;
+                case 'new':
+                    $query->orderBy('created_at', 'desc')->limit(4);
+                    break;
+                case 'all':
+                    $query->orderBy('created_at', 'desc')->limit(8);
+                    break;
+                case 'Terbaru':
+                default:
+                    $query->orderBy('created_at', 'desc');
+                    break;
             }
 
             return $query->get()->map(function ($item) {
