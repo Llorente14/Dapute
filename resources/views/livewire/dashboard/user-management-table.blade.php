@@ -331,7 +331,7 @@
                     <p class="font-body text-xs text-[#414844] mt-0.5">Active — user can log in</p>
                 </div>
                 <div>
-                    <button type="button" wire:click="$set('edit_is_active', !edit_is_active)"
+                    <button type="button" @click="$wire.edit_is_active = !$wire.edit_is_active"
                         class="relative shrink-0 w-14 h-7 border-[3px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all cursor-pointer focus:outline-none"
                         :style="$wire.edit_is_active ? 'background:#d3ee6f' : 'background:#dde4e0'">
                         <span class="absolute top-[2px] w-5 h-5 border-[3px] border-[#012d1d] transition-all pointer-events-none"
