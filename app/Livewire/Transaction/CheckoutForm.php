@@ -135,17 +135,24 @@ class CheckoutForm extends Component
 
         $this->couriers = [
             [
-                'id' => 'standard',
-                'name' => 'Standard',
-                'estimate' => '3-5 business days',
+                'id' => 'pickup',
+                'name' => 'Self Pickup',
+                'estimate' => 'Ready in 1 hour',
                 'price' => 0,
+                'icon' => 'directions_walk'
+            ],
+            [
+                'id' => 'standard',
+                'name' => 'Standard Delivery',
+                'estimate' => '3-5 business days',
+                'price' => 10000,
                 'icon' => 'local_shipping'
             ],
             [
                 'id' => 'express',
-                'name' => 'Express',
+                'name' => 'Express Delivery',
                 'estimate' => 'Next business day',
-                'price' => 15000,
+                'price' => 25000,
                 'icon' => 'rocket_launch'
             ]
         ];

@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start w-full">
     <!-- Left Column: Forms -->
-    <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16">
+    <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16 relative z-50">
         <!-- Address Input Section -->
         <section class="flex flex-col gap-6">
             <header class="flex items-baseline justify-between mb-2">
@@ -109,7 +109,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <span class="material-symbols-outlined text-3xl peer-checked:text-tertiary-fixed transition-transform duration-300 peer-checked:scale-110">{{ $courier['icon'] ?? 'local_shipping' }}</span>
                             <span class="font-label font-bold text-lg peer-checked:text-tertiary-fixed">
-                                {{ $courier['price'] == 0 ? 'GRATIS' : 'Rp '.number_format($courier['price'], 0, ',', '.') }}
+                                {{ $courier['price'] == 0 ? 'FREE' : 'Rp '.number_format($courier['price'], 0, ',', '.') }}
                             </span>
                         </div>
                         <h3 class="font-headline font-bold text-xl uppercase mb-1">{{ $courier['name'] }}</h3>

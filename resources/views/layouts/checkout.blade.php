@@ -13,7 +13,7 @@
 </head>
 <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col selection:bg-tertiary-fixed selection:text-primary">
     <!-- Simplified Checkout Header -->
-    <header class="w-full border-b-[3px] border-primary bg-surface py-4 px-6 flex justify-between items-center z-50 sticky top-0">
+    <header class="w-full border-b-[3px] border-primary bg-surface py-4 px-6 flex justify-between items-center z-[100] sticky top-0">
         <a href="/" class="font-headline font-black text-3xl uppercase tracking-tighter text-primary">
             Dapute
         </a>
