@@ -90,7 +90,7 @@
 @endpush
 
 {{-- ══ SEARCH & FILTER ════════════════════════════════════════════ --}}
-<div class="flex flex-col sm:flex-row gap-4 opacity-0 animate-[fadeUp_0.5s_ease_0.15s_forwards] relative z-50">
+<div class="flex flex-col sm:flex-row gap-4 opacity-0 animate-[fadeUp_0.5s_ease_0.15s_forwards] relative z-20">
     <div class="flex-1 flex border-[3px] border-[#012d1d] bg-white focus-within:shadow-[4px_4px_0_0_#012d1d] transition-all">
         <span class="flex items-center px-4 text-[#012d1d]"><span class="material-symbols-outlined">search</span></span>
         <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search by name, email, or phone number..."
@@ -119,7 +119,7 @@
              x-transition:leave="transition ease-in duration-100"
              x-transition:leave-start="opacity-100 translate-y-0"
              x-transition:leave-end="opacity-0 -translate-y-2"
-             class="absolute right-0 z-[100] w-full mt-1 bg-white border-[3px] border-[#012d1d] shadow-[4px_4px_0_0_#012d1d]">
+             class="absolute right-0 z-30 w-full mt-1 bg-white border-[3px] border-[#012d1d] shadow-[4px_4px_0_0_#012d1d]">
             <template x-for="option in options" :key="option">
                 <div @click="$wire.set('filterRole', option); open = false"
                      class="px-4 py-3 font-label font-bold text-xs uppercase tracking-wider cursor-pointer transition-colors"
@@ -190,7 +190,7 @@
 
                         <div x-show="open" style="display:none;"
                              x-transition.opacity.duration.150ms
-                             class="absolute left-0 z-[100] w-full mt-1 bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
+                             class="absolute left-0 z-30 w-full mt-1 bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
                             @foreach($roleOptions as $val => $label)
                                 <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
                                      class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
