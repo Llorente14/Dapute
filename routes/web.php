@@ -28,13 +28,13 @@ Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAct
 | TODO: Tambahkan middleware(['auth', 'role:owner|admin']) saat auth siap.
 | Spatie permission sudah terpasang di composer.json.
 */
-use App\Livewire\Dashboard\UserManagementTable;
+use App\Livewire\Admin\UserManagement;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/products',              ProductIndex::class)->name('products.index');
     Route::get('/products/create',       ProductCrudForm::class)->name('products.create');
     Route::get('/products/{productId}/edit', ProductCrudForm::class)->name('products.edit');
-    Route::get('/users',                 UserManagementTable::class)->name('users.index');
+    Route::get('/users',                 UserManagement::class)->name('users.index');
 });
 // ─── Guest Routes ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
