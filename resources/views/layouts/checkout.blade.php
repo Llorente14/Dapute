@@ -27,6 +27,42 @@
         {{ $slot }}
     </main>
 
+    <x-ui.toast />
+
     @livewireScripts
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('open-snap', (data) => {
+                const payload = Array.isArray(data) ? data[0] : data;
+                const token = payload.token;
+                const orderId = payload.order_id;
+                
+                snap.pay(token, {
+                    onSuccess: function(result) {
+                        window.location.href = `/orders/${orderId}`;
+                    },
+                    onPending: function(result) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Menunggu', subtitle: 'Menunggu pembayaran...', type: 'cart' }
+                        }));
+                        setTimeout(() => {
+                            window.location.href = `/orders/${orderId}`;
+                        }, 2000);
+                    },
+                    onError: function(result) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Gagal', subtitle: 'Pembayaran gagal!', type: 'cart' }
+                        }));
+                    },
+                    onClose: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Dibatalkan', subtitle: 'Anda menutup popup pembayaran', type: 'cart' }
+                        }));
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
