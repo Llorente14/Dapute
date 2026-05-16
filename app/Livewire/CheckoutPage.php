@@ -19,6 +19,7 @@ class CheckoutPage extends Component
 
     public array $couriers = [];
     public ?string $selected_courier = null;
+    public string $courier_type = 'regular';
     public int $shippingCost = 0;
     public int $adminFee = 2500;
     public int $total = 0;
@@ -59,6 +60,12 @@ class CheckoutPage extends Component
             $this->fetchCouriers();
         }
 
+        if ($property === 'courier_type') {
+            $this->selected_courier = null;
+            $this->shippingCost = 0;
+            $this->fetchCouriers();
+        }
+
         if ($property === 'selected_courier') {
             $this->applySelectedCourier();
         }
@@ -77,8 +84,17 @@ class CheckoutPage extends Component
             return;
         }
 
+        if ($this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
+            $this->couriers = [];
+            $this->selected_courier = null;
+            $this->shippingCost = 0;
+            $this->courierError = 'Pick a map pin or use your current location for instant courier rates.';
+            $this->calculateTotal();
+            return;
+        }
+
         $action ??= app(FetchBiteshipRatesAction::class);
-        $result = $action->execute((string) Auth::id(), $postalCode, $this->selected_address);
+        $result = $action->execute((string) Auth::id(), $postalCode, $this->selected_address, $this->courier_type);
 
         if (!$result['success']) {
             $this->couriers = [];
@@ -131,6 +147,11 @@ class CheckoutPage extends Component
 
         if (!$this->selected_courier) {
             $this->addError('selected_courier', 'Pilih kurir terlebih dahulu.');
+            return;
+        }
+
+        if ($this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
+            $this->addError('selected_address.coordinates', 'Pick a map pin for instant courier delivery.');
             return;
         }
 
@@ -202,6 +223,24 @@ class CheckoutPage extends Component
             'price' => $price,
             'icon' => 'local_shipping',
         ];
+    }
+
+    private function hasDestinationCoordinate(): bool
+    {
+        $coordinates = $this->selected_address['coordinates'] ?? null;
+
+        if (is_string($coordinates)) {
+            $coordinates = json_decode($coordinates, true);
+        }
+
+        if (!is_array($coordinates)) {
+            return false;
+        }
+
+        $latitude = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
+        $longitude = $coordinates['longitude'] ?? $coordinates['longtitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
+
+        return is_numeric($latitude) && is_numeric($longitude);
     }
 
     public function render()
