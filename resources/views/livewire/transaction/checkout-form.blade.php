@@ -2,7 +2,7 @@
     <!-- Left Column: Forms -->
     <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16 relative z-50">
         <!-- Address Input Section -->
-        <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name))" x-init="init($wire)">
+        <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name), $wire.entangle('selected_address').live)" x-init="init($wire)">
             <header class="flex items-baseline justify-between mb-2">
                 <h1 class="font-headline font-bold text-3xl md:text-4xl uppercase tracking-tight text-primary">Shipping details</h1>
                 <a href="/profile" class="font-label text-xs font-bold uppercase text-primary border-[3px] border-primary px-3 py-2 hover:bg-tertiary-fixed transition-colors">
@@ -10,7 +10,7 @@
                 </a>
             </header>
 
-            @error('selectedAddress')
+            @error('selected_address')
                 <div class="bg-error-container text-on-error-container border-[3px] border-error p-4 font-label text-sm font-bold uppercase">
                     {{ $message }}
                 </div>
@@ -41,27 +41,27 @@
                 <div>
                     <label class="sr-only" for="manual_recipient_name">Recipient Name</label>
                     <input x-model="manual.recipient_name" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_recipient_name" placeholder="RECIPIENT NAME" type="text"/>
-                    @error('selectedAddress.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                    @error('selected_address.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="sr-only" for="manual_recipient_phone">Phone Number</label>
                     <input x-model="manual.recipient_phone" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_recipient_phone" placeholder="PHONE NUMBER" type="tel"/>
-                    @error('selectedAddress.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                    @error('selected_address.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div class="md:col-span-2">
                     <label class="sr-only" for="manual_address">Street Address</label>
                     <textarea x-model="manual.address" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 resize-none" id="manual_address" placeholder="STREET ADDRESS" rows="3"></textarea>
-                    @error('selectedAddress.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                    @error('selected_address.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="sr-only" for="manual_city">City</label>
                     <input x-model="manual.city" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_city" placeholder="CITY" type="text"/>
-                    @error('selectedAddress.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                    @error('selected_address.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="sr-only" for="manual_postal_code">Postal Code</label>
                     <input x-model="manual.postal_code" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_postal_code" placeholder="POSTAL CODE" type="text" inputmode="numeric"/>
-                    @error('selectedAddress.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                    @error('selected_address.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div class="md:col-span-2 bg-tertiary-fixed border-[3px] border-primary p-4 font-label text-xs font-bold uppercase text-primary">
                     No saved address found. This checkout address is sent directly to Livewire.
@@ -69,11 +69,11 @@
             </div>
 
             <div x-show="addresses.length > 0">
-                @error('selectedAddress.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
-                @error('selectedAddress.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
-                @error('selectedAddress.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
-                @error('selectedAddress.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
-                @error('selectedAddress.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selected_address.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selected_address.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selected_address.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selected_address.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selected_address.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
             </div>
         </section>
 
@@ -93,21 +93,30 @@
                     </div>
                 </div>
 
-                @if(empty($couriers))
+                @if($courierError)
+                    <div class="sm:col-span-2 bg-error-container text-on-error-container border-[3px] border-error p-4 font-label text-sm font-bold uppercase">
+                        {{ $courierError }}
+                    </div>
+                @endif
+
+                @if(empty($couriers) && !$courierError)
                     <!-- Placeholder skeleton structure if empty initially -->
-                    <div wire:loading class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 animate-pulse">
+                    <div wire:loading wire:target="fetchCouriers" class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 animate-pulse">
                         <div class="h-8 bg-surface-variant w-1/3 mb-4"></div>
                         <div class="h-6 bg-surface-variant w-1/2"></div>
                     </div>
-                    <div wire:loading class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 animate-pulse">
+                    <div wire:loading wire:target="fetchCouriers" class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 animate-pulse">
                         <div class="h-8 bg-surface-variant w-1/3 mb-4"></div>
                         <div class="h-6 bg-surface-variant w-1/2"></div>
+                    </div>
+                    <div wire:loading.remove wire:target="fetchCouriers" class="sm:col-span-2 bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-xs font-bold uppercase text-primary">
+                        {{ empty($selected_address) ? 'Complete shipping address to load courier rates.' : 'Waiting for courier rates. Select another address if this stays empty.' }}
                     </div>
                 @endif
 
                 @foreach($couriers as $courier)
                 <label class="relative block cursor-pointer group" wire:loading.remove wire:target="fetchCouriers">
-                    <input wire:model.live="selectedCourier" class="peer sr-only" name="delivery" type="radio" value="{{ $courier['id'] }}"/>
+                    <input wire:model.live="selected_courier" class="peer sr-only" name="delivery" type="radio" value="{{ $courier['id'] }}"/>
                     <div class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 transition-all duration-200 peer-checked:bg-primary peer-checked:text-surface hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0 h-full flex flex-col" style="box-shadow: 4px 4px 0px 0px #012d1d;">
                         <div class="flex justify-between items-start mb-4">
                             <span class="material-symbols-outlined text-3xl peer-checked:text-tertiary-fixed transition-transform duration-300 peer-checked:scale-110">{{ $courier['icon'] ?? 'local_shipping' }}</span>
@@ -116,10 +125,16 @@
                             </span>
                         </div>
                         <h3 class="font-headline font-bold text-xl uppercase mb-1">{{ $courier['name'] }}</h3>
+                        <p class="font-body text-sm font-semibold opacity-80">{{ $courier['service'] }}</p>
                         <p class="font-body text-sm font-semibold opacity-80">{{ $courier['estimate'] }}</p>
                     </div>
                 </label>
                 @endforeach
+                @error('selected_courier')
+                    <div class="sm:col-span-2 bg-error-container text-on-error-container border-[3px] border-error p-4 font-label text-sm font-bold uppercase">
+                        {{ $message }}
+                    </div>
+                @enderror
             </div>
         </section>
     </div>
@@ -174,18 +189,25 @@
             </div>
 
             <!-- CTA -->
-            <button wire:click="processPayment" 
+            @error('order')
+                <div class="bg-error-container text-on-error-container border-[3px] border-error p-4 font-label text-sm font-bold uppercase">
+                    {{ $message }}
+                </div>
+            @enderror
+
+            <button wire:click="placeOrder"
                     wire:loading.attr="disabled"
-                    @if(!$selectedCourier) disabled @endif
+                    wire:target="placeOrder"
+                    @if(!$selected_courier || $order_id) disabled @endif
                     class="w-full bg-primary text-surface border-[3px] border-primary py-5 px-6 font-headline font-black text-lg uppercase tracking-wider flex justify-between items-center group transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0"
                     style="box-shadow: 6px 6px 0px 0px #D4EF70;"
                     type="button">
                 
-                <span wire:loading.remove wire:target="processPayment">Pay Now</span>
-                <span wire:loading wire:target="processPayment">Processing...</span>
+                <span wire:loading.remove wire:target="placeOrder">{{ $order_id ? 'Order Created' : 'Bayar Sekarang' }}</span>
+                <span wire:loading wire:target="placeOrder">Processing...</span>
                 
-                <span wire:loading.remove wire:target="processPayment" class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
-                <span wire:loading wire:target="processPayment" class="material-symbols-outlined animate-spin">sync</span>
+                <span wire:loading.remove wire:target="placeOrder" class="material-symbols-outlined group-hover:translate-x-2 transition-transform">arrow_forward</span>
+                <span wire:loading wire:target="placeOrder" class="material-symbols-outlined animate-spin">sync</span>
             </button>
 
             <div class="text-center font-body text-xs font-semibold text-primary/60">

@@ -172,11 +172,12 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    Alpine.data('checkoutAddressSelector', (userId, initialName = '') => ({
+    Alpine.data('checkoutAddressSelector', (userId, initialName = '', selectedAddress = null) => ({
         userId,
         wire: null,
         addresses: [],
         selectedId: '',
+        selectedAddress,
         manual: {
             label: 'Checkout',
             recipient_name: initialName || '',
@@ -230,7 +231,36 @@ document.addEventListener('alpine:init', () => {
 
         sync(address) {
             if (!this.wire) return;
-            this.wire.set('selectedAddress', this.payload(address));
+            const payload = this.payload(address);
+
+            if (this.selectedAddress !== null) {
+                this.selectedAddress = payload;
+            }
+
+            const setAddress = typeof this.wire.$set === 'function'
+                ? this.wire.$set.bind(this.wire)
+                : (typeof this.wire.set === 'function' ? this.wire.set.bind(this.wire) : null);
+
+            if (!setAddress) return;
+
+            Promise.resolve(setAddress('selected_address', payload))
+                .then(() => this.fetchCouriers());
+        },
+
+        fetchCouriers() {
+            if (typeof this.wire.fetchCouriers === 'function') {
+                return this.wire.fetchCouriers();
+            }
+
+            if (typeof this.wire.$call === 'function') {
+                return this.wire.$call('fetchCouriers');
+            }
+
+            if (typeof this.wire.call === 'function') {
+                return this.wire.call('fetchCouriers');
+            }
+
+            return null;
         },
 
         syncManual() {

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class CreateOrderAction
 {
-    public function execute(string $userId, int $shippingFee, string $notes = null): array
+    public function execute(string $userId, int $shippingFee, ?string $notes = null, int $adminFee = 0): array
     {
         // Cegah double click dengan Cache Lock (10 detik)
         $lock = Cache::lock("create_order_lock_{$userId}", 10);
@@ -35,7 +35,7 @@ class CreateOrderAction
                 $subtotalAmount += ($item->price_snapshot * $item->quantity);
             }
 
-            $totalPayment = $subtotalAmount + $shippingFee;
+            $totalPayment = $subtotalAmount + $shippingFee + $adminFee;
             $orderId = (string) Str::uuid();
 
             // Insert ke tabel orders
