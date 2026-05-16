@@ -171,37 +171,98 @@
             </section>
 
             <!-- Saved Addresses -->
-            <section class="anim-in d3">
+            <section class="anim-in d3" x-data="profileAddressManager(@js((string) auth()->id()))">
                 <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-4">
                         <span class="material-symbols-outlined text-2xl text-primary">location_on</span>
                         <h2 class="font-headline text-2xl font-bold tracking-tight text-primary uppercase">Addresses</h2>
                     </div>
-                    <button onclick="openAddressModal('new')" class="text-primary font-label font-bold uppercase hover:bg-secondary-container px-4 py-2 transition-colors border-[3px] border-transparent hover:border-primary flex items-center gap-2 cursor-pointer">
+                    <button x-show="!isFull" x-on:click="openCreate()" type="button" class="text-primary font-label font-bold uppercase hover:bg-secondary-container px-4 py-2 transition-colors border-[3px] border-transparent hover:border-primary flex items-center gap-2 cursor-pointer">
                         <span class="material-symbols-outlined">add</span>
                         New
                     </button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Address Card 1 -->
-                    <div class="address-card bg-surface-container-lowest neo-border p-6 relative group hover:bg-surface-container-low">
-                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="openAddressModal('edit', {label:'Home',name:'Jane Doe',address:'123 Conservatory Lane',city:'Portland',postal:'97204',phone:'+1 (555) 123-4567'})" class="p-1 hover:bg-primary hover:text-on-primary transition-colors border-[3px] border-transparent hover:border-primary rounded-none cursor-pointer"><span class="material-symbols-outlined text-sm">edit</span></button>
-                            <button class="p-1 hover:bg-error hover:text-on-error transition-colors border-[3px] border-transparent hover:border-error rounded-none text-error cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
-                        </div>
-                        <span class="inline-block bg-primary text-on-primary font-label text-xs font-bold uppercase px-2 py-1 mb-4">Default Home</span>
-                        <p class="font-body text-primary font-bold text-lg mb-1">Jane Doe</p>
-                        <p class="font-body text-on-surface-variant">123 Conservatory Lane<br/>Apt 4B<br/>Portland, OR 97204</p>
+
+                <div x-show="formOpen" x-collapse class="bg-surface-container-lowest neo-border p-6 md:p-8 neo-shadow mb-6">
+                    <div class="flex items-center justify-between gap-4 mb-6 border-b-[3px] border-primary pb-4">
+                        <h3 class="font-headline text-xl font-black text-primary uppercase tracking-tight" x-text="editingId ? 'Edit Address' : 'New Address'"></h3>
+                        <button x-on:click="cancelForm()" type="button" class="p-1 hover:bg-surface-dim transition-colors cursor-pointer">
+                            <span class="material-symbols-outlined text-primary">close</span>
+                        </button>
                     </div>
-                    <!-- Address Card 2 -->
-                    <div class="address-card bg-surface-container-lowest neo-border p-6 relative group hover:bg-surface-container-low">
-                        <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="openAddressModal('edit', {label:'Work',name:'Jane Doe',address:'450 Structural Ave, Suite 200',city:'Seattle',postal:'98101',phone:'+1 (555) 987-6543'})" class="p-1 hover:bg-primary hover:text-on-primary transition-colors border-[3px] border-transparent hover:border-primary rounded-none cursor-pointer"><span class="material-symbols-outlined text-sm">edit</span></button>
-                            <button class="p-1 hover:bg-error hover:text-on-error transition-colors border-[3px] border-transparent hover:border-error rounded-none text-error cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                    <form x-on:submit.prevent="save()" class="flex flex-col gap-5">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex flex-col gap-1.5 input-wrap">
+                                <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Label</label>
+                                <input x-model="form.label" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="Home, Work, Kos"/>
+                                <p x-show="errors.label" x-text="errors.label" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                            </div>
+                            <div class="flex flex-col gap-1.5 input-wrap">
+                                <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Recipient Phone</label>
+                                <input x-model="form.recipient_phone" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="tel" placeholder="+62 8..."/>
+                                <p x-show="errors.recipient_phone" x-text="errors.recipient_phone" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                            </div>
                         </div>
-                        <span class="inline-block border-[3px] border-primary text-primary font-label text-xs font-bold uppercase px-2 py-1 mb-4">Work</span>
-                        <p class="font-body text-primary font-bold text-lg mb-1">Jane Doe</p>
-                        <p class="font-body text-on-surface-variant">450 Structural Ave<br/>Suite 200<br/>Seattle, WA 98101</p>
+                        <div class="flex flex-col gap-1.5 input-wrap">
+                            <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Recipient Name</label>
+                            <input x-model="form.recipient_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="Full name"/>
+                            <p x-show="errors.recipient_name" x-text="errors.recipient_name" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                        </div>
+                        <div class="flex flex-col gap-1.5 input-wrap">
+                            <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Full Address</label>
+                            <textarea x-model="form.address" rows="2" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold resize-none" placeholder="Street, building, apartment..."></textarea>
+                            <p x-show="errors.address" x-text="errors.address" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div class="flex flex-col gap-1.5 input-wrap">
+                                <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">City</label>
+                                <input x-model="form.city" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="City"/>
+                                <p x-show="errors.city" x-text="errors.city" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                            </div>
+                            <div class="flex flex-col gap-1.5 input-wrap">
+                                <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Postal Code</label>
+                                <input x-model="form.postal_code" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" inputmode="numeric" placeholder="12345"/>
+                                <p x-show="errors.postal_code" x-text="errors.postal_code" class="error-msg font-body text-[12px] text-error font-semibold"></p>
+                            </div>
+                        </div>
+                        <label class="flex items-center gap-3 font-label text-sm font-bold uppercase text-primary cursor-pointer">
+                            <input x-model="form.is_default" type="checkbox" class="h-5 w-5 border-[3px] border-primary text-primary focus:ring-0"/>
+                            Set As Default
+                        </label>
+                        <button type="submit" class="mt-2 neo-border bg-primary text-on-primary font-label font-bold uppercase px-6 py-4 neo-shadow neo-shadow-hover transition-all w-full">
+                            Save Address
+                        </button>
+                    </form>
+                </div>
+
+                <div x-show="addresses.length === 0 && !formOpen" class="bg-surface-container-lowest neo-border p-6 neo-shadow">
+                    <p class="font-body text-on-surface-variant font-semibold">No address saved yet.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <template x-for="address in addresses" :key="address.id">
+                        <div class="address-card bg-surface-container-lowest border-[3px] border-primary p-6 relative group hover:bg-surface-container-low" style="box-shadow: 4px 4px 0px 0px #012d1d;">
+                            <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button x-on:click="openEdit(address)" type="button" class="p-1 hover:bg-primary hover:text-on-primary transition-colors border-[3px] border-transparent hover:border-primary cursor-pointer"><span class="material-symbols-outlined text-sm">edit</span></button>
+                                <button x-on:click="remove(address.id)" type="button" class="p-1 hover:bg-error hover:text-on-error transition-colors border-[3px] border-transparent hover:border-error text-error cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 mb-4 pr-20">
+                                <span class="inline-block bg-[#D4EF70] text-primary font-label text-xs font-bold uppercase px-2 py-1" x-text="address.is_default ? 'Default' : address.label"></span>
+                                <button x-show="!address.is_default" x-on:click="setDefault(address.id)" type="button" class="border-[3px] border-primary px-2 py-1 font-label text-[10px] font-bold uppercase text-primary hover:bg-primary hover:text-on-primary transition-colors">
+                                    Set Default
+                                </button>
+                            </div>
+                            <p class="font-body text-primary font-bold text-lg mb-1" x-text="address.recipient_name"></p>
+                            <p class="font-body text-on-surface-variant" x-text="address.recipient_phone"></p>
+                            <p class="font-body text-on-surface-variant mt-3">
+                                <span x-text="address.address"></span><br/>
+                                <span x-text="address.city"></span>,
+                                <span x-text="address.postal_code"></span>
+                            </p>
+                        </div>
+                    </template>
+                    <div x-show="isFull" class="bg-tertiary-fixed border-[3px] border-primary p-4 font-label font-bold uppercase text-primary">
+                        Address limit reached (5/5)
                     </div>
                 </div>
             </section>
@@ -267,128 +328,5 @@
 
     </div>
 </div>
-
-{{-- ═══════════════════════════════════════════════════════════════
-    ADDRESS MODAL (shared for New & Edit)
-═══════════════════════════════════════════════════════════════ --}}
-<div id="addressModal" class="fixed inset-0 z-[100] hidden" aria-modal="true">
-    <!-- Backdrop -->
-    <div class="modal-backdrop absolute inset-0 bg-black/50" onclick="closeAddressModal()"></div>
-    <!-- Panel -->
-    <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div id="addressPanel" class="modal-panel bg-surface-container-lowest neo-border neo-shadow w-full max-w-lg relative">
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between p-6 border-b-[3px] border-primary">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-2xl text-primary" id="modalIcon">add_location</span>
-                    <h3 class="font-headline text-2xl font-black text-primary uppercase tracking-tight" id="modalTitle">New Address</h3>
-                </div>
-                <button onclick="closeAddressModal()" class="p-1 hover:bg-surface-dim transition-colors cursor-pointer">
-                    <span class="material-symbols-outlined text-primary">close</span>
-                </button>
-            </div>
-            <!-- Modal Body -->
-            <form class="p-6 flex flex-col gap-5">
-                {{-- Address Label --}}
-                <div class="flex flex-col gap-1.5 input-wrap" id="wrap_label">
-                    <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Address Label</label>
-                    <input id="modal_label" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="e.g. Home, Work, Warehouse"/>
-                </div>
-                {{-- Receiver Name (DEMO ERROR) --}}
-                <div class="flex flex-col gap-1.5 input-wrap input-error" id="wrap_name">
-                    <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Receiver Name</label>
-                    <input id="modal_name" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="Full name"/>
-                </div>
-                {{-- Receiver Phone --}}
-                <div class="flex flex-col gap-1.5 input-wrap" id="wrap_phone">
-                    <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Receiver Phone</label>
-                    <input id="modal_phone" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="tel" placeholder="+62 8..."/>
-                </div>
-                {{-- Full Address --}}
-                <div class="flex flex-col gap-1.5 input-wrap" id="wrap_address">
-                    <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Full Address</label>
-                    <textarea id="modal_address" rows="2" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold resize-none" placeholder="Street, building, apartment..."></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-5">
-                    {{-- City --}}
-                    <div class="flex flex-col gap-1.5 input-wrap" id="wrap_city">
-                        <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">City</label>
-                        <input id="modal_city" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="City"/>
-                    </div>
-                    {{-- Postal Code --}}
-                    <div class="flex flex-col gap-1.5 input-wrap" id="wrap_postal">
-                        <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Postal Code</label>
-                        <input id="modal_postal" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" placeholder="12345"/>
-                    </div>
-                </div>
-                {{-- Submit --}}
-                <button type="button" id="modalSubmitBtn" onclick="closeAddressModal()" class="mt-2 neo-border bg-primary text-on-primary font-label font-bold uppercase px-6 py-4 neo-shadow neo-shadow-hover transition-all w-full">
-                    Save Address
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    function openAddressModal(mode, data = {}) {
-        const modal   = document.getElementById('addressModal');
-        const panel   = document.getElementById('addressPanel');
-        const title   = document.getElementById('modalTitle');
-        const icon    = document.getElementById('modalIcon');
-        const btn     = document.getElementById('modalSubmitBtn');
-
-        // Set mode
-        if (mode === 'edit') {
-            title.textContent = 'Edit Address';
-            icon.textContent  = 'edit_location';
-            btn.textContent   = 'Update Address';
-            // Populate fields
-            document.getElementById('modal_label').value   = data.label   || '';
-            document.getElementById('modal_name').value    = data.name    || '';
-            document.getElementById('modal_phone').value   = data.phone   || '';
-            document.getElementById('modal_address').value = data.address || '';
-            document.getElementById('modal_city').value    = data.city    || '';
-            document.getElementById('modal_postal').value  = data.postal  || '';
-        } else {
-            title.textContent = 'New Address';
-            icon.textContent  = 'add_location';
-            btn.textContent   = 'Save Address';
-            // Clear fields
-            document.getElementById('modal_label').value   = '';
-            document.getElementById('modal_name').value    = '';
-            document.getElementById('modal_phone').value   = '';
-            document.getElementById('modal_address').value = '';
-            document.getElementById('modal_city').value    = '';
-            document.getElementById('modal_postal').value  = '';
-        }
-
-        // Show with animation
-        modal.classList.remove('hidden');
-        panel.classList.add('entering');
-        document.body.style.overflow = 'hidden';
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                panel.classList.remove('entering');
-            });
-        });
-    }
-
-    function closeAddressModal() {
-        const modal = document.getElementById('addressModal');
-        const panel = document.getElementById('addressPanel');
-        panel.classList.add('entering');
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            panel.classList.remove('entering');
-            document.body.style.overflow = '';
-        }, 200);
-    }
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeAddressModal();
-    });
-</script>
 
 </div>
