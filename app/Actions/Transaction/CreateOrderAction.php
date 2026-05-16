@@ -15,7 +15,7 @@ class CreateOrderAction
         $lock = Cache::lock("create_order_lock_{$userId}", 10);
 
         if (!$lock->get()) {
-            return ['success' => false, 'message' => 'Pesanan sedang diproses, mohon tunggu.'];
+            return ['success' => false, 'message' => 'Order is being processed, please wait.'];
         }
 
         DB::beginTransaction();
@@ -26,7 +26,7 @@ class CreateOrderAction
                 ->get();
 
             if ($cartItems->isEmpty()) {
-                throw new \Exception('Keranjang belanja kosong.');
+                throw new \Exception('Shopping cart is empty.');
             }
 
             // Hitung subtotal
@@ -95,7 +95,7 @@ class CreateOrderAction
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("CreateOrder Error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Gagal membuat pesanan. ' . $e->getMessage()];
+            return ['success' => false, 'message' => 'Failed to create order. ' . $e->getMessage()];
         } finally {
             $lock->release();
         }

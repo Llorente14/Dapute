@@ -20,7 +20,7 @@ class UpdateCartAction
                 ->first();
 
             if (!$product) {
-                return ['success' => false, 'message' => 'Produk tidak tersedia atau tidak aktif.'];
+                return ['success' => false, 'message' => 'Product not available or inactive.'];
             }
 
             // Gunakan UPSERT untuk menangani UNIQUE(user_id, product_id)
@@ -55,7 +55,7 @@ class UpdateCartAction
             ];
         } catch (\Exception $e) {
             Log::error("CartAdd Error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Gagal menambahkan ke keranjang.'];
+            return ['success' => false, 'message' => 'Failed to add item to cart.'];
         }
     }
 
@@ -63,8 +63,8 @@ class UpdateCartAction
     {
         $item = DB::table('carts')->where('id', $cartItemId)->where('user_id', $userId)->first();
         
-        if (!$item) return ['success' => false, 'message' => 'Item tidak ditemukan.'];
-        if ($item->quantity >= 99) return ['success' => false, 'message' => 'Maksimum 99 item'];
+        if (!$item) return ['success' => false, 'message' => 'Item not found.'];
+        if ($item->quantity >= 99) return ['success' => false, 'message' => 'Maximum 99 items'];
 
         $newQty = $item->quantity + 1;
         DB::table('carts')->where('id', $cartItemId)->update(['quantity' => $newQty, 'updated_at' => now()]);
@@ -80,7 +80,7 @@ class UpdateCartAction
     {
         $item = DB::table('carts')->where('id', $cartItemId)->where('user_id', $userId)->first();
         
-        if (!$item) return ['success' => false, 'message' => 'Item tidak ditemukan.'];
+        if (!$item) return ['success' => false, 'message' => 'Item not found.'];
         if ($item->quantity <= 1) return ['success' => false, 'message' => 'Minimum 1 item'];
 
         $newQty = $item->quantity - 1;

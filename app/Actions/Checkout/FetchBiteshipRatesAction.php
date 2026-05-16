@@ -24,7 +24,7 @@ class FetchBiteshipRatesAction
                 ->get();
 
             if ($cartItems->isEmpty()) {
-                return ['success' => false, 'message' => 'Keranjang kosong.'];
+                return ['success' => false, 'message' => 'Cart is empty.'];
             }
 
             $items = $cartItems->map(function ($item) {
@@ -39,7 +39,7 @@ class FetchBiteshipRatesAction
             $totalWeight = collect($items)->sum(fn ($item) => $item['weight'] * $item['quantity']);
 
             if ($totalWeight <= 0) {
-                return ['success' => false, 'message' => 'Keranjang kosong atau berat tidak valid.'];
+                return ['success' => false, 'message' => 'Cart is empty or weight is invalid.'];
             }
 
             // Setup caching
@@ -59,7 +59,7 @@ class FetchBiteshipRatesAction
 
             $rates = Cache::remember($cacheKey, 300, function () use ($originPostalCode, $destinationPostalCode, $totalWeight, $items, $destinationCoordinate, $originCoordinate, $couriers) {
                 if (blank(env('BITESHIP_API_KEY'))) {
-                    throw new \Exception('Biteship API key belum dikonfigurasi.');
+                    throw new \Exception('Biteship API key not configured.');
                 }
 
                 $payload = [
@@ -89,14 +89,14 @@ class FetchBiteshipRatesAction
 
                 if ($response->failed()) {
                     Log::error('Biteship API Error: ' . $response->body());
-                    throw new \Exception('Gagal mengambil data dari server kurir.');
+                    throw new \Exception('Failed to fetch data from shipping server.');
                 }
 
                 return $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight);
             });
 
             if (empty($rates)) {
-                return ['success' => false, 'message' => 'Biteship tidak mengembalikan tarif untuk alamat ini.'];
+                return ['success' => false, 'message' => 'No shipping rates found for this address.'];
             }
 
             return [
@@ -107,7 +107,7 @@ class FetchBiteshipRatesAction
         } catch (\Exception $e) {
             Log::warning('Biteship rates unavailable: ' . $e->getMessage());
 
-            return ['success' => false, 'message' => 'Biteship gagal menghitung ongkir. Coba lagi nanti atau cek saldo/API key Biteship.'];
+            return ['success' => false, 'message' => 'Failed to calculate shipping cost. Please try again later.'];
         }
     }
 
@@ -124,7 +124,7 @@ class FetchBiteshipRatesAction
                 'courier_name' => 'Local Courier',
                 'courier_service_code' => 'standard',
                 'courier_service_name' => 'Standard Delivery',
-                'duration' => '2-4 jam',
+                'duration' => '2-4 hours',
                 'price' => $standardPrice,
             ],
             [
@@ -132,7 +132,7 @@ class FetchBiteshipRatesAction
                 'courier_name' => 'Local Courier',
                 'courier_service_code' => 'express',
                 'courier_service_name' => 'Express Delivery',
-                'duration' => '1-2 jam',
+                'duration' => '1-2 hours',
                 'price' => $expressPrice,
             ],
         ];

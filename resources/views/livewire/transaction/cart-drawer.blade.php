@@ -105,9 +105,9 @@
                 <!-- Empty State -->
                 <div class="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
                     <span class="material-symbols-outlined text-[64px] text-[#012d1d]/30">shopping_cart</span>
-                    <p class="font-body text-[#012d1d] font-bold">Keranjang kamu masih kosong</p>
+                    <p class="font-body text-[#012d1d] font-bold">Your cart is currently empty</p>
                     <a href="/catalog" @click="isOpen = false" class="bg-[#012d1d] text-[#ffffff] font-label font-bold uppercase py-3 px-6 border-[3px] border-[#012d1d] shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:bg-[#1b4332] transition-all">
-                        Mulai Belanja
+                        Start Shopping
                     </a>
                 </div>
             @endif
@@ -123,7 +123,7 @@
                         <span class="font-label font-bold text-[#012d1d]">{{ 'Rp ' . number_format($subtotal, 0, ',', '.') }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="font-label font-bold uppercase text-[#012d1d]">TOTAL BERAT (G)</span>
+                        <span class="font-label font-bold uppercase text-[#012d1d]">TOTAL WEIGHT (G)</span>
                         <span class="font-body font-bold text-[14px] text-[#012d1d]">{{ number_format($totalWeight, 0, ',', '.') }}g</span>
                     </div>
                 </div>
@@ -136,10 +136,10 @@
 
                 <!-- Checkout Button -->
                 <a href="/checkout" class="w-full bg-[#012d1d] text-[#ffffff] font-label font-bold uppercase py-4 border-[3px] border-[#012d1d] shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:bg-[#1b4332] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(1,45,29,1)] transition-all flex justify-center items-center gap-2">
-                    CHECKOUT SEKARANG
+                    CHECKOUT NOW
                     <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
                 </a>
-                <p class="text-center font-body text-[11px] text-[#57615c] mt-3">Ongkos kirim dihitung di langkah berikutnya</p>
+                <p class="text-center font-body text-[11px] text-[#57615c] mt-3">Shipping costs calculated at the next step</p>
             </footer>
         @endif
     </aside>
