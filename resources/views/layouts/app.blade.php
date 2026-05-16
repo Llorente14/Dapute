@@ -156,6 +156,7 @@
     @php
         $isLoggedIn = session()->has('supabase_token');
         $currentPath = request()->path();
+        $ordersActive = str_starts_with($currentPath, 'order') || str_starts_with($currentPath, 'orders');
     @endphp
 
     <nav
@@ -169,7 +170,7 @@
                 <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'catalog') ? 'active' : '' }}"
                     href="/catalog">Shop</a>
                 @if ($isLoggedIn)
-                    <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'orders') ? 'active' : '' }}"
+                    <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ $ordersActive ? 'active' : '' }}"
                         href="/orders">Orders</a>
                 @endif
                 <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'about') ? 'active' : '' }}"
@@ -223,7 +224,7 @@
                 <span x-show="count > 0" x-text="count" style="display: none;" class="absolute top-1 right-2 bg-[#D4EF70] text-[#012d1d] text-[10px] font-black w-[16px] h-[16px] flex items-center justify-center border-[2px] border-[#012d1d] rounded-none">
                 </span>
             </button>
-            <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ str_starts_with($currentPath, 'orders') ? 'active' : 'opacity-60' }}"
+            <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $ordersActive ? 'active' : 'opacity-60' }}"
                 href="/orders">
                 <span class="material-symbols-outlined mb-1 text-xl">local_shipping</span>
                 <span class="font-label font-bold text-[10px] uppercase">Orders</span>

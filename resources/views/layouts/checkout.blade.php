@@ -40,14 +40,14 @@
                 
                 snap.pay(token, {
                     onSuccess: function(result) {
-                        window.location.href = `/orders/${orderId}`;
+                        window.location.href = `/order/${orderId}`;
                     },
                     onPending: function(result) {
                         window.dispatchEvent(new CustomEvent('show-toast', {
                             detail: { title: 'Menunggu', subtitle: 'Menunggu pembayaran...', type: 'cart' }
                         }));
                         setTimeout(() => {
-                            window.location.href = `/orders/${orderId}`;
+                            window.location.href = `/order/${orderId}`;
                         }, 2000);
                     },
                     onError: function(result) {

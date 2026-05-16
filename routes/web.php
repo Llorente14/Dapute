@@ -11,6 +11,7 @@ use App\Livewire\CheckoutPage;
 use App\Livewire\Auth\LoginForm;
 use App\Livewire\Auth\RegisterForm;
 use App\Livewire\ProfileForm;
+use App\Livewire\Transaction\OrderDetailPage;
 
 Route::get('/', function () {
     return view('home');
@@ -45,6 +46,8 @@ Route::middleware('guest')->group(function () {
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
+    Route::get('/order/{id}', OrderDetailPage::class)->name('orders.show');
+    Route::get('/orders/{id}', OrderDetailPage::class)->name('orders.show.alias');
     Route::get('/profile', ProfileForm::class)->name('profile');
 
 
