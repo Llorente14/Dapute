@@ -105,7 +105,15 @@ class UpdateCartAction
         return DB::table('carts')
             ->join('products', 'carts.product_id', '=', 'products.id')
             ->where('carts.user_id', $userId)
-            ->select('carts.id as cart_item_id', 'carts.product_id', 'carts.cake_name_snapshot', 'carts.price_snapshot', 'carts.image_url_snapshot', 'carts.quantity', 'products.weight_grams')
+            ->select(
+                'carts.id as cart_item_id',
+                'carts.product_id',
+                'carts.cake_name_snapshot',
+                'carts.price_snapshot',
+                DB::raw('COALESCE(carts.image_url_snapshot, products.image_url) as image_url_snapshot'),
+                'carts.quantity',
+                'products.weight_grams'
+            )
             ->get()
             ->map(function($item) {
                 $item->price_snapshot = (int) $item->price_snapshot;

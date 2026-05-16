@@ -257,9 +257,12 @@
                     <div class="flex gap-4 items-center">
                         <div
                             class="w-20 h-20 bg-secondary-container border-[3px] border-primary flex-shrink-0 relative overflow-hidden">
+                            @php
+                                $imageUrl = $item['image_url_snapshot'] ?: 'https://placehold.co/100?text=No+Image';
+                            @endphp
                             <img alt="{{ $item['cake_name_snapshot'] }}"
                                 class="absolute inset-0 w-full h-full object-cover grayscale mix-blend-multiply opacity-80"
-                                src="{{ Storage::url($item['image_url_snapshot']) }}"
+                                src="{{ $imageUrl }}"
                                 onerror="this.src='https://placehold.co/100?text=No+Image'" />
                         </div>
                         <div class="flex-grow flex flex-col">
