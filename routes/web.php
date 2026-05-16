@@ -7,6 +7,7 @@ use App\Actions\Checkout\FetchBiteshipRatesAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Actions\Auth\LogoutUserAction;
+use App\Livewire\CheckoutPage;
 use App\Livewire\Auth\LoginForm;
 use App\Livewire\Auth\RegisterForm;
 use App\Livewire\ProfileForm;
@@ -18,7 +19,7 @@ Route::get('/', function () {
 Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAction $action) {
     // Memastikan user sudah auth di level route/middleware
     $request->validate(['postal_code' => 'required']);
-    return response()->json($action->execute(auth()->id(), $request->postal_code));
+    return response()->json($action->execute((string) auth()->id(), $request->postal_code, $request->all()));
 })->middleware('auth');
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +44,7 @@ Route::middleware('guest')->group(function () {
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
-    Route::get('/checkout', \App\Livewire\Transaction\CheckoutForm::class)->name('checkout');
+    Route::get('/checkout', CheckoutPage::class)->name('checkout');
     Route::get('/profile', ProfileForm::class)->name('profile');
 
 

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class CreateOrderAction
 {
-    public function execute(string $userId, int $shippingFee, string $notes = null): array
+    public function execute(string $userId, int $shippingFee, ?string $notes = null, int $adminFee = 0, array $shippingAddress = []): array
     {
         // Cegah double click dengan Cache Lock (10 detik)
         $lock = Cache::lock("create_order_lock_{$userId}", 10);
@@ -35,7 +35,7 @@ class CreateOrderAction
                 $subtotalAmount += ($item->price_snapshot * $item->quantity);
             }
 
-            $totalPayment = $subtotalAmount + $shippingFee;
+            $totalPayment = $subtotalAmount + $shippingFee + $adminFee;
             $orderId = (string) Str::uuid();
 
             // Insert ke tabel orders
@@ -50,6 +50,24 @@ class CreateOrderAction
                 'created_at' => now(),
                 'order_date' => now(),
             ]);
+
+            if (!empty($shippingAddress)) {
+                $coordinates = $shippingAddress['coordinates'] ?? null;
+                if (is_array($coordinates)) {
+                    $coordinates = json_encode($coordinates);
+                }
+
+                DB::table('order_addresses')->insert([
+                    'id' => (string) Str::uuid(),
+                    'order_id' => $orderId,
+                    'recipient_name' => $shippingAddress['recipient_name'] ?? '',
+                    'recipient_phone' => $shippingAddress['recipient_phone'] ?? '',
+                    'shipping_address' => $shippingAddress['address'] ?? '',
+                    'city' => $shippingAddress['city'] ?? '',
+                    'postal_code' => $shippingAddress['postal_code'] ?? '',
+                    'coordinates' => $coordinates,
+                ]);
+            }
 
             // Siapkan array untuk bulk insert order_items
             $orderItemsData = [];
