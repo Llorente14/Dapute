@@ -16,7 +16,7 @@
                 </div>
             @enderror
 
-            <div x-show="addresses.length > 0" class="grid grid-cols-1 gap-4">
+            <div x-show="addresses.length > 0 && addresses.length <= 3" class="grid grid-cols-1 gap-4">
                 <template x-for="address in addresses" :key="address.id">
                     <label class="block cursor-pointer">
                         <input x-model="selectedId" x-on:change="select(address)" class="peer sr-only" name="shipping_address" type="radio" :value="address.id"/>
@@ -34,6 +34,36 @@
                             </p>
                         </div>
                     </label>
+                </template>
+            </div>
+
+            <div x-show="addresses.length > 3" class="flex flex-col gap-4">
+                <div>
+                    <label class="sr-only" for="shipping_address_select">Shipping Address</label>
+                    <select id="shipping_address_select"
+                            x-model="selectedId"
+                            x-on:change="selectById()"
+                            class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary focus:bg-surface-container-lowest focus:outline-none focus:ring-0">
+                        <template x-for="address in addresses" :key="address.id">
+                            <option :value="address.id" x-text="`${address.is_default ? 'Default' : address.label} - ${address.recipient_name} (${address.postal_code})`"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <template x-if="selectedAddressDetails()">
+                    <div class="bg-primary text-surface border-[3px] border-primary p-5" style="box-shadow: 4px 4px 0px 0px #012d1d;">
+                        <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                            <span class="bg-[#D4EF70] text-primary font-label text-xs font-bold uppercase px-2 py-1" x-text="selectedAddressDetails().is_default ? 'Default' : selectedAddressDetails().label"></span>
+                            <span class="material-symbols-outlined text-2xl">radio_button_checked</span>
+                        </div>
+                        <p class="font-headline font-bold text-lg uppercase" x-text="selectedAddressDetails().recipient_name"></p>
+                        <p class="font-body text-sm font-semibold opacity-80" x-text="selectedAddressDetails().recipient_phone"></p>
+                        <p class="font-body text-sm font-semibold opacity-80 mt-2">
+                            <span x-text="selectedAddressDetails().address"></span><br/>
+                            <span x-text="selectedAddressDetails().city"></span>,
+                            <span x-text="selectedAddressDetails().postal_code"></span>
+                        </p>
+                    </div>
                 </template>
             </div>
 
@@ -164,6 +194,17 @@
                 @empty
                 <div class="text-sm font-body font-bold text-primary/60">Cart is empty.</div>
                 @endforelse
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label class="sr-only" for="checkout_notes">Order Notes</label>
+                <textarea wire:model.live.debounce.500ms="notes"
+                          id="checkout_notes"
+                          rows="3"
+                          maxlength="500"
+                          class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 resize-none"
+                          placeholder="ORDER NOTES"></textarea>
             </div>
 
             <!-- Totals -->

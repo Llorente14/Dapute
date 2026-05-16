@@ -23,6 +23,7 @@ class CheckoutPage extends Component
     public int $total = 0;
     public ?string $order_id = null;
     public ?string $courierError = null;
+    public string $notes = '';
 
     public bool $isProcessing = false;
 
@@ -154,6 +155,7 @@ class CheckoutPage extends Component
         $this->resetErrorBag();
 
         $notes = json_encode([
+            'customer_note' => trim($this->notes),
             'selected_address' => $this->selected_address,
             'selected_courier' => $selectedCourier,
             'admin_fee' => $this->adminFee,

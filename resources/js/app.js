@@ -229,6 +229,17 @@ document.addEventListener('alpine:init', () => {
             this.sync(address);
         },
 
+        selectById() {
+            const address = this.addresses.find((item) => String(item.id) === String(this.selectedId));
+            if (address) {
+                this.select(address);
+            }
+        },
+
+        selectedAddressDetails() {
+            return this.addresses.find((item) => String(item.id) === String(this.selectedId)) || null;
+        },
+
         sync(address) {
             if (!this.wire) return;
             const payload = this.payload(address);
