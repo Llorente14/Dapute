@@ -77,7 +77,7 @@ class CheckoutPage extends Component
         }
 
         $action ??= app(FetchBiteshipRatesAction::class);
-        $result = $action->execute((string) Auth::id(), $postalCode);
+        $result = $action->execute((string) Auth::id(), $postalCode, $this->selected_address);
 
         if (!$result['success']) {
             $this->couriers = [];
@@ -154,15 +154,10 @@ class CheckoutPage extends Component
         $this->isProcessing = true;
         $this->resetErrorBag();
 
-        $notes = json_encode([
-            'customer_note' => trim($this->notes),
-            'selected_address' => $this->selected_address,
-            'selected_courier' => $selectedCourier,
-            'admin_fee' => $this->adminFee,
-        ]);
+        $notes = trim($this->notes) ?: null;
 
         $action ??= app(CreateOrderAction::class);
-        $result = $action->execute((string) Auth::id(), $this->shippingCost, $notes, $this->adminFee);
+        $result = $action->execute((string) Auth::id(), $this->shippingCost, $notes, $this->adminFee, $this->selected_address);
 
         $this->isProcessing = false;
 

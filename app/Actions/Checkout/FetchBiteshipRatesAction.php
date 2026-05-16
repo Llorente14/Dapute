@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class FetchBiteshipRatesAction
 {
-    public function execute(string $userId, string $destinationPostalCode): array
+    public function execute(string $userId, string $destinationPostalCode, array $destinationAddress = []): array
     {
         try {
             $cartItems = DB::table('carts')
@@ -44,21 +44,42 @@ class FetchBiteshipRatesAction
 
             // Setup caching
             $originPostalCode = env('STORE_POSTAL_CODE', '11440');
-            $cacheKey = "biteship_rates_{$originPostalCode}_{$destinationPostalCode}_{$totalWeight}";
+            $destinationCoordinate = $this->normalizeCoordinate($destinationAddress['coordinates'] ?? null);
+            $originCoordinate = $this->normalizeCoordinate([
+                'latitude' => env('STORE_LATITUDE'),
+                'longitude' => env('STORE_LONGITUDE'),
+            ]);
+            $couriers = $destinationCoordinate && $originCoordinate
+                ? 'gosend,grab'
+                : env('BITESHIP_POSTAL_COURIERS', 'jne,sicepat,jnt');
+            $coordinateKey = $destinationCoordinate
+                ? "{$destinationCoordinate['latitude']}_{$destinationCoordinate['longitude']}"
+                : 'postal';
+            $cacheKey = "biteship_rates_{$originPostalCode}_{$destinationPostalCode}_{$coordinateKey}_{$totalWeight}_{$couriers}";
 
-            $rates = Cache::remember($cacheKey, 300, function () use ($originPostalCode, $destinationPostalCode, $totalWeight, $items) {
+            $rates = Cache::remember($cacheKey, 300, function () use ($originPostalCode, $destinationPostalCode, $totalWeight, $items, $destinationCoordinate, $originCoordinate, $couriers) {
                 if (blank(env('BITESHIP_API_KEY'))) {
                     throw new \Exception('Biteship API key belum dikonfigurasi.');
                 }
 
+                $payload = [
+                    'couriers' => $couriers,
+                    'items' => $items,
+                ];
+
+                if ($destinationCoordinate && $originCoordinate) {
+                    $payload['origin_latitude'] = $originCoordinate['latitude'];
+                    $payload['origin_longitude'] = $originCoordinate['longitude'];
+                    $payload['destination_latitude'] = $destinationCoordinate['latitude'];
+                    $payload['destination_longitude'] = $destinationCoordinate['longitude'];
+                } else {
+                    $payload['origin_postal_code'] = $originPostalCode;
+                    $payload['destination_postal_code'] = $destinationPostalCode;
+                }
+
                 $response = Http::withToken(env('BITESHIP_API_KEY'))
                     ->timeout(10)
-                    ->post('https://api.biteship.com/v1/rates/couriers', [
-                        'origin_postal_code' => $originPostalCode,
-                        'destination_postal_code' => $destinationPostalCode,
-                        'couriers' => 'gosend,grab',
-                        'items' => $items,
-                    ]);
+                    ->post('https://api.biteship.com/v1/rates/couriers', $payload);
 
                 if ($response->json('success') === false) {
                     Log::warning('Biteship rates business error: ' . $response->body());
@@ -114,6 +135,30 @@ class FetchBiteshipRatesAction
                 'duration' => '1-2 jam',
                 'price' => $expressPrice,
             ],
+        ];
+    }
+
+    private function normalizeCoordinate(mixed $coordinates): ?array
+    {
+        if (is_string($coordinates)) {
+            $decoded = json_decode($coordinates, true);
+            $coordinates = is_array($decoded) ? $decoded : null;
+        }
+
+        if (!is_array($coordinates)) {
+            return null;
+        }
+
+        $latitude = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
+        $longitude = $coordinates['longitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
+
+        if (!is_numeric($latitude) || !is_numeric($longitude)) {
+            return null;
+        }
+
+        return [
+            'latitude' => (float) $latitude,
+            'longitude' => (float) $longitude,
         ];
     }
 }

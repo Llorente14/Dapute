@@ -221,6 +221,7 @@ document.addEventListener('alpine:init', () => {
                 address: address.address || '',
                 city: address.city || '',
                 postal_code: String(address.postal_code || ''),
+                coordinates: address.coordinates || null,
             };
         },
 
