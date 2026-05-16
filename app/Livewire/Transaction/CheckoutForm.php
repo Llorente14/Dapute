@@ -4,6 +4,7 @@ namespace App\Livewire\Transaction;
 
 use Livewire\Component;
 use App\Actions\Cart\UpdateCartAction;
+use App\Helpers\AddressManager;
 use Illuminate\Support\Facades\Auth;
 
 class CheckoutForm extends Component
@@ -11,36 +12,8 @@ class CheckoutForm extends Component
     public $items = [];
     public $subtotal = 0;
     
-    // Address fields
     public $recipient_name = '';
-    public $recipient_phone = '';
-    public $address = '';
-    public $city = '';
-    public $state = '';
-    public $postal_code = '';
-
-    public $provinces = [
-        'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau', 'Jambi', 
-        'Sumatera Selatan', 'Kepulauan Bangka Belitung', 'Bengkulu', 'Lampung', 
-        'DKI Jakarta', 'Banten', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 
-        'Jawa Timur', 'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 
-        'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 
-        'Kalimantan Utara', 'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 
-        'Sulawesi Barat', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Maluku', 
-        'Maluku Utara', 'Papua Barat', 'Papua Barat Daya', 'Papua', 
-        'Papua Selatan', 'Papua Tengah', 'Papua Pegunungan'
-    ];
-
-    // Dropdown address properties
-    public $showAddressDropdown = false;
-    public $suggestedAddresses = [
-        '123 Forest Brutalist St, Jakarta',
-        'Jl. Jend. Sudirman Kav 45, Jakarta Selatan',
-        'Jl. Gatot Subroto No. 12, Jakarta Pusat',
-        'Komp. Neo-Brutalist Blok C/9, Bandung',
-        'Jl. Pahlawan No. 1, Surabaya'
-    ];
-    public $filteredAddresses = [];
+    public array $selectedAddress = [];
 
     public $couriers = [];
     public $selectedCourier = null;
@@ -56,24 +29,7 @@ class CheckoutForm extends Component
         
         if (Auth::check()) {
             $this->recipient_name = Auth::user()->name;
-            // Just populate mock address fields to show they are editable
-            $this->address = '123 Forest Brutalist St';
-            $this->city = 'Jakarta';
-            $this->state = 'DKI Jakarta';
-            $this->postal_code = '12345';
         }
-    }
-
-    #[\Livewire\Attributes\Computed]
-    public function filteredProvinces()
-    {
-        if (empty($this->state)) {
-            return $this->provinces;
-        }
-        return collect($this->provinces)
-            ->filter(fn($prov) => str_contains(strtolower($prov), strtolower($this->state)))
-            ->values()
-            ->toArray();
     }
 
     public function loadCart()
@@ -92,40 +48,6 @@ class CheckoutForm extends Component
         });
 
         $this->calculateTotal();
-    }
-
-    public function updatedAddress($value)
-    {
-        if (strlen($value) > 0) {
-            $this->filteredAddresses = collect($this->suggestedAddresses)
-                ->filter(fn($addr) => str_contains(strtolower($addr), strtolower($value)))
-                ->values()
-                ->toArray();
-            $this->showAddressDropdown = count($this->filteredAddresses) > 0;
-        } else {
-            $this->showAddressDropdown = false;
-        }
-    }
-
-    public function selectAddress($addr)
-    {
-        $this->address = $addr;
-        $this->showAddressDropdown = false;
-        
-        // Auto fill city/state based on selection (mock)
-        if (str_contains(strtolower($addr), 'jakarta')) {
-            $this->city = 'Jakarta';
-            $this->state = 'DKI Jakarta';
-            $this->postal_code = '10000';
-        } elseif (str_contains(strtolower($addr), 'bandung')) {
-            $this->city = 'Bandung';
-            $this->state = 'Jawa Barat'; 
-            $this->postal_code = '40111';
-        } elseif (str_contains(strtolower($addr), 'surabaya')) {
-            $this->city = 'Surabaya';
-            $this->state = 'Jawa Timur'; 
-            $this->postal_code = '60111';
-        }
     }
 
     public function fetchCouriers()
@@ -177,6 +99,18 @@ class CheckoutForm extends Component
     public function processPayment()
     {
         if (!$this->selectedCourier) {
+            return;
+        }
+
+        $addressValidation = AddressManager::validateAddress($this->selectedAddress);
+        if (!$addressValidation['valid']) {
+            $this->resetErrorBag();
+            $this->addError('selectedAddress', 'Please complete a valid shipping address.');
+
+            foreach ($addressValidation['errors'] as $field => $messages) {
+                $this->addError('selectedAddress.'.$field, $messages[0] ?? 'Invalid value.');
+            }
+
             return;
         }
         

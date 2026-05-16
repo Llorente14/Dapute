@@ -2,75 +2,78 @@
     <!-- Left Column: Forms -->
     <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16 relative z-50">
         <!-- Address Input Section -->
-        <section class="flex flex-col gap-6">
+        <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name))" x-init="init($wire)">
             <header class="flex items-baseline justify-between mb-2">
                 <h1 class="font-headline font-bold text-3xl md:text-4xl uppercase tracking-tight text-primary">Shipping details</h1>
+                <a href="/profile" class="font-label text-xs font-bold uppercase text-primary border-[3px] border-primary px-3 py-2 hover:bg-tertiary-fixed transition-colors">
+                    Manage
+                </a>
             </header>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="sr-only" for="recipient_name">Recipient Name</label>
-                    <input wire:model="recipient_name" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="recipient_name" placeholder="RECIPIENT NAME" type="text"/>
+
+            @error('selectedAddress')
+                <div class="bg-error-container text-on-error-container border-[3px] border-error p-4 font-label text-sm font-bold uppercase">
+                    {{ $message }}
                 </div>
-                <div>
-                    <label class="sr-only" for="recipient_phone">Phone Number</label>
-                    <input wire:model="recipient_phone" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="recipient_phone" placeholder="PHONE NUMBER" type="tel"/>
-                </div>
-                <div class="md:col-span-2 relative group z-50" x-data="{ open: @entangle('showAddressDropdown') }" @click.outside="open = false">
-                    <label class="sr-only" for="address">Street Address</label>
-                    <div class="relative w-full z-40">
-                        <input wire:model.live.debounce.300ms="address" x-on:focus="open = true" autocomplete="off" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 pr-24 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="address" placeholder="STREET ADDRESS" type="text"/>
-                        
-                        <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary transition-transform duration-200 pointer-events-none" :class="open ? 'rotate-180' : ''">expand_more</span>
-                            <div class="h-6 w-[2px] bg-primary/20"></div>
-                            <a href="/profile" class="flex items-center justify-center w-8 h-8 bg-primary text-surface hover:bg-surface hover:text-primary border-[2px] border-primary transition-all duration-150 hover:-translate-y-0.5 hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)] cursor-pointer" title="Manage Address in Profile">
-                                <span class="material-symbols-outlined text-xl">add</span>
-                            </a>
-                        </div>
-                        
-                        <div x-show="open" style="display: none;" class="absolute top-full left-0 w-full mt-2 bg-surface border-[3px] border-primary shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] z-50 flex flex-col max-h-60 overflow-y-auto custom-scrollbar">
-                            @foreach($filteredAddresses as $addr)
-                            <button type="button" wire:click="selectAddress('{{ $addr }}')" class="w-full text-left p-4 border-b-[3px] border-primary hover:bg-primary hover:text-surface font-label font-bold text-sm text-primary transition-colors duration-150 focus:bg-primary focus:text-surface focus:outline-none cursor-pointer last:border-b-0">
-                                {{ $addr }}
-                            </button>
-                            @endforeach
-                            
-                            @if(count($filteredAddresses) === 0 && strlen($address) > 0)
-                            <div class="p-4 font-label text-sm text-primary/60 font-semibold uppercase">
-                                No suggestions found.
+            @enderror
+
+            <div x-show="addresses.length > 0" class="grid grid-cols-1 gap-4">
+                <template x-for="address in addresses" :key="address.id">
+                    <label class="block cursor-pointer">
+                        <input x-model="selectedId" x-on:change="select(address)" class="peer sr-only" name="shipping_address" type="radio" :value="address.id"/>
+                        <div class="bg-surface-container-lowest border-[3px] border-primary p-5 transition-all peer-checked:bg-primary peer-checked:text-surface hover:-translate-y-1" style="box-shadow: 4px 4px 0px 0px #012d1d;">
+                            <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+                                <span class="bg-[#D4EF70] text-primary font-label text-xs font-bold uppercase px-2 py-1" x-text="address.is_default ? 'Default' : address.label"></span>
+                                <span class="material-symbols-outlined text-2xl">radio_button_checked</span>
                             </div>
-                            @endif
+                            <p class="font-headline font-bold text-lg uppercase" x-text="address.recipient_name"></p>
+                            <p class="font-body text-sm font-semibold opacity-80" x-text="address.recipient_phone"></p>
+                            <p class="font-body text-sm font-semibold opacity-80 mt-2">
+                                <span x-text="address.address"></span><br/>
+                                <span x-text="address.city"></span>,
+                                <span x-text="address.postal_code"></span>
+                            </p>
                         </div>
-                    </div>
+                    </label>
+                </template>
+            </div>
+
+            <div x-show="addresses.length === 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="sr-only" for="manual_recipient_name">Recipient Name</label>
+                    <input x-model="manual.recipient_name" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_recipient_name" placeholder="RECIPIENT NAME" type="text"/>
+                    @error('selectedAddress.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label class="sr-only" for="city">City</label>
-                    <input wire:model="city" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="city" placeholder="CITY" type="text"/>
-                </div>
-                <div class="relative w-full z-40">
-                    <label class="sr-only" for="state">State</label>
-                    <div class="relative w-full" x-data="{ open: false }" @click.outside="open = false">
-                        <input wire:model.live.debounce.300ms="state" x-on:focus="open = true" autocomplete="off" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 pr-12 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="state" placeholder="STATE / PROVINCE" type="text"/>
-                        <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-primary transition-transform duration-200" :class="open ? 'rotate-180' : ''">expand_more</span>
-                        
-                        <div x-show="open" style="display: none;" class="absolute top-full left-0 w-full mt-2 bg-surface border-[3px] border-primary shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] z-50 flex flex-col max-h-60 overflow-y-auto custom-scrollbar">
-                            @foreach($this->filteredProvinces as $prov)
-                            <button type="button" @click="$wire.set('state', '{{ $prov }}'); open = false;" class="w-full text-left p-4 border-b-[3px] border-primary hover:bg-primary hover:text-surface font-label font-bold text-sm text-primary transition-colors duration-150 focus:bg-primary focus:text-surface focus:outline-none cursor-pointer last:border-b-0">
-                                {{ $prov }}
-                            </button>
-                            @endforeach
-                            @if(count($this->filteredProvinces) === 0 && strlen($state) > 0)
-                            <div class="p-4 font-label text-sm text-primary/60 font-semibold uppercase">
-                                No suggestions found.
-                            </div>
-                            @endif
-                        </div>
-                    </div>
+                    <label class="sr-only" for="manual_recipient_phone">Phone Number</label>
+                    <input x-model="manual.recipient_phone" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_recipient_phone" placeholder="PHONE NUMBER" type="tel"/>
+                    @error('selectedAddress.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
                 <div class="md:col-span-2">
-                    <label class="sr-only" for="postal_code">Postal Code</label>
-                    <input wire:model="postal_code" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 focus:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] hover:shadow-[2px_2px_0px_0px_rgba(1,45,29,1)]" id="postal_code" placeholder="POSTAL CODE" type="text"/>
+                    <label class="sr-only" for="manual_address">Street Address</label>
+                    <textarea x-model="manual.address" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 resize-none" id="manual_address" placeholder="STREET ADDRESS" rows="3"></textarea>
+                    @error('selectedAddress.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
                 </div>
+                <div>
+                    <label class="sr-only" for="manual_city">City</label>
+                    <input x-model="manual.city" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_city" placeholder="CITY" type="text"/>
+                    @error('selectedAddress.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                </div>
+                <div>
+                    <label class="sr-only" for="manual_postal_code">Postal Code</label>
+                    <input x-model="manual.postal_code" x-on:input="syncManual()" class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5" id="manual_postal_code" placeholder="POSTAL CODE" type="text" inputmode="numeric"/>
+                    @error('selectedAddress.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                </div>
+                <div class="md:col-span-2 bg-tertiary-fixed border-[3px] border-primary p-4 font-label text-xs font-bold uppercase text-primary">
+                    No saved address found. This checkout address is sent directly to Livewire.
+                </div>
+            </div>
+
+            <div x-show="addresses.length > 0">
+                @error('selectedAddress.recipient_name') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selectedAddress.recipient_phone') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selectedAddress.address') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selectedAddress.city') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
+                @error('selectedAddress.postal_code') <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p> @enderror
             </div>
         </section>
 
@@ -84,9 +87,9 @@
                 <!-- Loading Skeleton -->
                 <div wire:loading wire:target="fetchCouriers" class="absolute inset-0 bg-surface/50 backdrop-blur-sm z-10 flex items-center justify-center">
                     <div class="flex gap-2">
-                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite] rounded-none"></div>
-                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite_100ms] rounded-none"></div>
-                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite_200ms] rounded-none"></div>
+                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite]"></div>
+                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite_100ms]"></div>
+                        <div class="w-4 h-4 bg-primary animate-[bounce_1s_infinite_200ms]"></div>
                     </div>
                 </div>
 
@@ -105,7 +108,7 @@
                 @foreach($couriers as $courier)
                 <label class="relative block cursor-pointer group" wire:loading.remove wire:target="fetchCouriers">
                     <input wire:model.live="selectedCourier" class="peer sr-only" name="delivery" type="radio" value="{{ $courier['id'] }}"/>
-                    <div class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 transition-all duration-200 peer-checked:bg-primary peer-checked:text-surface hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[4px_4px_0px_0px_rgba(1,45,29,1)] active:translate-y-0 active:translate-x-0 active:shadow-none peer-checked:shadow-[4px_4px_0px_0px_rgba(211,238,111,1)] h-full flex flex-col">
+                    <div class="w-full bg-surface-container-lowest border-[3px] border-primary p-6 transition-all duration-200 peer-checked:bg-primary peer-checked:text-surface hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0 h-full flex flex-col" style="box-shadow: 4px 4px 0px 0px #012d1d;">
                         <div class="flex justify-between items-start mb-4">
                             <span class="material-symbols-outlined text-3xl peer-checked:text-tertiary-fixed transition-transform duration-300 peer-checked:scale-110">{{ $courier['icon'] ?? 'local_shipping' }}</span>
                             <span class="font-label font-bold text-lg peer-checked:text-tertiary-fixed">
@@ -123,7 +126,7 @@
 
     <!-- Right Column: Order Summary -->
     <div class="lg:col-span-5 relative">
-        <div class="sticky top-24 bg-surface border-[3px] border-primary shadow-[8px_8px_0px_0px_rgba(1,45,29,1)] p-6 md:p-8 flex flex-col gap-8">
+        <div class="sticky top-24 bg-surface border-[3px] border-primary p-6 md:p-8 flex flex-col gap-8" style="box-shadow: 8px 8px 0px 0px #012d1d;">
             <header class="border-b-[3px] border-primary pb-4">
                 <h2 class="font-headline font-black text-2xl uppercase tracking-tighter text-primary">Order Blueprint</h2>
             </header>
@@ -174,7 +177,8 @@
             <button wire:click="processPayment" 
                     wire:loading.attr="disabled"
                     @if(!$selectedCourier) disabled @endif
-                    class="w-full bg-primary text-surface border-[3px] border-primary py-5 px-6 font-headline font-black text-lg uppercase tracking-wider flex justify-between items-center group transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-none hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0px_0px_rgba(211,238,111,1)] active:translate-y-0 active:translate-x-0 active:shadow-none" 
+                    class="w-full bg-primary text-surface border-[3px] border-primary py-5 px-6 font-headline font-black text-lg uppercase tracking-wider flex justify-between items-center group transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0"
+                    style="box-shadow: 6px 6px 0px 0px #D4EF70;"
                     type="button">
                 
                 <span wire:loading.remove wire:target="processPayment">Pay Now</span>
