@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Actions\Cart\UpdateCartAction;
 use App\Actions\Checkout\FetchBiteshipRatesAction;
 use App\Actions\Transaction\CreateOrderAction;
+use App\Actions\Payment\GetMidtransSnapTokenAction;
 use App\Helpers\AddressManager;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -117,14 +118,14 @@ class CheckoutPage extends Component
         $this->total = $this->subtotal + $this->shippingCost + $this->adminFee;
     }
 
-    public function placeOrder(?CreateOrderAction $action = null): void
+    public function placeOrder(?CreateOrderAction $action = null, ?GetMidtransSnapTokenAction $snapAction = null): void
     {
         if ($this->isProcessing) {
             return;
         }
 
         if ($this->order_id) {
-            $this->dispatch('order-created', order_id: $this->order_id);
+            $this->triggerSnap($snapAction);
             return;
         }
 
@@ -167,7 +168,19 @@ class CheckoutPage extends Component
         }
 
         $this->order_id = $result['order_id'];
-        $this->dispatch('order-created', order_id: $this->order_id);
+        $this->triggerSnap($snapAction);
+    }
+
+    private function triggerSnap(?GetMidtransSnapTokenAction $snapAction = null): void
+    {
+        $snapAction ??= app(GetMidtransSnapTokenAction::class);
+        $snapResult = $snapAction->execute($this->order_id);
+
+        if ($snapResult['success']) {
+            $this->dispatch('open-snap', token: $snapResult['snap_token'], order_id: $this->order_id);
+        } else {
+            $this->addError('order', $snapResult['message'] ?? 'Gagal mendapatkan token pembayaran.');
+        }
     }
 
     public function processPayment(?CreateOrderAction $action = null): void

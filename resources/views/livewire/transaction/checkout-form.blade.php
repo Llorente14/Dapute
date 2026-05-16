@@ -323,12 +323,11 @@
             @enderror
 
             <button wire:click="placeOrder" wire:loading.attr="disabled" wire:target="placeOrder"
-                @if (!$selected_courier || $order_id) disabled @endif
+                @if (!$selected_courier) disabled @endif
                 class="w-full bg-primary text-surface border-[3px] border-primary py-5 px-6 font-headline font-black text-lg uppercase tracking-wider flex justify-between items-center group transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0"
                 style="box-shadow: 6px 6px 0px 0px #D4EF70;" type="button">
 
-                <span wire:loading.remove
-                    wire:target="placeOrder">{{ $order_id ? 'Order Created' : 'Pay Now' }}</span>
+                <span wire:loading.remove wire:target="placeOrder">Pay Now</span>
                 <span wire:loading wire:target="placeOrder">Processing...</span>
 
                 <span wire:loading.remove wire:target="placeOrder"
