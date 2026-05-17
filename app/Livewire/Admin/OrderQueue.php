@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\Logistics\ManualShipmentAction;
+use App\Actions\Logistics\RequestBiteshipPickupAction;
 use App\Actions\Logistics\UpdateOrderStatusAction;
 use App\Enums\OrderStatus;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -17,6 +19,10 @@ class OrderQueue extends Component
     public int $page = 1;
     public int $perPage = 10;
     public int $totalOrders = 0;
+    public bool $showManualShipmentModal = false;
+    public ?string $manualShipmentOrderId = null;
+    public string $manualTrackingId = '';
+    public ?array $manualShipmentOrder = null;
 
     private const ACTIVE_STATUSES = [
         'PENDING_PAYMENT',
@@ -99,6 +105,83 @@ class OrderQueue extends Component
         $this->transitionOrder($orderId, $nextStatus, $action);
     }
 
+    public function requestPickup(string $orderId, RequestBiteshipPickupAction $action): void
+    {
+        $result = $action->execute($orderId);
+
+        if (!$result['success']) {
+            $this->dispatch('show-toast', title: 'Pickup Failed', subtitle: $result['message'] ?? 'Biteship pickup failed.', type: 'cart');
+            return;
+        }
+
+        $this->expandedOrderId = null;
+        $this->loadOrders();
+        $this->dispatch('show-toast', title: 'Pickup Requested', subtitle: $result['message'] ?? 'Courier pickup requested.', type: 'success');
+    }
+
+    public function openManualShipmentModal(string $orderId): void
+    {
+        $order = $this->findManualShipmentOrder($orderId);
+
+        if (!$order) {
+            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Order not found.', type: 'cart');
+            return;
+        }
+
+        if ($order['order_status'] !== OrderStatus::PICKUP_REQUESTED->value) {
+            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Only pickup requested orders can be shipped manually.', type: 'cart');
+            return;
+        }
+
+        $this->resetErrorBag('manualTrackingId');
+        $this->manualShipmentOrderId = $orderId;
+        $this->manualTrackingId = '';
+        $this->manualShipmentOrder = $order;
+        $this->showManualShipmentModal = true;
+    }
+
+    public function closeManualShipmentModal(): void
+    {
+        $this->resetErrorBag('manualTrackingId');
+        $this->showManualShipmentModal = false;
+        $this->manualShipmentOrderId = null;
+        $this->manualTrackingId = '';
+        $this->manualShipmentOrder = null;
+    }
+
+    public function submitManualShipment(ManualShipmentAction $action): void
+    {
+        if (!$this->manualShipmentOrderId) {
+            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Order not selected.', type: 'cart');
+            return;
+        }
+
+        $trackingId = trim($this->manualTrackingId);
+
+        if ($trackingId === '') {
+            $this->addError('manualTrackingId', 'Tracking number is required.');
+            return;
+        }
+
+        try {
+            $result = $action($this->manualShipmentOrderId, $trackingId);
+        } catch (AuthorizationException $exception) {
+            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: $exception->getMessage(), type: 'cart');
+            return;
+        }
+
+        if (!$result['success']) {
+            $this->addError('manualTrackingId', $result['message'] ?? 'Manual shipment failed.');
+            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: $result['message'] ?? 'Manual shipment failed.', type: 'cart');
+            return;
+        }
+
+        $this->closeManualShipmentModal();
+        $this->expandedOrderId = null;
+        $this->loadOrders();
+        $this->dispatch('show-toast', title: 'Manual Shipment Saved', subtitle: 'Tracking number saved and order moved to delivery.', type: 'success');
+    }
+
     public function statusLabel(string $status): string
     {
         return match ($status) {
@@ -140,6 +223,7 @@ class OrderQueue extends Component
             [
                 'label' => 'Cancelled',
                 'status' => OrderStatus::CANCELLED->value,
+                'action' => 'status',
                 'icon' => 'cancel',
                 'available' => in_array($status, [
                     OrderStatus::PENDING_PAYMENT->value,
@@ -149,24 +233,35 @@ class OrderQueue extends Component
             [
                 'label' => 'Ready to Ship',
                 'status' => OrderStatus::PICKUP_REQUESTED->value,
+                'action' => 'status',
                 'icon' => 'outbox',
                 'available' => in_array($status, ['IN_PROCESSING', OrderStatus::PAID_PROCESSING->value], true),
             ],
             [
                 'label' => 'Request Pickup',
-                'status' => OrderStatus::ON_DELIVERY->value,
+                'status' => null,
+                'action' => 'pickup',
                 'icon' => 'local_shipping',
+                'available' => $status === OrderStatus::PICKUP_REQUESTED->value,
+            ],
+            [
+                'label' => 'Manual Shipment',
+                'status' => null,
+                'action' => 'manual',
+                'icon' => 'receipt_long',
                 'available' => $status === OrderStatus::PICKUP_REQUESTED->value,
             ],
             [
                 'label' => 'Mark Delivered',
                 'status' => OrderStatus::DELIVERED->value,
+                'action' => 'status',
                 'icon' => 'inventory',
                 'available' => $status === OrderStatus::ON_DELIVERY->value,
             ],
             [
                 'label' => 'Complete Order',
                 'status' => OrderStatus::COMPLETED->value,
+                'action' => 'status',
                 'icon' => 'task_alt',
                 'available' => $status === OrderStatus::DELIVERED->value,
             ],
@@ -283,6 +378,49 @@ class OrderQueue extends Component
             ])
             ->values()
             ->toArray();
+    }
+
+    private function findManualShipmentOrder(string $orderId): ?array
+    {
+        $order = DB::table('orders')
+            ->leftJoin('users', 'orders.customer_id', '=', 'users.id')
+            ->leftJoin('order_addresses', 'orders.id', '=', 'order_addresses.order_id')
+            ->where('orders.id', $orderId)
+            ->select(
+                'orders.id',
+                'orders.order_status',
+                'orders.total_payment',
+                'orders.tracking_id',
+                'orders.biteship_order_id',
+                'users.full_name as customer_name',
+                'users.email as customer_email',
+                'order_addresses.recipient_name',
+                'order_addresses.recipient_phone',
+                'order_addresses.shipping_address',
+                'order_addresses.city',
+                'order_addresses.postal_code'
+            )
+            ->first();
+
+        if (!$order) {
+            return null;
+        }
+
+        return [
+            'id' => $order->id,
+            'short_id' => strtoupper(substr((string) $order->id, 0, 8)),
+            'order_status' => $order->order_status,
+            'customer_name' => $order->customer_name ?: 'Unknown Customer',
+            'customer_email' => $order->customer_email,
+            'recipient_name' => $order->recipient_name,
+            'recipient_phone' => $order->recipient_phone,
+            'shipping_address' => $order->shipping_address,
+            'city' => $order->city,
+            'postal_code' => $order->postal_code,
+            'total_payment' => (int) $order->total_payment,
+            'tracking_id' => $order->tracking_id,
+            'biteship_order_id' => $order->biteship_order_id,
+        ];
     }
 
     private function statusesForFilter(string $status): array
