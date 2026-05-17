@@ -18,26 +18,31 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 sm:flex">
+            <div
+                x-data="{ exporting: null }"
+                class="grid grid-cols-2 gap-3 sm:flex"
+            >
                 @if($canExport)
-                    <button
-                        type="button"
-                        class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-white px-4 py-3 font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] transition-all hover:-translate-y-0.5 hover:bg-[#D4EF70]"
-                        x-data
-                        @click="window.dispatchEvent(new CustomEvent('show-toast', { detail: { title: 'Export UI Ready', subtitle: 'PDF export connected in SCRUM-61.', type: 'success' } }))"
+                    <a
+                        href="{{ route('admin.reports.export.pdf', ['month' => $month, 'year' => $year]) }}"
+                        @click="if (exporting) { $event.preventDefault(); return; } exporting = 'pdf'; setTimeout(() => exporting = null, 5000)"
+                        class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] px-4 py-3 font-label text-[11px] font-black uppercase tracking-widest shadow-[3px_3px_0_0_#012d1d] transition-all hover:-translate-y-0.5"
+                        :class="exporting ? 'pointer-events-none cursor-not-allowed bg-[#dde4e0] text-[#717973] shadow-none' : 'bg-white text-[#012d1d] hover:bg-[#D4EF70]'"
+                        :aria-disabled="exporting ? 'true' : 'false'"
                     >
-                        <span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
-                        Export PDF
-                    </button>
-                    <button
-                        type="button"
-                        class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#012d1d] px-4 py-3 font-label text-[11px] font-black uppercase tracking-widest text-white shadow-[3px_3px_0_0_#D4EF70] transition-all hover:-translate-y-0.5 hover:bg-[#D4EF70] hover:text-[#012d1d]"
-                        x-data
-                        @click="window.dispatchEvent(new CustomEvent('show-toast', { detail: { title: 'Export UI Ready', subtitle: 'Excel export connected in SCRUM-61.', type: 'success' } }))"
+                        <span class="material-symbols-outlined text-[18px]" :class="exporting === 'pdf' ? 'animate-spin' : ''" x-text="exporting === 'pdf' ? 'sync' : 'picture_as_pdf'">picture_as_pdf</span>
+                        <span x-text="exporting === 'pdf' ? 'Preparing PDF' : 'Export PDF'">Export PDF</span>
+                    </a>
+                    <a
+                        href="{{ route('admin.reports.export.excel', ['month' => $month, 'year' => $year]) }}"
+                        @click="if (exporting) { $event.preventDefault(); return; } exporting = 'excel'; setTimeout(() => exporting = null, 5000)"
+                        class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] px-4 py-3 font-label text-[11px] font-black uppercase tracking-widest shadow-[3px_3px_0_0_#D4EF70] transition-all hover:-translate-y-0.5"
+                        :class="exporting ? 'pointer-events-none cursor-not-allowed bg-[#dde4e0] text-[#717973] shadow-none' : 'bg-[#012d1d] text-white hover:bg-[#D4EF70] hover:text-[#012d1d]'"
+                        :aria-disabled="exporting ? 'true' : 'false'"
                     >
-                        <span class="material-symbols-outlined text-[18px]">table_view</span>
-                        Export Excel
-                    </button>
+                        <span class="material-symbols-outlined text-[18px]" :class="exporting === 'excel' ? 'animate-spin' : ''" x-text="exporting === 'excel' ? 'sync' : 'table_view'">table_view</span>
+                        <span x-text="exporting === 'excel' ? 'Preparing Excel' : 'Export Excel'">Export Excel</span>
+                    </a>
                 @endif
             </div>
         </div>
