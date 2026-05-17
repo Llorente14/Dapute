@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class FetchBiteshipRatesAction
 {
-    public function execute(string $userId, string $destinationPostalCode, array $destinationAddress = []): array
+    public function execute(string $userId, string $destinationPostalCode, array $destinationAddress = [], string $courierType = 'regular'): array
     {
         try {
             $cartItems = DB::table('carts')
@@ -49,15 +49,29 @@ class FetchBiteshipRatesAction
                 'latitude' => env('STORE_LATITUDE'),
                 'longitude' => env('STORE_LONGITUDE'),
             ]);
-            $couriers = $destinationCoordinate && $originCoordinate
-                ? 'gosend,grab'
+            $couriers = $courierType === 'instant'
+                ? env('BITESHIP_INSTANT_COURIERS', 'gosend,grab')
                 : env('BITESHIP_POSTAL_COURIERS', 'jne,sicepat,jnt');
+
+            if ($courierType === 'instant' && !$destinationCoordinate) {
+                return ['success' => false, 'message' => 'Pick a map pin or use your current location for instant courier rates.'];
+            }
+
+            if ($courierType === 'instant' && !$originCoordinate) {
+                Log::warning('Instant Biteship rates using dummy fallback: store origin coordinate is not configured.');
+
+                return [
+                    'success' => true,
+                    'data' => $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight, $courierType),
+                ];
+            }
+
             $coordinateKey = $destinationCoordinate
                 ? "{$destinationCoordinate['latitude']}_{$destinationCoordinate['longitude']}"
                 : 'postal';
-            $cacheKey = "biteship_rates_{$originPostalCode}_{$destinationPostalCode}_{$coordinateKey}_{$totalWeight}_{$couriers}";
+            $cacheKey = "biteship_rates_{$courierType}_{$originPostalCode}_{$destinationPostalCode}_{$coordinateKey}_{$totalWeight}_{$couriers}";
 
-            $rates = Cache::remember($cacheKey, 300, function () use ($originPostalCode, $destinationPostalCode, $totalWeight, $items, $destinationCoordinate, $originCoordinate, $couriers) {
+            $rates = Cache::remember($cacheKey, 300, function () use ($originPostalCode, $destinationPostalCode, $totalWeight, $items, $destinationCoordinate, $originCoordinate, $couriers, $courierType) {
                 if (blank(env('BITESHIP_API_KEY'))) {
                     throw new \Exception('Biteship API key not configured.');
                 }
@@ -67,7 +81,7 @@ class FetchBiteshipRatesAction
                     'items' => $items,
                 ];
 
-                if ($destinationCoordinate && $originCoordinate) {
+                if ($courierType === 'instant') {
                     $payload['origin_latitude'] = $originCoordinate['latitude'];
                     $payload['origin_longitude'] = $originCoordinate['longitude'];
                     $payload['destination_latitude'] = $destinationCoordinate['latitude'];
@@ -84,7 +98,7 @@ class FetchBiteshipRatesAction
                 if ($response->json('success') === false) {
                     Log::warning('Biteship rates business error: ' . $response->body());
 
-                    return $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight);
+                    return $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight, $courierType);
                 }
 
                 if ($response->failed()) {
@@ -92,7 +106,7 @@ class FetchBiteshipRatesAction
                     throw new \Exception('Failed to fetch data from shipping server.');
                 }
 
-                return $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight);
+                return $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight, $courierType);
             });
 
             if (empty($rates)) {
@@ -107,16 +121,44 @@ class FetchBiteshipRatesAction
         } catch (\Exception $e) {
             Log::warning('Biteship rates unavailable: ' . $e->getMessage());
 
+            if (($courierType ?? 'regular') === 'instant' && isset($originPostalCode, $destinationPostalCode, $totalWeight)) {
+                return [
+                    'success' => true,
+                    'data' => $this->dummyRates($originPostalCode, $destinationPostalCode, (int) $totalWeight, 'instant'),
+                ];
+            }
+
             return ['success' => false, 'message' => 'Failed to calculate shipping cost. Please try again later.'];
         }
     }
 
-    private function dummyRates(string $originPostalCode, string $destinationPostalCode, int $totalWeight): array
+    private function dummyRates(string $originPostalCode, string $destinationPostalCode, int $totalWeight, string $courierType = 'regular'): array
     {
         $seed = abs(crc32("{$originPostalCode}|{$destinationPostalCode}|{$totalWeight}"));
         $basePrice = 5000 + ($seed % 25001);
         $standardPrice = (int) (ceil($basePrice / 1000) * 1000);
         $expressPrice = min(30000, $standardPrice + 7000);
+
+        if ($courierType === 'instant') {
+            return [
+                [
+                    'courier_code' => 'gosend',
+                    'courier_name' => 'GoSend',
+                    'courier_service_code' => 'instant',
+                    'courier_service_name' => 'Instant Delivery',
+                    'duration' => '1-2 hours',
+                    'price' => $standardPrice,
+                ],
+                [
+                    'courier_code' => 'grab',
+                    'courier_name' => 'GrabExpress',
+                    'courier_service_code' => 'instant',
+                    'courier_service_name' => 'Instant Delivery',
+                    'duration' => '1-2 hours',
+                    'price' => $expressPrice,
+                ],
+            ];
+        }
 
         return [
             [
@@ -150,7 +192,7 @@ class FetchBiteshipRatesAction
         }
 
         $latitude = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
-        $longitude = $coordinates['longitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
+        $longitude = $coordinates['longitude'] ?? $coordinates['longtitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
 
         if (!is_numeric($latitude) || !is_numeric($longitude)) {
             return null;

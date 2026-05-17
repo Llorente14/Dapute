@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Actions\Cart\UpdateCartAction;
 use App\Actions\Checkout\FetchBiteshipRatesAction;
 use App\Actions\Transaction\CreateOrderAction;
+use App\Actions\Payment\GetMidtransSnapTokenAction;
 use App\Helpers\AddressManager;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -18,6 +19,7 @@ class CheckoutPage extends Component
 
     public array $couriers = [];
     public ?string $selected_courier = null;
+    public string $courier_type = 'regular';
     public int $shippingCost = 0;
     public int $adminFee = 2500;
     public int $total = 0;
@@ -58,6 +60,12 @@ class CheckoutPage extends Component
             $this->fetchCouriers();
         }
 
+        if ($property === 'courier_type') {
+            $this->selected_courier = null;
+            $this->shippingCost = 0;
+            $this->fetchCouriers();
+        }
+
         if ($property === 'selected_courier') {
             $this->applySelectedCourier();
         }
@@ -76,8 +84,17 @@ class CheckoutPage extends Component
             return;
         }
 
+        if ($this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
+            $this->couriers = [];
+            $this->selected_courier = null;
+            $this->shippingCost = 0;
+            $this->courierError = 'Pick a map pin or use your current location for instant courier rates.';
+            $this->calculateTotal();
+            return;
+        }
+
         $action ??= app(FetchBiteshipRatesAction::class);
-        $result = $action->execute((string) Auth::id(), $postalCode, $this->selected_address);
+        $result = $action->execute((string) Auth::id(), $postalCode, $this->selected_address, $this->courier_type);
 
         if (!$result['success']) {
             $this->couriers = [];
@@ -117,19 +134,24 @@ class CheckoutPage extends Component
         $this->total = $this->subtotal + $this->shippingCost + $this->adminFee;
     }
 
-    public function placeOrder(?CreateOrderAction $action = null): void
+    public function placeOrder(?CreateOrderAction $action = null, ?GetMidtransSnapTokenAction $snapAction = null): void
     {
         if ($this->isProcessing) {
             return;
         }
 
         if ($this->order_id) {
-            $this->dispatch('order-created', order_id: $this->order_id);
+            $this->triggerSnap($snapAction);
             return;
         }
 
         if (!$this->selected_courier) {
             $this->addError('selected_courier', 'Pilih kurir terlebih dahulu.');
+            return;
+        }
+
+        if ($this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
+            $this->addError('selected_address.coordinates', 'Pick a map pin for instant courier delivery.');
             return;
         }
 
@@ -167,7 +189,19 @@ class CheckoutPage extends Component
         }
 
         $this->order_id = $result['order_id'];
-        $this->dispatch('order-created', order_id: $this->order_id);
+        $this->triggerSnap($snapAction);
+    }
+
+    private function triggerSnap(?GetMidtransSnapTokenAction $snapAction = null): void
+    {
+        $snapAction ??= app(GetMidtransSnapTokenAction::class);
+        $snapResult = $snapAction->execute($this->order_id);
+
+        if ($snapResult['success']) {
+            $this->dispatch('open-snap', token: $snapResult['snap_token'], order_id: $this->order_id);
+        } else {
+            $this->addError('order', $snapResult['message'] ?? 'Gagal mendapatkan token pembayaran.');
+        }
     }
 
     public function processPayment(?CreateOrderAction $action = null): void
@@ -189,6 +223,24 @@ class CheckoutPage extends Component
             'price' => $price,
             'icon' => 'local_shipping',
         ];
+    }
+
+    private function hasDestinationCoordinate(): bool
+    {
+        $coordinates = $this->selected_address['coordinates'] ?? null;
+
+        if (is_string($coordinates)) {
+            $coordinates = json_decode($coordinates, true);
+        }
+
+        if (!is_array($coordinates)) {
+            return false;
+        }
+
+        $latitude = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
+        $longitude = $coordinates['longitude'] ?? $coordinates['longtitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
+
+        return is_numeric($latitude) && is_numeric($longitude);
     }
 
     public function render()

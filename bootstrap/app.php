@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'role.owner' => \App\Http\Middleware\RoleOwner::class,
+            'role' => \App\Http\Middleware\RoleAny::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

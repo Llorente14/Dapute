@@ -156,6 +156,7 @@
     @php
         $isLoggedIn = session()->has('supabase_token');
         $currentPath = request()->path();
+        $ordersActive = str_starts_with($currentPath, 'order') || str_starts_with($currentPath, 'orders');
     @endphp
 
     <nav
@@ -169,8 +170,8 @@
                 <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'catalog') ? 'active' : '' }}"
                     href="/catalog">Shop</a>
                 @if ($isLoggedIn)
-                    <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'orders') ? 'active' : '' }}"
-                        href="/orders">Orders</a>
+                    <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ $ordersActive ? 'active' : '' }}"
+                        href="/order">Orders</a>
                 @endif
                 <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'about') ? 'active' : '' }}"
                     href="/about">About</a>
@@ -223,8 +224,8 @@
                 <span x-show="count > 0" x-text="count" style="display: none;" class="absolute top-1 right-2 bg-[#D4EF70] text-[#012d1d] text-[10px] font-black w-[16px] h-[16px] flex items-center justify-center border-[2px] border-[#012d1d] rounded-none">
                 </span>
             </button>
-            <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ str_starts_with($currentPath, 'orders') ? 'active' : 'opacity-60' }}"
-                href="/orders">
+            <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $ordersActive ? 'active' : 'opacity-60' }}"
+                href="/order">
                 <span class="material-symbols-outlined mb-1 text-xl">local_shipping</span>
                 <span class="font-label font-bold text-[10px] uppercase">Orders</span>
             </a>
@@ -247,6 +248,38 @@
     <x-ui.toast />
     @stack('scripts')
     @livewireScripts
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('open-snap', (data) => {
+                const payload = Array.isArray(data) ? data[0] : data;
+                const token = payload.token;
+                const orderId = payload.order_id;
+
+                snap.pay(token, {
+                    onSuccess: function() {
+                        window.location.href = `/order/${orderId}`;
+                    },
+                    onPending: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Pending', subtitle: 'Waiting for payment confirmation.', type: 'cart' }
+                        }));
+                        setTimeout(() => window.location.href = `/order/${orderId}`, 1200);
+                    },
+                    onError: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Failed', subtitle: 'Please try again from order detail.', type: 'cart' }
+                        }));
+                    },
+                    onClose: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Closed', subtitle: 'Order remains pending payment.', type: 'cart' }
+                        }));
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
