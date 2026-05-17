@@ -1,8 +1,9 @@
 <?php
 
+use App\Actions\Transaction\ValidateMidtransWebhookSignatureAction;
 use Illuminate\Support\Facades\Route;
-use App\Actions\Transaction\ProcessMidtransWebhookAction;
 use App\Actions\Logistics\ProcessBiteshipWebhookAction;
+use App\Jobs\ProcessMidtransWebhookJob;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,9 +13,15 @@ use App\Actions\Logistics\ProcessBiteshipWebhookAction;
 | They use raw POST bodies — do NOT wrap in web middleware.
 */
 
-Route::post('/midtrans', function (ProcessMidtransWebhookAction $action) {
+Route::post('/midtrans', function (ValidateMidtransWebhookSignatureAction $action) {
     $payload = request()->json()->all();
-    $action($payload);
+
+    if (!$action->execute($payload)) {
+        return response()->json(['message' => 'Invalid Midtrans signature.'], 403);
+    }
+
+    ProcessMidtransWebhookJob::dispatch($payload);
+
     return response()->json(['status' => 'ok']);
 })->name('webhook.midtrans');
 
