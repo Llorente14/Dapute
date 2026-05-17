@@ -10,6 +10,8 @@
     <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
     <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-surface text-on-surface font-body antialiased min-h-screen flex flex-col selection:bg-tertiary-fixed selection:text-primary">
     <!-- Simplified Checkout Header -->
@@ -27,6 +29,42 @@
         {{ $slot }}
     </main>
 
+    <x-ui.toast />
+
     @livewireScripts
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('open-snap', (data) => {
+                const payload = Array.isArray(data) ? data[0] : data;
+                const token = payload.token;
+                const orderId = payload.order_id;
+                
+                snap.pay(token, {
+                    onSuccess: function(result) {
+                        window.location.href = `/order/${orderId}`;
+                    },
+                    onPending: function(result) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Menunggu', subtitle: 'Menunggu pembayaran...', type: 'cart' }
+                        }));
+                        setTimeout(() => {
+                            window.location.href = `/order/${orderId}`;
+                        }, 2000);
+                    },
+                    onError: function(result) {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Gagal', subtitle: 'Pembayaran gagal!', type: 'cart' }
+                        }));
+                    },
+                    onClose: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Dibatalkan', subtitle: 'Anda menutup popup pembayaran', type: 'cart' }
+                        }));
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

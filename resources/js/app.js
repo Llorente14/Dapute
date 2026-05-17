@@ -172,12 +172,17 @@ document.addEventListener('alpine:init', () => {
         },
     }));
 
-    Alpine.data('checkoutAddressSelector', (userId, initialName = '', selectedAddress = null) => ({
+    Alpine.data('checkoutAddressSelector', (userId, initialName = '', selectedAddress = null, courierType = 'regular') => ({
         userId,
         wire: null,
         addresses: [],
         selectedId: '',
         selectedAddress,
+        courierType,
+        map: null,
+        mapElement: null,
+        marker: null,
+        coordinateStatus: '',
         manual: {
             label: 'Checkout',
             recipient_name: initialName || '',
@@ -185,6 +190,7 @@ document.addEventListener('alpine:init', () => {
             address: '',
             city: '',
             postal_code: '',
+            coordinates: null,
             is_default: false,
         },
 
@@ -197,6 +203,10 @@ document.addEventListener('alpine:init', () => {
                 this.select(defaultAddress);
             } else {
                 this.syncManual();
+            }
+
+            if (this.isInstant()) {
+                setTimeout(() => this.initCoordinatePicker(), 200);
             }
         },
 
@@ -228,6 +238,10 @@ document.addEventListener('alpine:init', () => {
         select(address) {
             this.selectedId = address.id;
             this.sync(address);
+
+            if (this.isInstant()) {
+                setTimeout(() => this.initCoordinatePicker(), 100);
+            }
         },
 
         selectById() {
@@ -239,6 +253,22 @@ document.addEventListener('alpine:init', () => {
 
         selectedAddressDetails() {
             return this.addresses.find((item) => String(item.id) === String(this.selectedId)) || null;
+        },
+
+        isInstant() {
+            return this.courierType === 'instant';
+        },
+
+        setCourierType(type) {
+            this.courierType = type;
+            this.selectedAddress = this.selectedAddress || {};
+
+            if (this.isInstant()) {
+                setTimeout(() => this.initCoordinatePicker(), 100);
+                this.geocodeAddress(false);
+            } else {
+                this.fetchCouriers();
+            }
         },
 
         sync(address) {
@@ -257,6 +287,150 @@ document.addEventListener('alpine:init', () => {
 
             Promise.resolve(setAddress('selected_address', payload))
                 .then(() => this.fetchCouriers());
+        },
+
+        currentAddress() {
+            return this.selectedAddressDetails() || this.manual || {};
+        },
+
+        currentCoordinates() {
+            const raw = this.currentAddress().coordinates || this.selectedAddress?.coordinates || null;
+            if (!raw) return null;
+
+            const latitude = Number(raw.latitude ?? raw.lat);
+            const longitude = Number(raw.longitude ?? raw.longtitude ?? raw.lng ?? raw.lon);
+
+            return Number.isFinite(latitude) && Number.isFinite(longitude)
+                ? { latitude, longitude }
+                : null;
+        },
+
+        initCoordinatePicker() {
+            if (!this.isInstant()) return;
+
+            if (!window.L) {
+                this.coordinateStatus = 'Map library is still loading. Try again in a moment.';
+                return;
+            }
+
+            const mapElement = this.$refs.coordinateMap;
+            if (!mapElement || !mapElement.isConnected || mapElement.offsetParent === null) return;
+
+            const coords = this.currentCoordinates() || { latitude: -6.2, longitude: 106.816666 };
+            this.coordinateStatus = this.currentCoordinates()
+                ? 'Pin ready. Drag marker to fine tune delivery point.'
+                : 'Move the pin, use your location, or geocode the address.';
+
+            setTimeout(() => {
+                const liveMapElement = this.$refs.coordinateMap;
+                if (!liveMapElement || !liveMapElement.isConnected || liveMapElement.offsetParent === null) return;
+
+                if (this.map && this.mapElement !== liveMapElement) {
+                    this.map.remove();
+                    this.map = null;
+                    this.marker = null;
+                }
+
+                if (!this.map) {
+                    this.mapElement = liveMapElement;
+                    delete liveMapElement._leaflet_id;
+                    this.map = window.L.map(liveMapElement).setView([coords.latitude, coords.longitude], 15);
+                    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; OpenStreetMap',
+                    }).addTo(this.map);
+
+                    this.marker = window.L.marker([coords.latitude, coords.longitude], { draggable: true }).addTo(this.map);
+                    this.marker.on('dragend', () => {
+                        const point = this.marker.getLatLng();
+                        this.updateCoordinate(point.lat, point.lng, 'Pin moved.');
+                    });
+                } else {
+                    this.map.invalidateSize();
+                    this.map.setView([coords.latitude, coords.longitude], 15);
+                    this.marker.setLatLng([coords.latitude, coords.longitude]);
+                }
+
+                if (!this.currentCoordinates()) {
+                    this.geocodeAddress(false);
+                }
+            }, 80);
+        },
+
+        updateCoordinate(latitude, longitude, message = 'Coordinate selected.') {
+            const coordinate = {
+                latitude: Number(latitude.toFixed(7)),
+                longitude: Number(longitude.toFixed(7)),
+                longtitude: Number(longitude.toFixed(7)),
+            };
+
+            if (this.selectedId) {
+                this.addresses = this.addresses.map((address) => String(address.id) === String(this.selectedId)
+                    ? { ...address, coordinates: coordinate }
+                    : address);
+                localStorage.setItem(this.storageKey, JSON.stringify(this.addresses));
+                this.sync(this.selectedAddressDetails());
+            } else {
+                this.manual = { ...this.manual, coordinates: coordinate };
+                this.syncManual();
+            }
+
+            if (this.marker) {
+                this.marker.setLatLng([coordinate.latitude, coordinate.longitude]);
+            }
+
+            this.coordinateStatus = `${message} Lat ${coordinate.latitude}, Lng ${coordinate.longitude}`;
+        },
+
+        useMyLocation() {
+            if (!navigator.geolocation) {
+                this.coordinateStatus = 'Geolocation is not supported by this browser.';
+                return;
+            }
+
+            this.coordinateStatus = 'Reading browser location...';
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    this.updateCoordinate(latitude, longitude, 'Current location selected.');
+                    if (this.map) this.map.setView([latitude, longitude], 16);
+                },
+                () => {
+                    this.coordinateStatus = 'Unable to read current location. Drag the pin manually.';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        },
+
+        async geocodeAddress(showStatus = true) {
+            const address = this.currentAddress();
+            const query = [address.address, address.city, address.postal_code]
+                .filter(Boolean)
+                .join(', ');
+
+            if (!query) {
+                if (showStatus) this.coordinateStatus = 'Address is empty. Drag the pin manually.';
+                return;
+            }
+
+            if (showStatus) this.coordinateStatus = 'Searching coordinate from address...';
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`);
+                const results = await response.json();
+
+                if (!results.length) {
+                    if (showStatus) this.coordinateStatus = 'Coordinate not found. Drag the pin manually.';
+                    return;
+                }
+
+                const latitude = Number(results[0].lat);
+                const longitude = Number(results[0].lon);
+                this.updateCoordinate(latitude, longitude, 'Coordinate found from address.');
+                if (this.map) this.map.setView([latitude, longitude], 16);
+            } catch {
+                if (showStatus) this.coordinateStatus = 'Geocoding failed. Drag the pin manually.';
+            }
         },
 
         fetchCouriers() {

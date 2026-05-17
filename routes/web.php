@@ -11,6 +11,7 @@ use App\Livewire\CheckoutPage;
 use App\Livewire\Auth\LoginForm;
 use App\Livewire\Auth\RegisterForm;
 use App\Livewire\ProfileForm;
+use App\Livewire\Transaction\OrderDetailPage;
 
 Route::get('/', function () {
     return view('home');
@@ -19,7 +20,7 @@ Route::get('/', function () {
 Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAction $action) {
     // Memastikan user sudah auth di level route/middleware
     $request->validate(['postal_code' => 'required']);
-    return response()->json($action->execute((string) auth()->id(), $request->postal_code, $request->all()));
+    return response()->json($action->execute((string) auth()->id(), $request->postal_code, $request->all(), $request->input('courier_type', 'regular')));
 })->middleware('auth');
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +46,8 @@ Route::middleware('guest')->group(function () {
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
     Route::get('/checkout', CheckoutPage::class)->name('checkout');
+    Route::get('/order/{id}', OrderDetailPage::class)->name('orders.show');
+    Route::get('/orders/{id}', OrderDetailPage::class)->name('orders.show.alias');
     Route::get('/profile', ProfileForm::class)->name('profile');
 
 
