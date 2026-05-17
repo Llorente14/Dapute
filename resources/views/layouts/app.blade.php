@@ -171,7 +171,7 @@
                     href="/catalog">Shop</a>
                 @if ($isLoggedIn)
                     <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ $ordersActive ? 'active' : '' }}"
-                        href="/orders">Orders</a>
+                        href="/order">Orders</a>
                 @endif
                 <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'about') ? 'active' : '' }}"
                     href="/about">About</a>
@@ -225,7 +225,7 @@
                 </span>
             </button>
             <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $ordersActive ? 'active' : 'opacity-60' }}"
-                href="/orders">
+                href="/order">
                 <span class="material-symbols-outlined mb-1 text-xl">local_shipping</span>
                 <span class="font-label font-bold text-[10px] uppercase">Orders</span>
             </a>
