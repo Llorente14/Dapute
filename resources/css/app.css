@@ -2,25 +2,194 @@
 
 /* ── Forest Brutalist Design Tokens ─────────────────────── */
 @theme {
-  /* Colors */
-  --color-primary:            #012d1d;
-  --color-primary-container:  #cce8d8;
-  --color-secondary:          #3d6651;
-  --color-secondary-container:#b8e0c8;
-  --color-tertiary:           #D4EF70;
-  --color-surface:            #f4fbf7;
-  --color-surface-lowest:     #ffffff;
-  --color-surface-low:        #e8f3ec;
+    /* ── Primary palette ── */
+    --color-primary: #012d1d;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #1b4332;
+    --color-on-primary-container: #86af99;
+    --color-primary-fixed: #c1ecd4;
+    --color-primary-fixed-dim: #a5d0b9;
 
-  /* Fonts */
-  --font-epilogue:     'Epilogue', sans-serif;
-  --font-manrope:      'Manrope', sans-serif;
-  --font-space-grotesk:'Space Grotesk', sans-serif;
+    /* ── Secondary palette ── */
+    --color-secondary: #57615c;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #d8e2dc;
+    --color-on-secondary-container: #5b6560;
+    --color-secondary-fixed: #dbe5df;
+    --color-secondary-fixed-dim: #bfc9c3;
 
-  /* Neo-Shadows */
-  --shadow-brutal:     4px 4px 0 0 #012d1d;
-  --shadow-brutal-lg:  6px 6px 0 0 #012d1d;
+    /* ── Tertiary palette (lime accent) ── */
+    --color-tertiary: #212a00;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #354100;
+    --color-on-tertiary-container: #98b139;
+    --color-tertiary-fixed: #d3ee6f;
+    --color-tertiary-fixed-dim: #b8d256;
 
-  /* Border radius — Forest Brutalist: always 0 */
-  --radius: 0px;
+    /* ── Surface ── */
+    --color-surface: #f4fbf7;
+    --color-surface-dim: #d5dcd8;
+    --color-surface-bright: #f4fbf7;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #eef5f1;
+    --color-surface-container: #e8efec;
+    --color-surface-container-high: #e3eae6;
+    --color-surface-container-highest: #dde4e0;
+    --color-surface-variant: #dde4e0;
+    --color-surface-lowest: #ffffff;
+
+    /* ── On-surface ── */
+    --color-on-surface: #161d1b;
+    --color-on-surface-variant: #414844;
+    --color-on-background: #161d1b;
+    --color-background: #f4fbf7;
+
+    /* ── Outline ── */
+    --color-outline: #717973;
+    --color-outline-variant: #c1c8c2;
+
+    /* ── Error ── */
+    --color-error: #ba1a1a;
+    --color-on-error: #ffffff;
+    --color-error-container: #ffdad6;
+    --color-on-error-container: #93000a;
+
+    /* ── Inverse ── */
+    --color-inverse-surface: #2b322f;
+    --color-inverse-on-surface: #ebf2ee;
+    --color-inverse-primary: #a5d0b9;
+
+    /* ── Fonts ── */
+    --font-epilogue: "Epilogue", sans-serif;
+    --font-manrope: "Manrope", sans-serif;
+    --font-space-grotesk: "Space Grotesk", sans-serif;
+    --font-headline: "Epilogue", sans-serif;
+    --font-body: "Manrope", sans-serif;
+    --font-label: "Space Grotesk", sans-serif;
+
+    /* ── Shadows (offset/brutalist) ── */
+    --shadow-brutal: 4px 4px 0 0 #012d1d;
+    --shadow-brutal-lg: 6px 6px 0 0 #012d1d;
+
+    /* ── Border radius — always 0 ── */
+    --radius: 0px;
+
+    /* ── Animations ── */
+    --animate-fade-up: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    --animate-pop-in: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+    @keyframes fadeUp {
+        0% {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes popIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    /* Colors */
+    --color-surface-container-lowest: #ffffff;
+    --color-outline: #717973;
+    --color-on-primary-fixed-variant: #274e3d;
+    --color-primary: #012d1d;
+    --color-on-primary-fixed: #002114;
+    --color-primary-container: #1b4332;
+    --color-on-surface-variant: #414844;
+    --color-error-container: #ffdad6;
+    --color-surface: #f4fbf7;
+    --color-primary-fixed-dim: #a5d0b9;
+    --color-on-tertiary-fixed: #171e00;
+    --color-on-primary-container: #86af99;
+    --color-on-secondary: #ffffff;
+    --color-error: #ba1a1a;
+    --color-surface-dim: #d5dcd8;
+    --color-on-tertiary: #ffffff;
+    --color-surface-variant: #dde4e0;
+    --color-outline-variant: #c1c8c2;
+    --color-inverse-surface: #2b322f;
+    --color-tertiary-fixed-dim: #b8d256;
+    --color-inverse-primary: #a5d0b9;
+    --color-on-error: #ffffff;
+    --color-surface-container-highest: #dde4e0;
+    --color-surface-container: #e8efec;
+    --color-on-secondary-fixed-variant: #3f4945;
+    --color-secondary-container: #d8e2dc;
+    --color-secondary-fixed: #dbe5df;
+    --color-primary-fixed: #c1ecd4;
+    --color-on-background: #161d1b;
+    --color-secondary-fixed-dim: #bfc9c3;
+    --color-on-tertiary-container: #98b139;
+    --color-on-secondary-fixed: #151d1a;
+    --color-on-primary: #ffffff;
+    --color-background: #f4fbf7;
+    --color-tertiary-fixed: #d3ee6f;
+    --color-tertiary: #212a00;
+    --color-surface-tint: #3f6653;
+    --color-surface-container-high: #e3eae6;
+    --color-on-error-container: #93000a;
+    --color-surface-container-low: #eef5f1;
+    --color-on-surface: #161d1b;
+    --color-surface-bright: #f4fbf7;
+    --color-on-secondary-container: #5b6560;
+    --color-secondary: #57615c;
+    --color-inverse-on-surface: #ebf2ee;
+    --color-on-tertiary-fixed-variant: #3e4c00;
+    --color-tertiary-container: #354100;
+
+    /* Fonts */
+    --font-headline: "Epilogue", sans-serif;
+    --font-body: "Manrope", sans-serif;
+    --font-label: "Space Grotesk", sans-serif;
+
+    /* Shadows */
+    --shadow-brutal: 4px 4px 0px 0px rgba(1, 45, 29, 1);
+    --shadow-brutal-hover: 6px 6px 0px 0px rgba(1, 45, 29, 1);
+
+    /* Border radius */
+    --radius: 0px;
+}
+
+/* ── Text Selection — Acid Lime highlight ───────────────── */
+::selection {
+    background-color: #d4ef70;
+    color: #012d1d;
+}
+::-moz-selection {
+    background-color: #d4ef70;
+    color: #012d1d;
+}
+
+/* ── Native <option> styling (limited browser support) ──── */
+select option {
+    background-color: #ffffff;
+    color: #012d1d;
+    font-family: "Space Grotesk", sans-serif;
+    padding: 8px 12px;
+}
+select option:checked,
+select option:hover {
+    background-color: #012d1d;
+    color: #ffffff;
+}
+
+/* ── Hide number input spinners ─────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
 }
