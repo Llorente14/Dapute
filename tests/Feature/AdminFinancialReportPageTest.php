@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Actions\Reports\FetchMonthlyFinancialReportAction;
+use App\Enums\OrderStatus;
 use App\Livewire\Admin\FinancialReportPage;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,6 +18,8 @@ class AdminFinancialReportPageTest extends TestCase
     {
         parent::setUp();
 
+        Schema::dropIfExists('order_items');
+        Schema::dropIfExists('orders');
         Schema::dropIfExists('users');
 
         Schema::create('users', function (Blueprint $table): void {
@@ -27,6 +31,25 @@ class AdminFinancialReportPageTest extends TestCase
             ['id' => 'owner-123', 'role' => 'owner'],
             ['id' => 'customer-123', 'role' => 'customer'],
         ]);
+
+        Schema::create('orders', function (Blueprint $table): void {
+            $table->string('id')->primary();
+            $table->timestamp('order_date')->nullable();
+            $table->integer('subtotal_amount')->default(0);
+            $table->integer('shipping_fee')->default(0);
+            $table->integer('total_payment')->default(0);
+            $table->string('order_status');
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+        });
+
+        Schema::create('order_items', function (Blueprint $table): void {
+            $table->string('id')->primary();
+            $table->string('order_id');
+            $table->string('cake_name_snapshot');
+            $table->integer('quantity');
+            $table->integer('subtotal');
+        });
     }
 
     public function test_owner_can_view_financial_report_ui(): void
@@ -66,6 +89,36 @@ class AdminFinancialReportPageTest extends TestCase
             ->assertSee('Grand Total');
     }
 
+    public function test_monthly_financial_report_action_returns_aggregated_completed_orders_only(): void
+    {
+        $this->seedOrder('paid-1', '2026-05-08 10:00:00', OrderStatus::PAID_PROCESSING->value, 100000, 20000, 122500);
+        $this->seedOrder('done-1', '2026-05-09 10:00:00', OrderStatus::COMPLETED->value, 50000, 15000, 67500);
+        $this->seedOrder('pending-1', '2026-05-10 10:00:00', OrderStatus::PENDING_PAYMENT->value, 999999, 999999, 999999);
+        $this->seedOrder('cancelled-1', '2026-05-11 10:00:00', OrderStatus::CANCELLED->value, 999999, 999999, 999999);
+        $this->seedOrder('outside-month', '2026-04-08 10:00:00', OrderStatus::COMPLETED->value, 999999, 999999, 999999);
+
+        $report = app(FetchMonthlyFinancialReportAction::class)->execute(5, 2026);
+
+        $this->assertCount(2, $report['rows']);
+        $this->assertSame(150000, $report['summary']['product_revenue']);
+        $this->assertSame(35000, $report['summary']['shipping_revenue']);
+        $this->assertSame(190000, $report['summary']['grand_total']);
+        $this->assertSame(2, $report['summary']['order_count']);
+        $this->assertSame(['DONE-1', 'PAID-1'], array_column($report['rows'], 'order_no'));
+    }
+
+    public function test_financial_report_livewire_loads_rows_from_month_and_year_filter(): void
+    {
+        $this->seedOrder('may-1', '2026-05-08 10:00:00', OrderStatus::COMPLETED->value, 100000, 20000, 122500);
+        $this->seedOrder('january-1', '2026-01-08 10:00:00', OrderStatus::COMPLETED->value, 50000, 10000, 62500);
+
+        Livewire::actingAs($this->authUser('owner-123'))
+            ->test(FinancialReportPage::class)
+            ->set('month', 1)
+            ->set('year', 2026)
+            ->assertSet('reportRows.0.order_no', 'JANUARY-');
+    }
+
     private function authUser(string $id): User
     {
         $user = new User();
@@ -74,5 +127,27 @@ class AdminFinancialReportPageTest extends TestCase
         $user->exists = true;
 
         return $user;
+    }
+
+    private function seedOrder(string $id, string $orderDate, string $status, int $subtotal, int $shipping, int $total): void
+    {
+        DB::table('orders')->insert([
+            'id' => $id,
+            'order_date' => $orderDate,
+            'subtotal_amount' => $subtotal,
+            'shipping_fee' => $shipping,
+            'total_payment' => $total,
+            'order_status' => $status,
+            'created_at' => $orderDate,
+            'updated_at' => $orderDate,
+        ]);
+
+        DB::table('order_items')->insert([
+            'id' => 'item-' . $id,
+            'order_id' => $id,
+            'cake_name_snapshot' => 'Kue ' . $id,
+            'quantity' => 1,
+            'subtotal' => $subtotal,
+        ]);
     }
 }
