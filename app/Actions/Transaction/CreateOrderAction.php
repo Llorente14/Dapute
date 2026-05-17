@@ -53,8 +53,19 @@ class CreateOrderAction
 
             if (!empty($shippingAddress)) {
                 $coordinates = $shippingAddress['coordinates'] ?? null;
+                $latitude = null;
+                $longitude = null;
+
                 if (is_array($coordinates)) {
+                    $latitude = $coordinates['latitude'] ?? $coordinates['lat'] ?? null;
+                    $longitude = $coordinates['longitude'] ?? $coordinates['longtitude'] ?? $coordinates['lng'] ?? $coordinates['lon'] ?? null;
                     $coordinates = json_encode($coordinates);
+                } elseif (is_string($coordinates)) {
+                    $decoded = json_decode($coordinates, true);
+                    if (is_array($decoded)) {
+                        $latitude = $decoded['latitude'] ?? $decoded['lat'] ?? null;
+                        $longitude = $decoded['longitude'] ?? $decoded['longtitude'] ?? $decoded['lng'] ?? $decoded['lon'] ?? null;
+                    }
                 }
 
                 DB::table('order_addresses')->insert([
@@ -66,6 +77,8 @@ class CreateOrderAction
                     'city' => $shippingAddress['city'] ?? '',
                     'postal_code' => $shippingAddress['postal_code'] ?? '',
                     'coordinates' => $coordinates,
+                    'latitude' => is_numeric($latitude) ? (float) $latitude : null,
+                    'longitude' => is_numeric($longitude) ? (float) $longitude : null,
                 ]);
             }
 

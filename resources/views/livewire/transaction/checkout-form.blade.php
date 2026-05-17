@@ -2,7 +2,7 @@
     <!-- Left Column: Forms -->
     <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16 relative z-50">
         <!-- Address Input Section -->
-        <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name), $wire.entangle('selected_address').live)" x-init="init($wire)">
+        <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name), $wire.entangle('selected_address').live, $wire.entangle('courier_type').live)" x-init="init($wire)">
             <header class="flex items-baseline justify-between mb-2">
                 <h1 class="font-headline font-bold text-3xl md:text-4xl uppercase tracking-tight text-primary">Shipping
                     Details</h1>
@@ -18,6 +18,21 @@
                     {{ $message }}
                 </div>
             @enderror
+
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button"
+                    x-on:click="setCourierType('regular')"
+                    class="border-[3px] border-primary px-4 py-3 font-label font-black text-xs uppercase tracking-widest transition-all shadow-[4px_4px_0_0_#012d1d]"
+                    :class="courierType === 'regular' ? 'bg-primary text-surface' : 'bg-surface-container-lowest text-primary hover:bg-tertiary-fixed'">
+                    Regular
+                </button>
+                <button type="button"
+                    x-on:click="setCourierType('instant')"
+                    class="border-[3px] border-primary px-4 py-3 font-label font-black text-xs uppercase tracking-widest transition-all shadow-[4px_4px_0_0_#012d1d]"
+                    :class="courierType === 'instant' ? 'bg-primary text-surface' : 'bg-surface-container-lowest text-primary hover:bg-tertiary-fixed'">
+                    Instant
+                </button>
+            </div>
 
             <div x-show="addresses.length > 0 && addresses.length <= 3" class="grid grid-cols-1 gap-4">
                 <template x-for="address in addresses" :key="address.id">
@@ -166,6 +181,54 @@
                 @error('selected_address.postal_code')
                     <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                 @enderror
+                @error('selected_address.coordinates')
+                    <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div x-show="courierType === 'instant'" x-effect="if (courierType === 'instant') initCoordinatePicker()"
+                class="bg-surface-container-lowest border-[3px] border-primary p-5 flex flex-col gap-4"
+                style="box-shadow: 4px 4px 0px 0px #012d1d;">
+                <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                        <h2 class="font-headline font-black text-2xl uppercase tracking-tighter text-primary">
+                            Instant Pin Location
+                        </h2>
+                        <p class="font-body text-sm font-semibold text-primary/70 mt-1">
+                            Instant courier requires accurate latitude and longitude.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button"
+                            x-on:click="useMyLocation()"
+                            class="inline-flex items-center gap-2 border-[3px] border-primary bg-tertiary-fixed px-3 py-2 font-label font-black text-xs uppercase tracking-wider text-primary shadow-[3px_3px_0_0_#012d1d] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">my_location</span>
+                            Use My Location
+                        </button>
+                        <button type="button"
+                            x-on:click="geocodeAddress(true)"
+                            class="inline-flex items-center gap-2 border-[3px] border-primary bg-white px-3 py-2 font-label font-black text-xs uppercase tracking-wider text-primary shadow-[3px_3px_0_0_#012d1d] hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">travel_explore</span>
+                            Geocode Address
+                        </button>
+                    </div>
+                </div>
+
+                <div x-ref="coordinateMap" wire:ignore
+                    class="h-[320px] w-full border-[3px] border-primary bg-secondary-container overflow-hidden"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="border-[3px] border-primary bg-white p-3 font-label text-xs font-black uppercase text-primary">
+                        Latitude:
+                        <span x-text="currentCoordinates() ? currentCoordinates().latitude : 'Not selected'"></span>
+                    </div>
+                    <div class="border-[3px] border-primary bg-white p-3 font-label text-xs font-black uppercase text-primary">
+                        Longitude:
+                        <span x-text="currentCoordinates() ? currentCoordinates().longitude : 'Not selected'"></span>
+                    </div>
+                </div>
+
+                <p class="font-body text-xs font-bold text-primary/70" x-text="coordinateStatus"></p>
             </div>
         </section>
 
@@ -323,12 +386,11 @@
             @enderror
 
             <button wire:click="placeOrder" wire:loading.attr="disabled" wire:target="placeOrder"
-                @if (!$selected_courier || $order_id) disabled @endif
+                @if (!$selected_courier) disabled @endif
                 class="w-full bg-primary text-surface border-[3px] border-primary py-5 px-6 font-headline font-black text-lg uppercase tracking-wider flex justify-between items-center group transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0 hover:-translate-y-1 hover:-translate-x-1 active:translate-y-0 active:translate-x-0"
                 style="box-shadow: 6px 6px 0px 0px #D4EF70;" type="button">
 
-                <span wire:loading.remove
-                    wire:target="placeOrder">{{ $order_id ? 'Order Created' : 'Pay Now' }}</span>
+                <span wire:loading.remove wire:target="placeOrder">Pay Now</span>
                 <span wire:loading wire:target="placeOrder">Processing...</span>
 
                 <span wire:loading.remove wire:target="placeOrder"

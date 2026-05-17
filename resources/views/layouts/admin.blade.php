@@ -64,11 +64,11 @@
                 <span class="material-symbols-outlined text-xl shrink-0">dashboard</span>
                 <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Overview</span>
             </a>
-            <a href="#" class="text-[#012d1d] flex items-center gap-3 py-3.5 hover:bg-[#d8e2dc] transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
+            <a href="/admin/orders" class="{{ request()->is('admin/orders') ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
                 <span class="material-symbols-outlined text-xl shrink-0">pending_actions</span>
                 <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Live Orders</span>
             </a>
-            <a href="#" class="bg-[#012d1d] text-white flex items-center gap-3 py-3.5 border-y-2 border-[#012d1d] transition-all duration-300" :class="sidebarOpen ? 'px-6' : 'px-0 justify-center'">
+            <a href="/admin/products" class="{{ request()->is('admin/products*') ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
                 <span class="material-symbols-outlined text-xl material-symbols-filled shrink-0">inventory_2</span>
                 <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Inventory</span>
             </a>
@@ -97,6 +97,7 @@
 
 
 
+    <x-ui.toast />
     @livewireScripts
 </body>
 </html>
