@@ -46,6 +46,7 @@ class OrderHistoryPage extends Component
     public function statusTone(string $status): string
     {
         return match ($status) {
+            'PENDING_PAYMENT' => 'bg-[#ffdad6] text-[#93000a]',
             'PAID_PROCESSING', 'PICKUP_REQUESTED', 'ON_DELIVERY' => 'bg-[#D4EF70] text-[#012d1d]',
             'DELIVERED', 'COMPLETED' => 'bg-[#012d1d] text-white',
             'CANCELLED', 'FAILED', 'EXPIRED' => 'bg-[#ba1a1a] text-white',

@@ -248,6 +248,38 @@
     <x-ui.toast />
     @stack('scripts')
     @livewireScripts
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            Livewire.on('open-snap', (data) => {
+                const payload = Array.isArray(data) ? data[0] : data;
+                const token = payload.token;
+                const orderId = payload.order_id;
+
+                snap.pay(token, {
+                    onSuccess: function() {
+                        window.location.href = `/order/${orderId}`;
+                    },
+                    onPending: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Pending', subtitle: 'Waiting for payment confirmation.', type: 'cart' }
+                        }));
+                        setTimeout(() => window.location.href = `/order/${orderId}`, 1200);
+                    },
+                    onError: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Failed', subtitle: 'Please try again from order detail.', type: 'cart' }
+                        }));
+                    },
+                    onClose: function() {
+                        window.dispatchEvent(new CustomEvent('show-toast', {
+                            detail: { title: 'Payment Closed', subtitle: 'Order remains pending payment.', type: 'cart' }
+                        }));
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

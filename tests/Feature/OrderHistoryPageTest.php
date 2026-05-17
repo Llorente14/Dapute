@@ -132,4 +132,40 @@ class OrderHistoryPageTest extends TestCase
             ->assertSee('Paid Processing')
             ->assertSee('Track Package');
     }
+
+    public function test_order_history_page_warns_for_pending_payment_orders(): void
+    {
+        $user = new User();
+        $user->id = 'customer-123';
+        $user->exists = true;
+
+        DB::table('orders')->insert([
+            'id' => 'order-pending-1',
+            'customer_id' => 'customer-123',
+            'order_date' => now(),
+            'subtotal_amount' => 100000,
+            'shipping_fee' => 20000,
+            'total_payment' => 122500,
+            'order_status' => OrderStatus::PENDING_PAYMENT->value,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        DB::table('order_items')->insert([
+            'id' => 'item-pending-1',
+            'order_id' => 'order-pending-1',
+            'product_id' => null,
+            'cake_name_snapshot' => 'Pending Cake',
+            'price_snapshot' => 100000,
+            'quantity' => 1,
+            'subtotal' => 100000,
+        ]);
+
+        $this->actingAs($user)
+            ->get('/order')
+            ->assertOk()
+            ->assertSee('Pending Payment')
+            ->assertSee('Payment pending. Open order detail to pay or cancel.')
+            ->assertSee('Pay Or Cancel');
+    }
 }

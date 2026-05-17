@@ -53,7 +53,7 @@
                                         class="h-full w-full object-cover grayscale md:min-h-[180px]"
                                         onerror="this.src='{{ $fallbackImage }}'"
                                     />
-                                    <span class="absolute left-2 top-2 border border-[#012d1d] bg-[#D4EF70] px-2 py-1 font-label text-[9px] font-black uppercase tracking-wider md:left-3 md:top-3 md:text-[10px] md:tracking-widest">
+                                    <span class="absolute left-2 top-2 border border-[#012d1d] px-2 py-1 font-label text-[9px] font-black uppercase tracking-wider md:left-3 md:top-3 md:text-[10px] md:tracking-widest {{ $this->statusTone($order['order_status']) }}">
                                         {{ $this->statusLabel($order['order_status']) }}
                                     </span>
                                 </div>
@@ -84,13 +84,21 @@
                                         </div>
                                     </div>
 
+                                    @if($order['order_status'] === 'PENDING_PAYMENT')
+                                        <div class="mt-3 border-[3px] border-[#ba1a1a] bg-[#ffdad6] p-3 font-label text-[10px] font-black uppercase tracking-wider text-[#93000a] md:text-[11px] md:tracking-widest">
+                                            Payment pending. Open order detail to pay or cancel.
+                                        </div>
+                                    @endif
+
                                     <div class="mt-3 grid gap-2 border-[3px] border-[#012d1d] bg-[#f4fbf7] p-3 md:mt-5 md:grid-cols-[1fr_auto] md:items-center md:gap-3 md:p-4">
                                         <div class="flex items-center gap-2 md:gap-3">
                                             <span class="material-symbols-outlined text-[20px] md:text-[24px]">local_shipping</span>
                                             <div>
-                                                <p class="font-label text-[10px] font-black uppercase tracking-wider md:text-[11px] md:tracking-widest">Package Status</p>
+                                                <p class="font-label text-[10px] font-black uppercase tracking-wider md:text-[11px] md:tracking-widest">
+                                                    {{ $order['order_status'] === 'PENDING_PAYMENT' ? 'Payment Status' : 'Package Status' }}
+                                                </p>
                                                 <p class="font-body text-xs font-bold text-[#3d6651] md:text-sm">
-                                                    {{ $order['tracking_id'] ? 'Tracking #' . $order['tracking_id'] : 'Tracking number not assigned yet' }}
+                                                    {{ $order['order_status'] === 'PENDING_PAYMENT' ? 'Payment not completed yet' : ($order['tracking_id'] ? 'Tracking #' . $order['tracking_id'] : 'Tracking number not assigned yet') }}
                                                 </p>
                                             </div>
                                         </div>
@@ -100,7 +108,7 @@
                                             class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#012d1d] px-3 py-2.5 font-label text-[11px] font-black uppercase tracking-widest text-white transition-all hover:bg-[#D4EF70] hover:text-[#012d1d] md:px-4 md:py-3 md:text-xs"
                                         >
                                             <span class="material-symbols-outlined text-[18px]">route</span>
-                                            Track Package
+                                            {{ $order['order_status'] === 'PENDING_PAYMENT' ? 'Pay Or Cancel' : 'Track Package' }}
                                         </a>
                                     </div>
                                 </div>

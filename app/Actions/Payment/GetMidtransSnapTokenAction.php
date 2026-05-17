@@ -37,12 +37,14 @@ class GetMidtransSnapTokenAction
 
             // 3. CONSTRAINT: Cek apakah order sudah memiliki token aktif (Database Check)
             if (isset($order->snap_token) && !empty($order->snap_token)) {
+                $this->ensurePendingPayment($order, $order->snap_token);
                 return ['success' => true, 'snap_token' => $order->snap_token];
             }
 
             // FALLBACK CONSTRAINT: Cek via Cache Lock/Storage jika kolom DB belum siap
             $cachedToken = Cache::get("midtrans_token_order_{$orderId}");
             if ($cachedToken) {
+                $this->ensurePendingPayment($order, $cachedToken);
                 return ['success' => true, 'snap_token' => $cachedToken];
             }
 
