@@ -20,7 +20,7 @@ Route::post('/midtrans', function (ValidateMidtransWebhookSignatureAction $actio
         return response()->json(['message' => 'Invalid Midtrans signature.'], 403);
     }
 
-    ProcessMidtransWebhookJob::dispatch($payload);
+    ProcessMidtransWebhookJob::dispatchSync($payload);
 
     return response()->json(['status' => 'ok']);
 })->name('webhook.midtrans');

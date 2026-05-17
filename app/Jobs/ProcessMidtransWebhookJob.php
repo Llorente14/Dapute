@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Actions\Transaction\ProcessMidtransWebhookAction;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Log;
 
 class ProcessMidtransWebhookJob implements ShouldQueue
 {
@@ -15,11 +15,8 @@ class ProcessMidtransWebhookJob implements ShouldQueue
         //
     }
 
-    public function handle(): void
+    public function handle(ProcessMidtransWebhookAction $action): void
     {
-        Log::info('Midtrans webhook validated and queued.', [
-            'order_id' => $this->payload['order_id'] ?? null,
-            'transaction_status' => $this->payload['transaction_status'] ?? null,
-        ]);
+        $action->execute($this->payload);
     }
 }
