@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Actions\Reports\FetchMonthlyFinancialReportAction;
+use App\Actions\Reports\ExportMonthlyFinancialReportAction;
 use App\Enums\OrderStatus;
 use App\Livewire\Admin\FinancialReportPage;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -117,6 +119,44 @@ class AdminFinancialReportPageTest extends TestCase
             ->set('month', 1)
             ->set('year', 2026)
             ->assertSet('reportRows.0.order_no', 'JANUARY-');
+    }
+
+    public function test_owner_can_download_pdf_and_excel_reports_with_expected_filename(): void
+    {
+        $this->actingAs($this->authUser('owner-123'));
+        $this->seedOrder('may-1', '2026-05-08 10:00:00', OrderStatus::COMPLETED->value, 100000, 20000, 122500);
+
+        $action = app(ExportMonthlyFinancialReportAction::class);
+
+        $pdf = $action->pdf(5, 2026);
+        $excel = $action->excel(5, 2026);
+
+        $this->assertStringContainsString('laporan-dapute-2026-05.pdf', $pdf->headers->get('content-disposition'));
+        $this->assertStringContainsString('laporan-dapute-2026-05.xlsx', $excel->headers->get('content-disposition'));
+    }
+
+    public function test_owner_can_download_pdf_and_excel_reports_from_http_routes(): void
+    {
+        $this->actingAs($this->authUser('owner-123'));
+        $this->seedOrder('may-1', '2026-05-08 10:00:00', OrderStatus::COMPLETED->value, 100000, 20000, 122500);
+
+        $this->get('/admin/reports/export/pdf?month=5&year=2026')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'attachment; filename=laporan-dapute-2026-05.pdf');
+
+        $this->get('/admin/reports/export/excel?month=5&year=2026')
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=laporan-dapute-2026-05.xlsx');
+    }
+
+    public function test_non_owner_cannot_export_financial_report_from_backend(): void
+    {
+        $this->actingAs($this->authUser('customer-123'));
+
+        $this->expectException(AuthorizationException::class);
+
+        app(ExportMonthlyFinancialReportAction::class)->pdf(5, 2026);
     }
 
     private function authUser(string $id): User
