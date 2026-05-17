@@ -3,6 +3,8 @@
 namespace App\Livewire\Admin;
 
 use App\Actions\Logistics\UpdateOrderStatusAction;
+use App\Enums\OrderStatus;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -12,6 +14,9 @@ class OrderQueue extends Component
     public ?string $expandedOrderId = null;
     public array $orders = [];
     public array $orderItems = [];
+    public int $page = 1;
+    public int $perPage = 10;
+    public int $totalOrders = 0;
 
     private const ACTIVE_STATUSES = [
         'PENDING_PAYMENT',
@@ -19,6 +24,7 @@ class OrderQueue extends Component
         'PAID_PROCESSING',
         'PICKUP_REQUESTED',
         'ON_DELIVERY',
+        'DELIVERED',
     ];
 
     public function mount(): void
@@ -29,6 +35,50 @@ class OrderQueue extends Component
     public function filterBy(string $status): void
     {
         $this->statusFilter = $status;
+        $this->expandedOrderId = null;
+        $this->page = 1;
+        $this->loadOrders();
+    }
+
+    public function setPerPage(int $perPage): void
+    {
+        $perPage = in_array($perPage, [5, 10], true) ? $perPage : 10;
+
+        if ($this->perPage === $perPage) {
+            return;
+        }
+
+        $this->perPage = $perPage;
+        $this->page = 1;
+        $this->expandedOrderId = null;
+        $this->loadOrders();
+    }
+
+    public function nextPage(): void
+    {
+        if ($this->page >= $this->totalPages()) {
+            return;
+        }
+
+        $this->page++;
+        $this->expandedOrderId = null;
+        $this->loadOrders();
+    }
+
+    public function previousPage(): void
+    {
+        if ($this->page <= 1) {
+            return;
+        }
+
+        $this->page--;
+        $this->expandedOrderId = null;
+        $this->loadOrders();
+    }
+
+    public function goToPage(int $page): void
+    {
+        $this->page = max(1, min($page, $this->totalPages()));
         $this->expandedOrderId = null;
         $this->loadOrders();
     }
@@ -44,19 +94,9 @@ class OrderQueue extends Component
         $this->loadOrderItems($orderId);
     }
 
-    public function cancelPending(string $orderId, UpdateOrderStatusAction $action): void
+    public function updateStatus(string $orderId, string $nextStatus, UpdateOrderStatusAction $action): void
     {
-        $this->transitionOrder($orderId, 'CANCELLED', $action);
-    }
-
-    public function markReadyToShip(string $orderId, UpdateOrderStatusAction $action): void
-    {
-        $this->transitionOrder($orderId, 'PICKUP_REQUESTED', $action);
-    }
-
-    public function requestPickup(string $orderId): void
-    {
-        $this->dispatch('show-toast', title: 'Pickup Pending', subtitle: 'Biteship pickup flow is handled in SCRUM-51.', type: 'cart');
+        $this->transitionOrder($orderId, $nextStatus, $action);
     }
 
     public function statusLabel(string $status): string
@@ -75,6 +115,9 @@ class OrderQueue extends Component
             'IN_PROCESSING', 'PAID_PROCESSING' => 'bg-[#d7e3ff] text-[#001b3f]',
             'PICKUP_REQUESTED' => 'bg-[#eadcff] text-[#2a0054]',
             'ON_DELIVERY' => 'bg-[#c1ecd4] text-[#012d1d]',
+            'DELIVERED' => 'bg-[#012d1d] text-white',
+            'COMPLETED' => 'bg-[#012d1d] text-white',
+            'CANCELLED' => 'bg-[#ffd7d7] text-[#630000]',
             default => 'bg-white text-[#012d1d]',
         };
     }
@@ -87,33 +130,48 @@ class OrderQueue extends Component
             'PAID_PROCESSING' => 'Paid Processing',
             'PICKUP_REQUESTED' => 'Pickup Requested',
             'ON_DELIVERY' => 'On Delivery',
+            'DELIVERED' => 'Delivered',
         ];
     }
 
     public function actionOptions(string $status): array
     {
-        $options = [
+        return [
             [
                 'label' => 'Batalkan',
-                'method' => 'cancelPending',
+                'status' => OrderStatus::CANCELLED->value,
                 'icon' => 'cancel',
-                'available' => $status === 'PENDING_PAYMENT',
+                'available' => in_array($status, [
+                    OrderStatus::PENDING_PAYMENT->value,
+                    'IN_PROCESSING',
+                    OrderStatus::PAID_PROCESSING->value,
+                ], true),
             ],
             [
                 'label' => 'Siap Dikirim',
-                'method' => 'markReadyToShip',
+                'status' => OrderStatus::PICKUP_REQUESTED->value,
                 'icon' => 'outbox',
-                'available' => in_array($status, ['IN_PROCESSING', 'PAID_PROCESSING'], true),
+                'available' => in_array($status, ['IN_PROCESSING', OrderStatus::PAID_PROCESSING->value], true),
             ],
             [
                 'label' => 'Request Pickup',
-                'method' => 'requestPickup',
+                'status' => OrderStatus::ON_DELIVERY->value,
                 'icon' => 'local_shipping',
-                'available' => $status === 'PICKUP_REQUESTED',
+                'available' => $status === OrderStatus::PICKUP_REQUESTED->value,
+            ],
+            [
+                'label' => 'Mark Delivered',
+                'status' => OrderStatus::DELIVERED->value,
+                'icon' => 'inventory',
+                'available' => $status === OrderStatus::ON_DELIVERY->value,
+            ],
+            [
+                'label' => 'Complete Order',
+                'status' => OrderStatus::COMPLETED->value,
+                'icon' => 'task_alt',
+                'available' => $status === OrderStatus::DELIVERED->value,
             ],
         ];
-
-        return $options;
     }
 
     public function itemsForOrder(string $orderId): array
@@ -121,9 +179,38 @@ class OrderQueue extends Component
         return $this->orderItems[$orderId] ?? [];
     }
 
+    public function totalPages(): int
+    {
+        return max(1, (int) ceil($this->totalOrders / $this->perPage));
+    }
+
+    public function pageStart(): int
+    {
+        return $this->totalOrders === 0 ? 0 : (($this->page - 1) * $this->perPage) + 1;
+    }
+
+    public function pageEnd(): int
+    {
+        return min($this->page * $this->perPage, $this->totalOrders);
+    }
+
+    public function paginationPages(): array
+    {
+        $totalPages = $this->totalPages();
+        $start = max(1, $this->page - 2);
+        $end = min($totalPages, $this->page + 2);
+
+        return range($start, $end);
+    }
+
     private function transitionOrder(string $orderId, string $status, UpdateOrderStatusAction $action): void
     {
-        $result = $action($orderId, $status);
+        try {
+            $result = $action($orderId, $status);
+        } catch (AuthorizationException $exception) {
+            $this->dispatch('show-toast', title: 'Update Failed', subtitle: $exception->getMessage(), type: 'cart');
+            return;
+        }
 
         if (!$result['success']) {
             $this->dispatch('show-toast', title: 'Update Failed', subtitle: $result['message'] ?? 'Order status failed to update.', type: 'cart');
@@ -132,7 +219,7 @@ class OrderQueue extends Component
 
         $this->expandedOrderId = null;
         $this->loadOrders();
-        $this->dispatch('show-toast', title: 'Order Updated', subtitle: 'Order queue refreshed.', type: 'success');
+        $this->dispatch('show-toast', title: 'Status diperbarui', subtitle: 'Badge pesanan sudah diperbarui.', type: 'success');
     }
 
     private function loadOrders(): void
@@ -141,9 +228,14 @@ class OrderQueue extends Component
             ? self::ACTIVE_STATUSES
             : $this->statusesForFilter($this->statusFilter);
 
-        $rows = DB::table('orders')
+        $query = DB::table('orders')
             ->leftJoin('users', 'orders.customer_id', '=', 'users.id')
-            ->whereIn('orders.order_status', $statuses)
+            ->whereIn('orders.order_status', $statuses);
+
+        $this->totalOrders = (clone $query)->count('orders.id');
+        $this->page = max(1, min($this->page, $this->totalPages()));
+
+        $rows = $query
             ->select(
                 'orders.id',
                 'orders.customer_id',
@@ -156,6 +248,8 @@ class OrderQueue extends Component
             )
             ->orderByDesc('orders.order_date')
             ->orderByDesc('orders.created_at')
+            ->offset(($this->page - 1) * $this->perPage)
+            ->limit($this->perPage)
             ->get();
 
         $this->orders = $rows

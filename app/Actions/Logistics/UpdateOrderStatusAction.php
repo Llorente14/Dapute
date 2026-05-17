@@ -2,6 +2,8 @@
 
 namespace App\Actions\Logistics;
 
+use App\Enums\OrderStatus;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use InvalidArgumentException;
@@ -37,43 +39,84 @@ class UpdateOrderStatusAction
 
     public function execute(string $orderId, string $newStatus): array
     {
-        // Validasi input status
-        if (!array_key_exists($newStatus, self::VALID_TRANSITIONS) && $newStatus !== self::STATUS_DONE && $newStatus !== self::STATUS_CANCELLED) {
-            throw new InvalidArgumentException("Status '{$newStatus}' tidak valid dalam sistem.");
+        $user = auth()->user();
+
+        if (!$user || !in_array($user->role, ['admin', 'karyawan'], true)) {
+            throw new AuthorizationException('Only admin or employee can update order status.');
         }
 
-        // Ambil data pesanan
-        $order = DB::table('orders')->where('id', $orderId)->lockForUpdate()->first();
+        if (!OrderStatus::tryFrom($status)) {
+            return ['success' => false, 'message' => 'Invalid order status.'];
+        }
+
+        $order = DB::table('orders')
+            ->where('id', $orderId)
+            ->select('id', 'order_status')
+            ->first();
 
         if (!$order) {
-            throw new Exception("Pesanan dengan ID {$orderId} tidak ditemukan.");
+            Log::warning('Order status update skipped: order not found.', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return ['success' => false, 'message' => 'Order not found.'];
         }
 
-        // Terjemahkan status DB lama kembali ke bahasa SCRUM-52
-        $currentDbStatus = $order->order_status;
-        $currentStatus = array_search($currentDbStatus, self::DB_MAPPING) ?: self::STATUS_PENDING_PAYMENT;
+        if (!$this->canTransition((string) $order->order_status, $status)) {
+            Log::warning('Order status update rejected: invalid transition.', [
+                'order_id' => $orderId,
+                'current_status' => $order->order_status,
+                'requested_status' => $status,
+            ]);
 
-        // Abaikan jika status tidak berubah
-        if ($currentStatus === $newStatus) {
-            return ['success' => true, 'message' => 'Status pesanan tetap sama.'];
+            return ['success' => false, 'message' => 'Invalid status transition.'];
         }
 
-        // Validasi pergerakan status
-        $allowedNextStatuses = self::VALID_TRANSITIONS[$currentStatus] ?? [];
+        $updated = DB::table('orders')
+            ->where('id', $orderId)
+            ->update([
+                'order_status' => $status,
+                'updated_at' => now(),
+            ]);
 
-        if (!in_array($newStatus, $allowedNextStatuses)) {
-            throw new Exception("Transisi ilegal: Tidak dapat mengubah status pesanan dari '{$currentStatus}' menjadi '{$newStatus}'.");
-        }
-
-        // Eksekusi pembaruan ke database menggunakan struktur lama
-        DB::table('orders')->where('id', $orderId)->update([
-            'order_status' => self::DB_MAPPING[$newStatus],
-            // Baris 'updated_at' dihapus agar tidak bentrok dengan DDL lama
+        Log::info('Order status updated from admin queue.', [
+            'order_id' => $orderId,
+            'previous_status' => $order->order_status,
+            'status' => $status,
         ]);
 
         return [
             'success' => true, 
             'message' => "Status pesanan berhasil diperbarui menjadi {$newStatus}."
         ];
+    }
+
+    private function canTransition(string $currentStatus, string $nextStatus): bool
+    {
+        $transitions = [
+            OrderStatus::PENDING_PAYMENT->value => [
+                OrderStatus::CANCELLED->value,
+            ],
+            'IN_PROCESSING' => [
+                OrderStatus::PICKUP_REQUESTED->value,
+                OrderStatus::CANCELLED->value,
+            ],
+            OrderStatus::PAID_PROCESSING->value => [
+                OrderStatus::PICKUP_REQUESTED->value,
+                OrderStatus::CANCELLED->value,
+            ],
+            OrderStatus::PICKUP_REQUESTED->value => [
+                OrderStatus::ON_DELIVERY->value,
+            ],
+            OrderStatus::ON_DELIVERY->value => [
+                OrderStatus::DELIVERED->value,
+            ],
+            OrderStatus::DELIVERED->value => [
+                OrderStatus::COMPLETED->value,
+            ],
+        ];
+
+        return in_array($nextStatus, $transitions[$currentStatus] ?? [], true);
     }
 }
