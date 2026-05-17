@@ -68,7 +68,7 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Actions')
             ->assertSee('Available')
             ->assertSee('Unavailable')
-            ->assertSee('Siap Dikirim')
+            ->assertSee('Ready to Ship')
             ->assertSee('Request Pickup');
     }
 
@@ -90,8 +90,8 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Customer User')
             ->assertDontSee('order-3')
             ->call('filterBy', 'PAID_PROCESSING')
-            ->assertSee('Siap Dikirim')
-            ->assertSee('Batalkan')
+            ->assertSee('Ready to Ship')
+            ->assertSee('Cancelled')
             ->assertSee('Unavailable')
             ->call('toggleDetails', 'order-1')
             ->assertSee('Chocolate Cake')
@@ -153,6 +153,28 @@ class AdminOrderQueueTest extends TestCase
             ->call('updateStatus', 'order-1', OrderStatus::ON_DELIVERY->value);
 
         $this->assertSame(OrderStatus::PENDING_PAYMENT->value, DB::table('orders')->where('id', 'order-1')->value('order_status'));
+    }
+
+    public function test_status_update_supports_scrum_50_legacy_processing_transition(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::PICKUP_REQUESTED->value);
+
+        $this->assertSame(OrderStatus::PICKUP_REQUESTED->value, DB::table('orders')->where('id', 'order-1')->value('order_status'));
+    }
+
+    public function test_status_update_blocks_processing_cancel_because_only_paid_or_pending_can_cancel(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::CANCELLED->value);
+
+        $this->assertSame('IN_PROCESSING', DB::table('orders')->where('id', 'order-1')->value('order_status'));
     }
 
     public function test_status_update_requires_admin_or_employee_role(): void

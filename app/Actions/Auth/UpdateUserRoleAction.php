@@ -14,10 +14,9 @@ class UpdateUserRoleAction
     public function update(string $userId, string $role, bool $status): array
     {
         try {
-            // Validasi Strict Enum sesuai constraint tabel Supabase
             $allowedRoles = ['customer', 'admin', 'owner', 'staff'];
             if (!in_array($role, $allowedRoles)) {
-                return ['success' => false, 'message' => 'Role tidak valid. Harus berupa owner, admin, staff, atau customer.'];
+                return ['success' => false, 'message' => 'Invalid role. Must be owner, admin, staff, or customer.'];
             }
 
             DB::table('users')->where('id', $userId)->update([
@@ -25,10 +24,10 @@ class UpdateUserRoleAction
                 'is_active' => DB::raw($status ? 'true' : 'false')
             ]);
 
-            return ['success' => true, 'message' => 'Data pengguna berhasil diperbarui.'];
+            return ['success' => true, 'message' => 'User data successfully updated.'];
         } catch (\Exception $e) {
             Log::error("UpdateUserRole Error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Gagal memperbarui data pengguna.'];
+            return ['success' => false, 'message' => 'Failed to update user data.'];
         }
     }
 
@@ -46,13 +45,13 @@ class UpdateUserRoleAction
             ]);
 
             if ($response->successful()) {
-                return ['success' => true, 'message' => 'Instruksi reset password berhasil dikirim ke email target.'];
+                return ['success' => true, 'message' => 'Password reset instructions successfully sent to target email.'];
             }
 
-            return ['success' => false, 'message' => 'Gagal mengirim instruksi reset password. Pastikan email terdaftar.'];
+            return ['success' => false, 'message' => 'Failed to send password reset instructions. Make sure the email is registered.'];
         } catch (\Exception $e) {
             Log::error("ResetPassword Error: " . $e->getMessage());
-            return ['success' => false, 'message' => 'Terjadi kesalahan sistem saat menghubungi Supabase.'];
+            return ['success' => false, 'message' => 'System error occurred while contacting Supabase.'];
         }
     }
 }

@@ -125,7 +125,7 @@ class OrderQueue extends Component
     public function getFilterTabsProperty(): array
     {
         return [
-            'ALL' => 'Semua',
+            'ALL' => 'All',
             'PENDING_PAYMENT' => 'Pending',
             'PAID_PROCESSING' => 'Paid Processing',
             'PICKUP_REQUESTED' => 'Pickup Requested',
@@ -138,17 +138,16 @@ class OrderQueue extends Component
     {
         return [
             [
-                'label' => 'Batalkan',
+                'label' => 'Cancelled',
                 'status' => OrderStatus::CANCELLED->value,
                 'icon' => 'cancel',
                 'available' => in_array($status, [
                     OrderStatus::PENDING_PAYMENT->value,
-                    'IN_PROCESSING',
                     OrderStatus::PAID_PROCESSING->value,
                 ], true),
             ],
             [
-                'label' => 'Siap Dikirim',
+                'label' => 'Ready to Ship',
                 'status' => OrderStatus::PICKUP_REQUESTED->value,
                 'icon' => 'outbox',
                 'available' => in_array($status, ['IN_PROCESSING', OrderStatus::PAID_PROCESSING->value], true),
@@ -219,7 +218,7 @@ class OrderQueue extends Component
 
         $this->expandedOrderId = null;
         $this->loadOrders();
-        $this->dispatch('show-toast', title: 'Status diperbarui', subtitle: 'Badge pesanan sudah diperbarui.', type: 'success');
+        $this->dispatch('show-toast', title: 'Status updated', subtitle: 'Order badge has been updated.', type: 'success');
     }
 
     private function loadOrders(): void

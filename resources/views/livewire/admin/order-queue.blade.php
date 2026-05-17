@@ -51,8 +51,8 @@
             <div class="px-4 py-4">Customer</div>
             <div class="px-4 py-4 text-right">Total</div>
             <div class="px-4 py-4">Status</div>
-            <div class="px-4 py-4">Tanggal Masuk</div>
-            <div class="px-4 py-4 text-right">Aksi</div>
+            <div class="px-4 py-4">Date Entered</div>
+            <div class="px-4 py-4 text-right">Actions</div>
         </div>
 
         <div class="divide-y-[3px] divide-[#012d1d]">
@@ -105,7 +105,7 @@
                         </div>
 
                         <div>
-                            <p class="lg:hidden mb-1 font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Tanggal Masuk</p>
+                            <p class="lg:hidden mb-1 font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Date Entered</p>
                             <p class="font-body text-sm font-bold text-[#414844]">{{ $formatDate($order['order_date']) }}</p>
                         </div>
 
