@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Log;
 
 class UpdateOrderStatusAction
 {
+
+
     private const ALLOWED_ROLES = ['admin', 'karyawan'];
 
     private const VALID_TRANSITIONS = [

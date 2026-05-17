@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Actions\Logistics\ManualShipmentAction;
 use App\Actions\Logistics\UpdateOrderStatusAction;
 use App\Livewire\Admin\OrderQueue;
 use App\Models\User;
@@ -20,6 +21,7 @@ class AdminOrderQueueTest extends TestCase
         parent::setUp();
 
         Schema::dropIfExists('order_items');
+        Schema::dropIfExists('order_addresses');
         Schema::dropIfExists('orders');
         Schema::dropIfExists('users');
 
@@ -36,8 +38,20 @@ class AdminOrderQueueTest extends TestCase
             $table->timestamp('order_date')->nullable();
             $table->integer('total_payment');
             $table->string('order_status')->default(OrderStatus::PENDING_PAYMENT->value);
+            $table->string('biteship_order_id')->nullable();
+            $table->string('tracking_id')->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
+        });
+
+        Schema::create('order_addresses', function (Blueprint $table): void {
+            $table->string('id')->primary();
+            $table->string('order_id');
+            $table->string('recipient_name')->nullable();
+            $table->string('recipient_phone')->nullable();
+            $table->text('shipping_address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('postal_code')->nullable();
         });
 
         Schema::create('order_items', function (Blueprint $table): void {
@@ -69,7 +83,8 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Available')
             ->assertSee('Unavailable')
             ->assertSee('Ready to Ship')
-            ->assertSee('Request Pickup');
+            ->assertSee('Request Pickup')
+            ->assertSee('Manual Shipment');
     }
 
     public function test_customer_access_to_admin_order_queue_redirects_home(): void
@@ -187,6 +202,54 @@ class AdminOrderQueueTest extends TestCase
         app(UpdateOrderStatusAction::class)('order-1', OrderStatus::PICKUP_REQUESTED->value);
     }
 
+    public function test_manual_shipment_saves_tracking_without_biteship_and_moves_to_delivery(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+        $this->seedOrderAddress('order-1');
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('openManualShipmentModal', 'order-1')
+            ->assertSet('showManualShipmentModal', true)
+            ->set('manualTrackingId', ' MANUAL-123 ')
+            ->call('submitManualShipment')
+            ->assertSet('showManualShipmentModal', false);
+
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertSame(OrderStatus::ON_DELIVERY->value, $order->order_status);
+        $this->assertSame('MANUAL-123', $order->tracking_id);
+        $this->assertNull($order->biteship_order_id);
+    }
+
+    public function test_manual_shipment_requires_tracking_number(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+        $this->seedOrderAddress('order-1');
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('openManualShipmentModal', 'order-1')
+            ->set('manualTrackingId', '   ')
+            ->call('submitManualShipment')
+            ->assertHasErrors(['manualTrackingId']);
+
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertSame(OrderStatus::PICKUP_REQUESTED->value, $order->order_status);
+        $this->assertNull($order->tracking_id);
+    }
+
+    public function test_manual_shipment_requires_admin_or_employee_role(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+
+        $this->actingAs($this->authUser('customer-123'));
+        $this->expectException(AuthorizationException::class);
+
+        app(ManualShipmentAction::class)('order-1', 'MANUAL-123');
+    }
+
     private function seedOrder(string $orderId, string $customerId, string $status, $orderDate = null): void
     {
         $orderDate ??= now();
@@ -197,6 +260,8 @@ class AdminOrderQueueTest extends TestCase
             'order_date' => $orderDate,
             'total_payment' => 125000,
             'order_status' => $status,
+            'biteship_order_id' => null,
+            'tracking_id' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -207,6 +272,19 @@ class AdminOrderQueueTest extends TestCase
             'cake_name_snapshot' => 'Chocolate Cake',
             'quantity' => 2,
             'subtotal' => 100000,
+        ]);
+    }
+
+    private function seedOrderAddress(string $orderId): void
+    {
+        DB::table('order_addresses')->insert([
+            'id' => 'address-' . $orderId,
+            'order_id' => $orderId,
+            'recipient_name' => 'Customer User',
+            'recipient_phone' => '081234567890',
+            'shipping_address' => 'Jl. Testing No. 1',
+            'city' => 'Jakarta',
+            'postal_code' => '11440',
         ]);
     }
 

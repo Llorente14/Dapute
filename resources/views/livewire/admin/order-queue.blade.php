@@ -136,7 +136,13 @@
                                     @if($option['available'])
                                         <button
                                             type="button"
-                                            wire:click="updateStatus('{{ $order['id'] }}', '{{ $option['status'] }}')"
+                                            @if($option['action'] === 'status')
+                                                wire:click="updateStatus('{{ $order['id'] }}', '{{ $option['status'] }}')"
+                                            @elseif($option['action'] === 'pickup')
+                                                wire:click="openPickupModal('{{ $order['id'] }}')"
+                                            @elseif($option['action'] === 'manual')
+                                                wire:click="openManualShipmentModal('{{ $order['id'] }}')"
+                                            @endif
                                             wire:loading.attr="disabled"
                                             @click="open = false"
                                             class="flex w-full items-center justify-between gap-3 border-b-[2px] border-[#012d1d] px-3 py-3 text-left font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] hover:bg-[#D4EF70] disabled:opacity-60 last:border-b-0"
@@ -255,4 +261,208 @@
             </div>
         @endif
     </div>
+
+    @if($showManualShipmentModal && $manualShipmentOrder)
+        <div
+            class="fixed inset-0 z-[80] flex items-center justify-center bg-[#012d1d]/40 px-4 py-6 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="manual-shipment-title"
+        >
+            <div class="w-full max-w-[620px] border-[4px] border-[#012d1d] bg-[#f4fbf7] shadow-[8px_8px_0_0_#012d1d]">
+                <div class="flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] bg-white p-5">
+                    <div>
+                        <p class="font-label text-[11px] font-black uppercase tracking-[0.24em] text-[#414844]">Manual Shipment</p>
+                        <h2 id="manual-shipment-title" class="mt-1 font-headline text-2xl font-black uppercase tracking-tighter text-[#012d1d]">
+                            #{{ $manualShipmentOrder['short_id'] }}
+                        </h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="closeManualShipmentModal"
+                        class="grid h-10 w-10 place-items-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all hover:bg-[#D4EF70]"
+                        aria-label="Close manual shipment modal"
+                    >
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+
+                <div class="grid gap-4 p-5">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                            <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Customer</p>
+                            <p class="mt-1 font-headline text-lg font-black uppercase tracking-tight text-[#012d1d]">{{ $manualShipmentOrder['customer_name'] }}</p>
+                            @if($manualShipmentOrder['customer_email'])
+                                <p class="mt-1 break-all font-body text-xs font-bold text-[#414844]">{{ $manualShipmentOrder['customer_email'] }}</p>
+                            @endif
+                        </div>
+
+                        <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                            <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Status</p>
+                            <p class="mt-1 font-label text-xs font-black uppercase tracking-widest text-[#012d1d]">
+                                {{ $this->statusLabel($manualShipmentOrder['order_status']) }}
+                            </p>
+                            <p class="mt-2 font-body text-xs font-bold text-[#414844]">
+                                Biteship ID: {{ $manualShipmentOrder['biteship_order_id'] ?: 'Not assigned' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                        <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Destination</p>
+                        <p class="mt-1 font-body text-sm font-bold leading-relaxed text-[#012d1d]">
+                            {{ $manualShipmentOrder['recipient_name'] ?: $manualShipmentOrder['customer_name'] }}
+                            @if($manualShipmentOrder['recipient_phone'])
+                                / {{ $manualShipmentOrder['recipient_phone'] }}
+                            @endif
+                        </p>
+                        <p class="mt-1 font-body text-sm font-semibold leading-relaxed text-[#414844]">
+                            {{ $manualShipmentOrder['shipping_address'] ?: 'Address not available' }}
+                            @if($manualShipmentOrder['city'] || $manualShipmentOrder['postal_code'])
+                                <br>{{ $manualShipmentOrder['city'] }} {{ $manualShipmentOrder['postal_code'] }}
+                            @endif
+                        </p>
+                    </div>
+
+                    <form wire:submit.prevent="submitManualShipment" class="grid gap-3">
+                        <label for="manual_tracking_id" class="font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d]">
+                            Tracking Number
+                        </label>
+                        <input
+                            id="manual_tracking_id"
+                            type="text"
+                            wire:model.defer="manualTrackingId"
+                            class="w-full border-[3px] border-[#012d1d] bg-white px-4 py-3 font-body text-sm font-bold text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] outline-none transition-all focus:bg-[#D4EF70]"
+                            placeholder="MANUAL-TRACKING-001"
+                        >
+                        @error('manualTrackingId')
+                            <p class="font-label text-[11px] font-black uppercase tracking-widest text-[#ba1a1a]">{{ $message }}</p>
+                        @enderror
+
+                        <div class="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                            <button
+                                type="button"
+                                wire:click="closeManualShipmentModal"
+                                class="border-[3px] border-[#012d1d] bg-white px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] transition-all hover:bg-[#eef5f1]"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                wire:loading.attr="disabled"
+                                wire:target="submitManualShipment"
+                                class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#012d1d] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-white shadow-[3px_3px_0_0_#D4EF70] transition-all hover:bg-[#D4EF70] hover:text-[#012d1d] disabled:cursor-wait disabled:opacity-70"
+                            >
+                                <span wire:loading.remove wire:target="submitManualShipment">Save Manual Shipment</span>
+                                <span wire:loading.inline-flex wire:target="submitManualShipment" class="hidden items-center gap-2">
+                                    <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+                                    Processing...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showPickupModal && $pickupOrder)
+        <div
+            class="fixed inset-0 z-[80] flex items-center justify-center bg-[#012d1d]/40 px-4 py-6 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pickup-request-title"
+        >
+            <div class="w-full max-w-[620px] border-[4px] border-[#012d1d] bg-[#f4fbf7] shadow-[8px_8px_0_0_#012d1d]">
+                <div class="flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] bg-white p-5">
+                    <div>
+                        <p class="font-label text-[11px] font-black uppercase tracking-[0.24em] text-[#414844]">Request Pickup</p>
+                        <h2 id="pickup-request-title" class="mt-1 font-headline text-2xl font-black uppercase tracking-tighter text-[#012d1d]">
+                            #{{ $pickupOrder['short_id'] }}
+                        </h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        wire:click="closePickupModal"
+                        class="grid h-10 w-10 place-items-center border-[3px] border-[#012d1d] bg-white text-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all hover:bg-[#D4EF70]"
+                        aria-label="Close pickup modal"
+                    >
+                        <span class="material-symbols-outlined text-[18px]">close</span>
+                    </button>
+                </div>
+
+                <div class="grid gap-4 p-5">
+                    <div class="grid gap-3 md:grid-cols-2">
+                        <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                            <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Customer</p>
+                            <p class="mt-1 font-headline text-lg font-black uppercase tracking-tight text-[#012d1d]">{{ $pickupOrder['customer_name'] }}</p>
+                            @if($pickupOrder['customer_email'])
+                                <p class="mt-1 break-all font-body text-xs font-bold text-[#414844]">{{ $pickupOrder['customer_email'] }}</p>
+                            @endif
+                        </div>
+
+                        <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                            <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Destination</p>
+                            <p class="mt-1 font-body text-sm font-bold leading-relaxed text-[#012d1d]">
+                                {{ $pickupOrder['recipient_name'] ?: $pickupOrder['customer_name'] }}
+                            </p>
+                            <p class="mt-1 font-body text-sm font-semibold leading-relaxed text-[#414844]">
+                                {{ $pickupOrder['shipping_address'] ?: 'Address not available' }}
+                                @if($pickupOrder['city'] || $pickupOrder['postal_code'])
+                                    <br>{{ $pickupOrder['city'] }} {{ $pickupOrder['postal_code'] }}
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="border-[3px] border-[#012d1d] bg-white p-4">
+                        <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Package Summary</p>
+                        <div class="mt-2 grid gap-2">
+                            @forelse($this->itemsForOrder($pickupOrderId) as $item)
+                                <div class="flex items-center justify-between border-b-[2px] border-dashed border-[#012d1d] pb-2 last:border-b-0 last:pb-0">
+                                    <p class="font-headline text-sm font-black uppercase tracking-tight text-[#012d1d]">{{ $item['cake_name_snapshot'] }}</p>
+                                    <p class="font-label text-xs font-black uppercase tracking-widest text-[#414844]">Qty {{ $item['quantity'] }}</p>
+                                </div>
+                            @empty
+                                <p class="font-label text-xs font-black uppercase tracking-widest text-[#414844]">No items found.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="border-[3px] border-[#012d1d] bg-[#D4EF70] p-4 text-center">
+                        <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#012d1d]">Service</p>
+                        <p class="mt-1 font-headline text-xl font-black uppercase tracking-tighter text-[#012d1d]">Gojek / Grab</p>
+                        <p class="font-body text-xs font-bold text-[#012d1d]">Instant Delivery</p>
+                    </div>
+
+                    <div class="mt-2 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                        <button
+                            type="button"
+                            wire:click="closePickupModal"
+                            wire:loading.attr="disabled"
+                            wire:target="submitPickup"
+                            class="border-[3px] border-[#012d1d] bg-white px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] transition-all hover:bg-[#eef5f1] disabled:opacity-50"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            wire:click="submitPickup"
+                            wire:loading.attr="disabled"
+                            wire:target="submitPickup"
+                            class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#012d1d] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-white shadow-[3px_3px_0_0_#D4EF70] transition-all hover:bg-[#D4EF70] hover:text-[#012d1d] disabled:cursor-wait disabled:opacity-70 disabled:bg-[#012d1d] disabled:text-white"
+                        >
+                            <span wire:loading.remove wire:target="submitPickup">Submit Pickup</span>
+                            <span wire:loading.inline-flex wire:target="submitPickup" class="hidden items-center gap-2">
+                                <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
+                                Requesting Pickup...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </section>
