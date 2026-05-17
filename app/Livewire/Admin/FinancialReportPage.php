@@ -12,6 +12,7 @@ class FinancialReportPage extends Component
     public int $page = 1;
     public int $perPage = 20;
     public array $reportRows = [];
+    public array $reportCharts = [];
 
     public function mount(FetchMonthlyFinancialReportAction $action): void
     {
@@ -70,6 +71,7 @@ class FinancialReportPage extends Component
         $report = $action->execute($this->month, $this->year, $this->perPage);
 
         $this->reportRows = $report['rows'];
+        $this->reportCharts = $report['charts'];
     }
 
     public function render()

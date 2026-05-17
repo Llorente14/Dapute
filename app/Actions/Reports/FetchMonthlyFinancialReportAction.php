@@ -71,13 +71,19 @@ class FetchMonthlyFinancialReportAction
             ->values()
             ->toArray();
 
+        $summary = [
+            'product_revenue' => (int) collect($rows)->sum('subtotal'),
+            'shipping_revenue' => (int) collect($rows)->sum('shipping'),
+            'grand_total' => (int) collect($rows)->sum('total'),
+            'order_count' => count($rows),
+        ];
+
         return [
             'rows' => $rows,
-            'summary' => [
-                'product_revenue' => (int) collect($rows)->sum('subtotal'),
-                'shipping_revenue' => (int) collect($rows)->sum('shipping'),
-                'grand_total' => (int) collect($rows)->sum('total'),
-                'order_count' => count($rows),
+            'summary' => $summary,
+            'charts' => [
+                'top_products' => $this->topProducts($itemsByOrder),
+                'revenue_split' => $this->revenueSplit($summary),
             ],
         ];
     }
@@ -109,5 +115,41 @@ class FetchMonthlyFinancialReportAction
         return $extraCount > 0
             ? "{$firstName} + {$extraCount} more"
             : $firstName;
+    }
+
+    private function topProducts(Collection $itemsByOrder): array
+    {
+        return $itemsByOrder
+            ->flatten(1)
+            ->groupBy('cake_name_snapshot')
+            ->map(fn (Collection $items, string $name): array => [
+                'label' => $name ?: 'Unknown Product',
+                'quantity' => (int) $items->sum('quantity'),
+                'revenue' => (int) $items->sum('subtotal'),
+            ])
+            ->sortByDesc('quantity')
+            ->take(5)
+            ->values()
+            ->toArray();
+    }
+
+    private function revenueSplit(array $summary): array
+    {
+        $productRevenue = (int) ($summary['product_revenue'] ?? 0);
+        $shippingRevenue = (int) ($summary['shipping_revenue'] ?? 0);
+        $grandTotal = max(1, $productRevenue + $shippingRevenue);
+
+        return [
+            [
+                'label' => 'Product Sales',
+                'value' => $productRevenue,
+                'percentage' => (int) round(($productRevenue / $grandTotal) * 100),
+            ],
+            [
+                'label' => 'Shipping Fees',
+                'value' => $shippingRevenue,
+                'percentage' => (int) round(($shippingRevenue / $grandTotal) * 100),
+            ],
+        ];
     }
 }

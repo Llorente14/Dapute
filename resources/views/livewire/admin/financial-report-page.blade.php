@@ -1,6 +1,14 @@
 @php
     $formatCurrency = fn (int $amount) => 'Rp ' . number_format($amount, 0, ',', '.');
     $canExport = auth()->user()?->role === 'owner';
+    $topProducts = $reportCharts['top_products'] ?? [];
+    $revenueSplit = $reportCharts['revenue_split'] ?? [];
+    $maxProductQuantity = max(1, collect($topProducts)->max('quantity') ?? 0);
+    $productSplit = $revenueSplit[0] ?? ['percentage' => 0, 'value' => 0, 'label' => 'Product Sales'];
+    $shippingSplit = $revenueSplit[1] ?? ['percentage' => 0, 'value' => 0, 'label' => 'Shipping Fees'];
+    $donutCircumference = 251.2;
+    $productDash = round((((int) ($productSplit['percentage'] ?? 0)) / 100) * $donutCircumference, 2);
+    $shippingDash = round((((int) ($shippingSplit['percentage'] ?? 0)) / 100) * $donutCircumference, 2);
 @endphp
 
 <section class="min-h-screen px-4 py-6 text-[#012d1d] md:px-8 md:py-10">
@@ -139,6 +147,105 @@
             </p>
         </div>
     </div>
+
+    <section class="mb-6 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <article class="border-[3px] border-[#012d1d] bg-white p-5 shadow-[4px_4px_0_0_#012d1d]">
+            <div class="mb-4 flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] pb-3">
+                <div>
+                    <p class="font-label text-[10px] font-black uppercase tracking-[0.24em] text-[#414844]">Product Demand</p>
+                    <h2 class="font-headline text-2xl font-black uppercase tracking-tighter text-[#012d1d]">Top Products Bought</h2>
+                </div>
+                <span class="material-symbols-outlined border-[2px] border-[#012d1d] bg-[#D4EF70] p-2 text-[20px]">leaderboard</span>
+            </div>
+
+            <div class="grid gap-3">
+                @forelse($topProducts as $product)
+                    @php
+                        $barWidth = max(8, ((int) $product['quantity'] / $maxProductQuantity) * 100);
+                    @endphp
+                    <div class="border-[2px] border-[#012d1d] bg-[#eef5f1] p-3">
+                        <div class="mb-2 flex items-start justify-between gap-3">
+                            <p class="font-headline text-sm font-black uppercase tracking-tight text-[#012d1d]">{{ $product['label'] }}</p>
+                            <p class="shrink-0 font-label text-xs font-black uppercase tracking-widest text-[#012d1d]">{{ $product['quantity'] }} sold</p>
+                        </div>
+                        <div class="h-4 border-[2px] border-[#012d1d] bg-white">
+                            <div class="h-full bg-[#D4EF70]" style="width: {{ $barWidth }}%"></div>
+                        </div>
+                        <p class="mt-2 font-body text-xs font-bold text-[#414844]">{{ $formatCurrency((int) $product['revenue']) }} product revenue</p>
+                    </div>
+                @empty
+                    <div class="border-[3px] border-[#012d1d] bg-[#eef5f1] p-6 text-center font-label text-xs font-black uppercase tracking-widest text-[#414844]">
+                        No product demand available.
+                    </div>
+                @endforelse
+            </div>
+        </article>
+
+        <article class="border-[3px] border-[#012d1d] bg-white p-5 shadow-[4px_4px_0_0_#012d1d]">
+            <div class="mb-4 flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] pb-3">
+                <div>
+                    <p class="font-label text-[10px] font-black uppercase tracking-[0.24em] text-[#414844]">Income Mix</p>
+                    <h2 class="font-headline text-2xl font-black uppercase tracking-tighter text-[#012d1d]">Revenue Split</h2>
+                </div>
+                <span class="material-symbols-outlined border-[2px] border-[#012d1d] bg-[#D4EF70] p-2 text-[20px]">donut_large</span>
+            </div>
+
+            @if(count($revenueSplit) > 0)
+                <div class="grid gap-4 border-[3px] border-[#012d1d] bg-[#eef5f1] p-4 md:grid-cols-[220px_1fr] md:items-center xl:grid-cols-1 2xl:grid-cols-[220px_1fr]">
+                    <div class="relative mx-auto h-[220px] w-[220px]">
+                        <svg viewBox="0 0 100 100" class="h-full w-full -rotate-90" role="img" aria-label="Revenue split donut chart">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-width="18" />
+                            <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="none"
+                                stroke="#012d1d"
+                                stroke-width="18"
+                                stroke-dasharray="{{ $productDash }} {{ $donutCircumference - $productDash }}"
+                                stroke-dashoffset="0"
+                            />
+                            <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="none"
+                                stroke="#D4EF70"
+                                stroke-width="18"
+                                stroke-dasharray="{{ $shippingDash }} {{ $donutCircumference - $shippingDash }}"
+                                stroke-dashoffset="-{{ $productDash }}"
+                            />
+                            <circle cx="50" cy="50" r="28" fill="#eef5f1" stroke="#012d1d" stroke-width="3" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">Total Mix</p>
+                            <p class="font-headline text-3xl font-black tracking-tighter text-[#012d1d]">{{ $productSplit['percentage'] ?? 0 }}%</p>
+                            <p class="font-body text-[11px] font-black text-[#414844]">Product</p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-3">
+                        @foreach($revenueSplit as $index => $segment)
+                            <div class="flex items-center justify-between gap-3 border-[2px] border-[#012d1d] bg-white p-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="h-4 w-4 border-[2px] border-[#012d1d] {{ $index === 0 ? 'bg-[#012d1d]' : 'bg-[#D4EF70]' }}"></span>
+                                    <p class="font-label text-[10px] font-black uppercase tracking-widest text-[#414844]">{{ $segment['label'] }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-headline text-base font-black tracking-tight text-[#012d1d]">{{ $segment['percentage'] }}%</p>
+                                    <p class="font-body text-[11px] font-bold text-[#414844]">{{ $formatCurrency((int) $segment['value']) }}</p>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="border-[3px] border-[#012d1d] bg-[#eef5f1] p-6 text-center font-label text-xs font-black uppercase tracking-widest text-[#414844]">
+                    No revenue split available.
+                </div>
+            @endif
+        </article>
+    </section>
 
     <div class="overflow-hidden border-[3px] border-[#012d1d] bg-white shadow-[6px_6px_0_0_#012d1d]">
         <div class="border-b-[3px] border-[#012d1d] bg-[#012d1d] px-4 py-4 text-white md:px-6">

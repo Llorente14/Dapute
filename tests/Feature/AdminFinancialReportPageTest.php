@@ -69,6 +69,8 @@ class AdminFinancialReportPageTest extends TestCase
             ->assertSee('Shipping')
             ->assertSee('Grand Total')
             ->assertSee('Orders This Period')
+            ->assertSee('Top Products Bought')
+            ->assertSee('Revenue Split')
             ->assertSee('No Transactions Yet');
     }
 
@@ -107,6 +109,8 @@ class AdminFinancialReportPageTest extends TestCase
         $this->assertSame(190000, $report['summary']['grand_total']);
         $this->assertSame(2, $report['summary']['order_count']);
         $this->assertSame(['DONE-1', 'PAID-1'], array_column($report['rows'], 'order_no'));
+        $this->assertSame('Kue done-1', $report['charts']['top_products'][0]['label']);
+        $this->assertSame(81, $report['charts']['revenue_split'][0]['percentage']);
     }
 
     public function test_financial_report_livewire_loads_rows_from_month_and_year_filter(): void
@@ -119,6 +123,21 @@ class AdminFinancialReportPageTest extends TestCase
             ->set('month', 1)
             ->set('year', 2026)
             ->assertSet('reportRows.0.order_no', 'JANUARY-');
+    }
+
+    public function test_financial_report_livewire_exposes_umkm_chart_data(): void
+    {
+        $this->seedOrder('brownies-1', '2026-05-08 10:00:00', OrderStatus::COMPLETED->value, 100000, 20000, 122500);
+        $this->seedOrder('nastar-1', '2026-05-09 10:00:00', OrderStatus::COMPLETED->value, 75000, 10000, 87500);
+
+        Livewire::actingAs($this->authUser('owner-123'))
+            ->test(FinancialReportPage::class)
+            ->set('month', 5)
+            ->set('year', 2026)
+            ->assertSee('Top Products Bought')
+            ->assertSee('Revenue Split')
+            ->assertSet('reportCharts.top_products.0.quantity', 1)
+            ->assertSet('reportCharts.revenue_split.0.label', 'Product Sales');
     }
 
     public function test_owner_can_download_pdf_and_excel_reports_with_expected_filename(): void
