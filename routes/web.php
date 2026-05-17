@@ -31,12 +31,14 @@ Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAct
 | Spatie permission sudah terpasang di composer.json.
 */
 use App\Livewire\Admin\UserManagement;
+use App\Livewire\Admin\OrderQueue;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/products',              ProductIndex::class)->name('products.index');
     Route::get('/products/create',       ProductCrudForm::class)->name('products.create');
     Route::get('/products/{productId}/edit', ProductCrudForm::class)->name('products.edit');
     Route::get('/users',                 UserManagement::class)->name('users.index');
+    Route::get('/orders',                OrderQueue::class)->middleware(['auth', 'role:admin,karyawan'])->name('orders.index');
 });
 // ─── Guest Routes ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
