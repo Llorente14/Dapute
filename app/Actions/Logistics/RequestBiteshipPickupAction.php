@@ -49,7 +49,7 @@ class RequestBiteshipPickupAction
             $items = DB::table('order_items')
                 ->join('products', 'order_items.product_id', '=', 'products.id')
                 ->where('order_items.order_id', $orderId)
-                ->select('order_items.*', 'products.weight_gram')
+                ->select('order_items.*', 'products.weight_grams')
                 ->get();
 
             $biteshipItems = [];
@@ -58,7 +58,7 @@ class RequestBiteshipPickupAction
                     'name'     => $item->cake_name_snapshot,
                     'value'    => (int) $item->price_snapshot,
                     'quantity' => (int) $item->quantity,
-                    'weight'   => (int) ($item->weight_gram ?? 500)
+                    'weight'   => (int) ($item->weight_grams ?? 500)
                 ];
             }
 
@@ -110,7 +110,7 @@ class RequestBiteshipPickupAction
                 'tracking_id'       => $trackingId
             ]);
 
-            $this->updateStatusAction->execute($orderId, UpdateOrderStatusAction::STATUS_SHIPPED);
+            $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
             DB::commit();
 

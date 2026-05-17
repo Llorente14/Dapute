@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class UpdateOrderStatusAction
 {
-    public const STATUS_SHIPPED = OrderStatus::ON_DELIVERY->value;
+
 
     private const ALLOWED_ROLES = ['admin', 'karyawan'];
 

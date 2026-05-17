@@ -23,6 +23,9 @@ class OrderQueue extends Component
     public ?string $manualShipmentOrderId = null;
     public string $manualTrackingId = '';
     public ?array $manualShipmentOrder = null;
+    public bool $showPickupModal = false;
+    public ?string $pickupOrderId = null;
+    public ?array $pickupOrder = null;
 
     private const ACTIVE_STATUSES = [
         'PENDING_PAYMENT',
@@ -105,15 +108,50 @@ class OrderQueue extends Component
         $this->transitionOrder($orderId, $nextStatus, $action);
     }
 
-    public function requestPickup(string $orderId, RequestBiteshipPickupAction $action): void
+    public function openPickupModal(string $orderId): void
     {
-        $result = $action->execute($orderId);
+        $order = $this->findManualShipmentOrder($orderId);
+
+        if (!$order) {
+            $this->dispatch('show-toast', title: 'Request Pickup Failed', subtitle: 'Order not found.', type: 'cart');
+            return;
+        }
+
+        if ($order['order_status'] !== OrderStatus::PICKUP_REQUESTED->value) {
+            $this->dispatch('show-toast', title: 'Request Pickup Failed', subtitle: 'Only pickup requested orders can be processed.', type: 'cart');
+            return;
+        }
+
+        $this->pickupOrderId = $orderId;
+        $this->pickupOrder = $order;
+        $this->loadOrderItems($orderId);
+        $this->showPickupModal = true;
+    }
+
+    public function closePickupModal(): void
+    {
+        $this->showPickupModal = false;
+        $this->pickupOrderId = null;
+        $this->pickupOrder = null;
+    }
+
+    public function submitPickup(): void
+    {
+        if (!$this->pickupOrderId) {
+            return;
+        }
+
+        \Illuminate\Support\Facades\Log::info('submitPickup called for order: ' . $this->pickupOrderId);
+        $action = app(RequestBiteshipPickupAction::class);
+        $result = $action->execute($this->pickupOrderId);
 
         if (!$result['success']) {
+            \Illuminate\Support\Facades\Log::error('Pickup failed: ' . ($result['message'] ?? 'Unknown error'));
             $this->dispatch('show-toast', title: 'Pickup Failed', subtitle: $result['message'] ?? 'Biteship pickup failed.', type: 'cart');
             return;
         }
 
+        $this->closePickupModal();
         $this->expandedOrderId = null;
         $this->loadOrders();
         $this->dispatch('show-toast', title: 'Pickup Requested', subtitle: $result['message'] ?? 'Courier pickup requested.', type: 'success');
