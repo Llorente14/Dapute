@@ -55,10 +55,21 @@
                             <button
                                 type="button"
                                 wire:click="toggleDetails('{{ $order['id'] }}')"
-                                class="inline-flex items-center gap-2 font-label text-sm font-black uppercase tracking-widest text-[#012d1d] hover:bg-[#D4EF70]"
+                                class="group inline-flex items-center gap-3 font-label text-sm font-black uppercase tracking-widest text-[#012d1d]"
                             >
-                                <span class="material-symbols-outlined text-[18px]">
+                                <span
+                                    wire:loading.remove
+                                    wire:target="toggleDetails('{{ $order['id'] }}')"
+                                    class="material-symbols-outlined grid h-7 w-7 place-items-center border-[2px] border-transparent text-[18px] transition-all group-hover:-translate-y-0.5 group-hover:border-[#012d1d] group-hover:bg-[#D4EF70] group-hover:shadow-[2px_2px_0_0_#012d1d]"
+                                >
                                     {{ $expandedOrderId === $order['id'] ? 'expand_less' : 'expand_more' }}
+                                </span>
+                                <span
+                                    wire:loading.grid
+                                    wire:target="toggleDetails('{{ $order['id'] }}')"
+                                    class="hidden h-7 w-7 place-items-center border-[2px] border-[#012d1d] bg-[#D4EF70] shadow-[2px_2px_0_0_#012d1d]"
+                                >
+                                    <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
                                 </span>
                                 #{{ $order['short_id'] }}
                             </button>
@@ -145,15 +156,30 @@
                         </div>
                     </div>
 
+                    <div
+                        wire:loading.flex
+                        wire:target="toggleDetails('{{ $order['id'] }}')"
+                        class="hidden border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4"
+                    >
+                        <div class="flex w-full items-center gap-3 border-[3px] border-[#012d1d] bg-white p-4 shadow-[3px_3px_0_0_#012d1d]">
+                            <span class="material-symbols-outlined animate-spin text-[22px]">sync</span>
+                            <span class="font-label text-xs font-black uppercase tracking-widest text-[#012d1d]">Loading Item Detail</span>
+                        </div>
+                    </div>
+
                     @if($expandedOrderId === $order['id'])
-                        <div class="border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4">
+                        <div
+                            wire:loading.remove
+                            wire:target="toggleDetails('{{ $order['id'] }}')"
+                            class="border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4"
+                        >
                             <div class="mb-3 flex items-center gap-2">
                                 <span class="h-5 w-2 bg-[#012d1d]"></span>
                                 <h3 class="font-headline text-lg font-black uppercase tracking-tighter">Item Detail</h3>
                             </div>
 
                             <div class="grid gap-3">
-                                @forelse($order['items'] as $item)
+                                @forelse($this->itemsForOrder($order['id']) as $item)
                                     <div class="grid gap-2 border-[3px] border-[#012d1d] bg-white p-3 shadow-[2px_2px_0_0_#012d1d] md:grid-cols-[1fr_80px_140px] md:items-center">
                                         <p class="font-headline text-sm font-black uppercase tracking-tight">{{ $item['cake_name_snapshot'] }}</p>
                                         <p class="font-label text-xs font-black uppercase tracking-widest text-[#414844]">Qty {{ $item['quantity'] }}</p>

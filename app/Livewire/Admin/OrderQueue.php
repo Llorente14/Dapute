@@ -11,6 +11,7 @@ class OrderQueue extends Component
     public string $statusFilter = 'ALL';
     public ?string $expandedOrderId = null;
     public array $orders = [];
+    public array $orderItems = [];
 
     private const ACTIVE_STATUSES = [
         'PENDING_PAYMENT',
@@ -34,7 +35,13 @@ class OrderQueue extends Component
 
     public function toggleDetails(string $orderId): void
     {
-        $this->expandedOrderId = $this->expandedOrderId === $orderId ? null : $orderId;
+        if ($this->expandedOrderId === $orderId) {
+            $this->expandedOrderId = null;
+            return;
+        }
+
+        $this->expandedOrderId = $orderId;
+        $this->loadOrderItems($orderId);
     }
 
     public function cancelPending(string $orderId, UpdateOrderStatusAction $action): void
@@ -109,6 +116,11 @@ class OrderQueue extends Component
         return $options;
     }
 
+    public function itemsForOrder(string $orderId): array
+    {
+        return $this->orderItems[$orderId] ?? [];
+    }
+
     private function transitionOrder(string $orderId, string $status, UpdateOrderStatusAction $action): void
     {
         $result = $action($orderId, $status);
@@ -146,13 +158,6 @@ class OrderQueue extends Component
             ->orderByDesc('orders.created_at')
             ->get();
 
-        $items = DB::table('order_items')
-            ->whereIn('order_id', $rows->pluck('id')->all())
-            ->select('order_id', 'cake_name_snapshot', 'quantity', 'subtotal')
-            ->orderBy('cake_name_snapshot')
-            ->get()
-            ->groupBy('order_id');
-
         $this->orders = $rows
             ->map(fn ($order) => [
                 'id' => $order->id,
@@ -162,14 +167,26 @@ class OrderQueue extends Component
                 'total_payment' => (int) $order->total_payment,
                 'order_status' => $order->order_status,
                 'order_date' => $order->order_date ?? $order->created_at,
-                'items' => ($items[$order->id] ?? collect())
-                    ->map(fn ($item) => [
-                        'cake_name_snapshot' => $item->cake_name_snapshot,
-                        'quantity' => (int) $item->quantity,
-                        'subtotal' => (int) $item->subtotal,
-                    ])
-                    ->values()
-                    ->toArray(),
+            ])
+            ->values()
+            ->toArray();
+    }
+
+    private function loadOrderItems(string $orderId): void
+    {
+        if (array_key_exists($orderId, $this->orderItems)) {
+            return;
+        }
+
+        $this->orderItems[$orderId] = DB::table('order_items')
+            ->where('order_id', $orderId)
+            ->select('cake_name_snapshot', 'quantity', 'subtotal')
+            ->orderBy('cake_name_snapshot')
+            ->get()
+            ->map(fn ($item) => [
+                'cake_name_snapshot' => $item->cake_name_snapshot,
+                'quantity' => (int) $item->quantity,
+                'subtotal' => (int) $item->subtotal,
             ])
             ->values()
             ->toArray();
