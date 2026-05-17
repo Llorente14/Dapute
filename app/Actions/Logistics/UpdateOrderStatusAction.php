@@ -28,7 +28,7 @@ class UpdateOrderStatusAction
 
     private const DB_MAPPING = [
         self::STATUS_PENDING_PAYMENT => 'PENDING_PAYMENT',
-        self::STATUS_PAID            => 'IN_PROCESSING', 
+        self::STATUS_PAID            => 'PAID_PROCESSING', 
         self::STATUS_PROCESSING      => 'PICKUP_REQUESTED',
         self::STATUS_SHIPPED         => 'ON_DELIVERY',
         self::STATUS_DONE            => 'COMPLETED',
