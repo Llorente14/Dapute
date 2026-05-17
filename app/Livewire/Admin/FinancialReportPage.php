@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Actions\Reports\FetchMonthlyFinancialReportAction;
 use Livewire\Component;
 
 class FinancialReportPage extends Component
@@ -12,20 +13,23 @@ class FinancialReportPage extends Component
     public int $perPage = 20;
     public array $reportRows = [];
 
-    public function mount(): void
+    public function mount(FetchMonthlyFinancialReportAction $action): void
     {
         $this->month = (int) now()->month;
         $this->year = (int) now()->year;
+        $this->loadReport($action);
     }
 
-    public function updatedMonth(): void
+    public function updatedMonth(FetchMonthlyFinancialReportAction $action): void
     {
         $this->page = 1;
+        $this->loadReport($action);
     }
 
-    public function updatedYear(): void
+    public function updatedYear(FetchMonthlyFinancialReportAction $action): void
     {
         $this->page = 1;
+        $this->loadReport($action);
     }
 
     public function getMonthOptionsProperty(): array
@@ -59,6 +63,13 @@ class FinancialReportPage extends Component
     public function getTotalOrdersInRangeProperty(): int
     {
         return count($this->reportRows);
+    }
+
+    private function loadReport(FetchMonthlyFinancialReportAction $action): void
+    {
+        $report = $action->execute($this->month, $this->year, $this->perPage);
+
+        $this->reportRows = $report['rows'];
     }
 
     public function render()
