@@ -2,7 +2,16 @@
     $formatDate = fn ($date) => $date ? \Carbon\Carbon::parse($date)->format('d M Y, H:i') : 'Date unavailable';
 @endphp
 
-<section class="min-h-screen px-4 py-6 md:px-8 md:py-10 text-[#012d1d]">
+<section
+    x-data="{
+        syncPerPage() {
+            const target = window.innerWidth < 768 ? 5 : 10;
+            this.$wire.setPerPage(target);
+        }
+    }"
+    x-init="syncPerPage(); window.addEventListener('resize', () => syncPerPage())"
+    class="min-h-screen px-4 py-6 md:px-8 md:py-10 text-[#012d1d]"
+>
     <header class="mb-8 border-b-[4px] border-[#012d1d] pb-6">
         <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
             <div>
@@ -19,7 +28,7 @@
 
             <div class="border-[3px] border-[#012d1d] bg-[#D4EF70] px-5 py-4 shadow-[4px_4px_0_0_#012d1d]">
                 <p class="font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d]">Active Orders</p>
-                <p class="font-headline text-4xl font-black tracking-tighter">{{ count($orders) }}</p>
+                <p class="font-headline text-4xl font-black tracking-tighter">{{ $totalOrders }}</p>
             </div>
         </div>
     </header>
@@ -127,7 +136,7 @@
                                     @if($option['available'])
                                         <button
                                             type="button"
-                                            wire:click="{{ $option['method'] }}('{{ $order['id'] }}')"
+                                            wire:click="updateStatus('{{ $order['id'] }}', '{{ $option['status'] }}')"
                                             wire:loading.attr="disabled"
                                             @click="open = false"
                                             class="flex w-full items-center justify-between gap-3 border-b-[2px] border-[#012d1d] px-3 py-3 text-left font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] hover:bg-[#D4EF70] disabled:opacity-60 last:border-b-0"
@@ -201,5 +210,49 @@
                 </div>
             @endforelse
         </div>
+
+        @if($totalOrders > 0)
+            <div class="flex flex-col gap-4 border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4 md:flex-row md:items-center md:justify-between">
+                <p class="font-label text-xs font-black uppercase tracking-widest text-[#414844]">
+                    Showing {{ $this->pageStart() }}-{{ $this->pageEnd() }} of {{ $totalOrders }} orders
+                </p>
+
+                <div class="flex flex-wrap items-center gap-2">
+                    <button
+                        type="button"
+                        wire:click="previousPage"
+                        wire:loading.attr="disabled"
+                        @disabled($page <= 1)
+                        class="inline-flex h-10 min-w-10 items-center justify-center border-[3px] border-[#012d1d] bg-white px-3 font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all hover:bg-[#D4EF70] disabled:cursor-not-allowed disabled:border-[#717973] disabled:bg-[#eef5f1] disabled:text-[#717973] disabled:shadow-none"
+                        aria-label="Previous page"
+                    >
+                        <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                    </button>
+
+                    @foreach($this->paginationPages() as $pageNumber)
+                        <button
+                            type="button"
+                            wire:click="goToPage({{ $pageNumber }})"
+                            wire:loading.attr="disabled"
+                            class="inline-flex h-10 min-w-10 items-center justify-center border-[3px] border-[#012d1d] px-3 font-label text-[11px] font-black uppercase tracking-widest shadow-[2px_2px_0_0_#012d1d] transition-all hover:-translate-y-0.5 hover:bg-[#D4EF70] {{ $page === $pageNumber ? 'bg-[#012d1d] text-white' : 'bg-white text-[#012d1d]' }}"
+                            aria-label="Page {{ $pageNumber }}"
+                        >
+                            {{ $pageNumber }}
+                        </button>
+                    @endforeach
+
+                    <button
+                        type="button"
+                        wire:click="nextPage"
+                        wire:loading.attr="disabled"
+                        @disabled($page >= $this->totalPages())
+                        class="inline-flex h-10 min-w-10 items-center justify-center border-[3px] border-[#012d1d] bg-white px-3 font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all hover:bg-[#D4EF70] disabled:cursor-not-allowed disabled:border-[#717973] disabled:bg-[#eef5f1] disabled:text-[#717973] disabled:shadow-none"
+                        aria-label="Next page"
+                    >
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </button>
+                </div>
+            </div>
+        @endif
     </div>
 </section>

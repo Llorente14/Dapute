@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Actions\Logistics\UpdateOrderStatusAction;
 use App\Livewire\Admin\OrderQueue;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -66,7 +68,8 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Actions')
             ->assertSee('Available')
             ->assertSee('Unavailable')
-            ->assertSee('Siap Dikirim');
+            ->assertSee('Siap Dikirim')
+            ->assertSee('Request Pickup');
     }
 
     public function test_customer_access_to_admin_order_queue_redirects_home(): void
@@ -92,18 +95,84 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Unavailable')
             ->call('toggleDetails', 'order-1')
             ->assertSee('Chocolate Cake')
-            ->call('markReadyToShip', 'order-1')
+            ->call('updateStatus', 'order-1', OrderStatus::PICKUP_REQUESTED->value)
             ->assertSet('expandedOrderId', null);
 
         $this->assertSame(OrderStatus::PICKUP_REQUESTED->value, DB::table('orders')->where('id', 'order-1')->value('order_status'));
     }
 
-    private function seedOrder(string $orderId, string $customerId, string $status): void
+    public function test_order_queue_paginates_ten_orders_per_page(): void
     {
+        for ($index = 1; $index <= 11; $index++) {
+            $this->seedOrder(
+                sprintf('order-%02d', $index),
+                'customer-123',
+                OrderStatus::PAID_PROCESSING->value,
+                now()->subMinutes($index)
+            );
+        }
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->assertSet('totalOrders', 11)
+            ->assertCount('orders', 10)
+            ->assertSee('ORDER-01')
+            ->assertDontSee('ORDER-11')
+            ->call('nextPage')
+            ->assertSet('page', 2)
+            ->assertCount('orders', 1)
+            ->assertSee('ORDER-11');
+    }
+
+    public function test_order_queue_can_switch_to_five_orders_per_page(): void
+    {
+        for ($index = 1; $index <= 11; $index++) {
+            $this->seedOrder(
+                sprintf('order-%02d', $index),
+                'customer-123',
+                OrderStatus::PAID_PROCESSING->value,
+                now()->subMinutes($index)
+            );
+        }
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('setPerPage', 5)
+            ->assertSet('perPage', 5)
+            ->assertSet('page', 1)
+            ->assertCount('orders', 5)
+            ->assertDontSee('ORDER-06');
+    }
+
+    public function test_status_update_rejects_invalid_transition(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PENDING_PAYMENT->value);
+
+        Livewire::actingAs($this->authUser('admin-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::ON_DELIVERY->value);
+
+        $this->assertSame(OrderStatus::PENDING_PAYMENT->value, DB::table('orders')->where('id', 'order-1')->value('order_status'));
+    }
+
+    public function test_status_update_requires_admin_or_employee_role(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
+
+        $this->actingAs($this->authUser('customer-123'));
+        $this->expectException(AuthorizationException::class);
+
+        app(UpdateOrderStatusAction::class)('order-1', OrderStatus::PICKUP_REQUESTED->value);
+    }
+
+    private function seedOrder(string $orderId, string $customerId, string $status, $orderDate = null): void
+    {
+        $orderDate ??= now();
+
         DB::table('orders')->insert([
             'id' => $orderId,
             'customer_id' => $customerId,
-            'order_date' => now(),
+            'order_date' => $orderDate,
             'total_payment' => 125000,
             'order_status' => $status,
             'created_at' => now(),
@@ -123,6 +192,7 @@ class AdminOrderQueueTest extends TestCase
     {
         $user = new User();
         $user->id = $id;
+        $user->role = DB::table('users')->where('id', $id)->value('role');
         $user->exists = true;
 
         return $user;
