@@ -5,11 +5,39 @@ namespace App\Actions\Logistics;
 use App\Enums\OrderStatus;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Exception;
+use InvalidArgumentException;
 
 class UpdateOrderStatusAction
 {
-    public function __invoke(string $orderId, string $status): array
+    // Konstanta input
+    public const STATUS_PENDING_PAYMENT = 'pending_payment';
+    public const STATUS_PAID            = 'paid';
+    public const STATUS_PROCESSING      = 'processing';
+    public const STATUS_SHIPPED         = 'shipped';
+    public const STATUS_DONE            = 'done';
+    public const STATUS_CANCELLED       = 'cancelled';
+
+    // State Machine
+    private const VALID_TRANSITIONS = [
+        self::STATUS_PENDING_PAYMENT => [self::STATUS_PAID, self::STATUS_CANCELLED],
+        self::STATUS_PAID            => [self::STATUS_PROCESSING, self::STATUS_CANCELLED],
+        self::STATUS_PROCESSING      => [self::STATUS_SHIPPED],
+        self::STATUS_SHIPPED         => [self::STATUS_DONE],
+        self::STATUS_DONE            => [], 
+        self::STATUS_CANCELLED       => [], 
+    ];
+
+    private const DB_MAPPING = [
+        self::STATUS_PENDING_PAYMENT => 'PENDING_PAYMENT',
+        self::STATUS_PAID            => 'PAID_PROCESSING', 
+        self::STATUS_PROCESSING      => 'PICKUP_REQUESTED',
+        self::STATUS_SHIPPED         => 'ON_DELIVERY',
+        self::STATUS_DONE            => 'COMPLETED',
+        self::STATUS_CANCELLED       => 'CANCELLED',
+    ];
+
+    public function execute(string $orderId, string $newStatus): array
     {
         $user = auth()->user();
 
@@ -58,7 +86,10 @@ class UpdateOrderStatusAction
             'status' => $status,
         ]);
 
-        return ['success' => true];
+        return [
+            'success' => true, 
+            'message' => "Status pesanan berhasil diperbarui menjadi {$newStatus}."
+        ];
     }
 
     private function canTransition(string $currentStatus, string $nextStatus): bool
