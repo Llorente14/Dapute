@@ -32,6 +32,7 @@ Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAct
 */
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Admin\OrderQueue;
+use App\Livewire\Admin\FinancialReportPage;
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/products',              ProductIndex::class)->name('products.index');
@@ -39,6 +40,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/products/{productId}/edit', ProductCrudForm::class)->name('products.edit');
     Route::get('/users',                 UserManagement::class)->name('users.index');
     Route::get('/orders',                OrderQueue::class)->middleware(['auth', 'role:admin,karyawan'])->name('orders.index');
+    Route::get('/reports',               FinancialReportPage::class)->middleware(['auth', 'role:owner'])->name('reports.index');
 });
 // ─── Guest Routes ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
