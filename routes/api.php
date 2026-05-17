@@ -3,7 +3,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Actions\Auth\RegisterUserAction; 
+use App\Actions\Auth\RegisterUserAction;
+use App\Actions\Transaction\ValidateMidtransWebhookSignatureAction;
+use App\Jobs\ProcessMidtransWebhookJob;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -14,3 +16,15 @@ Route::post('/register', function (Request $request, RegisterUserAction $action)
     
     return response()->json($result);
 });
+
+Route::post('/webhook/midtrans', function (Request $request, ValidateMidtransWebhookSignatureAction $action) {
+    $payload = $request->all();
+
+    if (!$action->execute($payload)) {
+        return response()->json(['message' => 'Invalid Midtrans signature.'], 403);
+    }
+
+    ProcessMidtransWebhookJob::dispatchSync($payload);
+
+    return response()->json(['status' => 'ok']);
+})->name('api.webhook.midtrans');
