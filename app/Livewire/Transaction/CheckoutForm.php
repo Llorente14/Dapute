@@ -2,12 +2,8 @@
 
 namespace App\Livewire\Transaction;
 
-use Livewire\Component;
+use App\Livewire\CheckoutPage;
 
-class CheckoutForm extends Component
+class CheckoutForm extends CheckoutPage
 {
-    public function render()
-    {
-        return view('livewire.transaction.checkout-form');
-    }
 }
