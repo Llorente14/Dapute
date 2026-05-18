@@ -90,13 +90,36 @@ class RequestBiteshipPickupAction
                 ];
             }
 
-            $response = Http::withToken(env('BITESHIP_API_KEY'))
+            $response = Http::withToken(config('services.biteship.api_key'))
                 ->timeout(15) 
-                ->post('https://api.biteship.com/v1/orders', $payload);
+                ->post(rtrim(config('services.biteship.base_url'), '/') . '/orders', $payload);
+
+            if ($this->isInsufficientBalanceResponse($response->json(), $response->body())) {
+                if ($this->canSimulateInsufficientBalance()) {
+                    Log::warning('Biteship pickup simulated because account balance is insufficient.', [
+                        'order_id' => $orderId,
+                        'response' => $response->body(),
+                    ]);
+
+                    return $this->markPickupAsSimulated($orderId, $courierCompany);
+                }
+
+                Log::error('Biteship Create Order Insufficient Balance: ' . $response->body());
+
+                return [
+                    'success' => false,
+                    'message' => 'Saldo Biteship tidak cukup. Top up saldo terlebih dahulu.',
+                ];
+            }
 
             if ($response->failed()) {
                 Log::error('Biteship Create Order Error: ' . $response->body());
                 return ['success' => false, 'message' => 'Gagal memanggil kurir dari Biteship. Coba lagi nanti.'];
+            }
+
+            if ($response->json('success') === false) {
+                Log::error('Biteship Create Order Business Error: ' . $response->body());
+                return ['success' => false, 'message' => 'Biteship menolak request pickup. Coba lagi nanti.'];
             }
 
             $responseData = $response->json();
@@ -126,5 +149,44 @@ class RequestBiteshipPickupAction
             Log::error('RequestBiteshipPickupAction Exception: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()];
         }
+    }
+
+    private function isInsufficientBalanceResponse(?array $responseData, string $body): bool
+    {
+        $message = strtolower((string) ($responseData['error'] ?? $responseData['message'] ?? $body));
+
+        return str_contains($message, 'insufficient balance')
+            || str_contains($message, 'no sufficient balance')
+            || str_contains($message, 'top up');
+    }
+
+    private function markPickupAsSimulated(string $orderId, string $courierCompany): array
+    {
+        DB::beginTransaction();
+
+        $trackingId = 'SIMULATED-' . strtoupper($courierCompany) . '-' . now()->format('YmdHis');
+
+        DB::table('orders')->where('id', $orderId)->update([
+            'biteship_order_id' => 'SIMULATED-BITESHIP-' . $orderId,
+            'tracking_id' => $trackingId,
+        ]);
+
+        $this->updateStatusAction->execute($orderId, UpdateOrderStatusAction::STATUS_SHIPPED);
+
+        DB::commit();
+
+        return [
+            'success' => true,
+            'message' => 'Kurir berhasil dipanggil dalam mode simulasi. Top up saldo Biteship untuk produksi.',
+            'courier' => $courierCompany,
+            'tracking_id' => $trackingId,
+            'simulated' => true,
+        ];
+    }
+
+    private function canSimulateInsufficientBalance(): bool
+    {
+        return (bool) config('services.biteship.simulate_insufficient_balance')
+            && ! app()->environment('production');
     }
 }
