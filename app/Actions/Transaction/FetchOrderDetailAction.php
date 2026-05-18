@@ -3,6 +3,7 @@
 namespace App\Actions\Transaction;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class FetchOrderDetailAction
 {
@@ -46,11 +47,72 @@ class FetchOrderDetailAction
             ->where('order_id', $orderId)
             ->first();
 
+        $trackings = $this->fetchTrackingEvents($orderId);
+
         return [
             'success' => true,
             'order' => (array) $order,
             'items' => $items,
             'address' => $address ? (array) $address : null,
+            'trackings' => $trackings,
         ];
+    }
+
+    private function fetchTrackingEvents(string $orderId): array
+    {
+        if (!Schema::hasTable('order_trackings')) {
+            return [];
+        }
+
+        $timestampColumn = $this->resolveTrackingTimestampColumn();
+        $query = DB::table('order_trackings')->where('order_id', $orderId);
+
+        if ($timestampColumn) {
+            $query->orderByDesc($timestampColumn);
+        }
+
+        return $query
+            ->get()
+            ->map(fn ($tracking) => $this->normalizeTrackingEvent((array) $tracking))
+            ->toArray();
+    }
+
+    private function normalizeTrackingEvent(array $tracking): array
+    {
+        $status = $tracking['status']
+            ?? $tracking['tracking_status']
+            ?? $tracking['shipment_status']
+            ?? $tracking['order_status']
+            ?? 'TRACKING_UPDATE';
+
+        return [
+            'id' => $tracking['id'] ?? null,
+            'status' => (string) $status,
+            'label' => str((string) $status)->replace('_', ' ')->title()->toString(),
+            'description' => $tracking['description']
+                ?? $tracking['message']
+                ?? $tracking['note']
+                ?? $tracking['checkpoint']
+                ?? 'Shipment status updated.',
+            'timestamp' => $tracking['event_at']
+                ?? $tracking['tracked_at']
+                ?? $tracking['timestamp']
+                ?? $tracking['created_at']
+                ?? $tracking['updated_at']
+                ?? null,
+        ];
+    }
+
+    private function resolveTrackingTimestampColumn(): ?string
+    {
+        $columns = Schema::getColumnListing('order_trackings');
+
+        foreach (['event_at', 'tracked_at', 'timestamp', 'created_at', 'updated_at'] as $column) {
+            if (in_array($column, $columns, true)) {
+                return $column;
+            }
+        }
+
+        return null;
     }
 }

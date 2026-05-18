@@ -5,6 +5,8 @@ namespace App\Livewire\Transaction;
 use App\Actions\Payment\GetMidtransSnapTokenAction;
 use App\Actions\Transaction\CancelPendingOrderAction;
 use App\Actions\Transaction\FetchOrderDetailAction;
+use App\Actions\Transaction\ConfirmOrderReceivedAction;
+use App\Enums\OrderStatus;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -14,6 +16,7 @@ class OrderDetailPage extends Component
     public array $order = [];
     public array $items = [];
     public ?array $address = null;
+    public array $trackings = [];
 
     public function mount(string $id, FetchOrderDetailAction $action): void
     {
@@ -27,9 +30,10 @@ class OrderDetailPage extends Component
         $this->order = $result['order'];
         $this->items = $result['items'];
         $this->address = $result['address'];
+        $this->trackings = $result['trackings'] ?? [];
     }
 
-    public function getStatusLabelProperty(): string
+    public function statusLabel(): string
     {
         return str($this->order['order_status'] ?? 'PENDING_PAYMENT')
             ->replace('_', ' ')
@@ -37,7 +41,7 @@ class OrderDetailPage extends Component
             ->toString();
     }
 
-    public function getStatusToneProperty(): string
+    public function statusTone(): string
     {
         return match ($this->order['order_status'] ?? 'PENDING_PAYMENT') {
             'PAID_PROCESSING', 'PICKUP_REQUESTED', 'ON_DELIVERY', 'SHIPPED', 'DELIVERED', 'COMPLETED' => 'bg-[#D4EF70] text-[#012d1d]',
@@ -46,14 +50,88 @@ class OrderDetailPage extends Component
         };
     }
 
-    public function getCanManagePendingPaymentProperty(): bool
+    public function canManagePendingPayment(): bool
     {
         return ($this->order['order_status'] ?? null) === 'PENDING_PAYMENT';
     }
 
+    public function canConfirmReceive(): bool
+    {
+        $status = $this->order['order_status'] ?? null;
+        $shippedStatuses = [OrderStatus::ON_DELIVERY->value, 'SHIPPED'];
+        $isShipped = in_array($status, $shippedStatuses, true);
+        $isOwner = Auth::check() && ((string) Auth::id() === (string) ($this->order['customer_id'] ?? $this->order['user_id'] ?? null));
+
+        return $isShipped && $isOwner;
+    }
+
+    public function currentTrackingEvent(): ?array
+    {
+        return $this->displayTrackingEvents()[0] ?? null;
+    }
+
+    public function displayTrackingEvents(): array
+    {
+        if ($this->trackings !== []) {
+            return $this->trackings;
+        }
+
+        return $this->fallbackTrackingEvents();
+    }
+
+    public function trackingIcon(string $status): string
+    {
+        return match (strtoupper($status)) {
+            'DELIVERED', 'COMPLETED' => 'check_circle',
+            'ON_DELIVERY', 'SHIPPED', 'IN_TRANSIT' => 'local_shipping',
+            'PICKUP_REQUESTED', 'PICKED_UP' => 'inventory_2',
+            'FAILED', 'CANCELLED', 'EXPIRED' => 'cancel',
+            default => 'radio_button_checked',
+        };
+    }
+
+    private function fallbackTrackingEvents(): array
+    {
+        $status = (string) ($this->order['order_status'] ?? 'PENDING_PAYMENT');
+        $timestamp = $this->order['updated_at'] ?? $this->order['order_date'] ?? $this->order['created_at'] ?? null;
+
+        return match ($status) {
+            'PAID_PROCESSING' => [
+                $this->trackingEvent('PAID_PROCESSING', 'Order paid and being prepared before courier pickup.', $timestamp),
+            ],
+            'PICKUP_REQUESTED' => [
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', $timestamp),
+            ],
+            'ON_DELIVERY', 'SHIPPED' => [
+                $this->trackingEvent('ON_DELIVERY', 'Courier is delivering the package.', $timestamp),
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', null),
+            ],
+            'DELIVERED', 'COMPLETED' => [
+                $this->trackingEvent('DELIVERED', 'Package has been marked as delivered.', $timestamp),
+                $this->trackingEvent('ON_DELIVERY', 'Courier delivered the package from pickup point.', null),
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', null),
+            ],
+            'CANCELLED', 'FAILED', 'EXPIRED' => [
+                $this->trackingEvent($status, 'Delivery tracking is no longer active for this order.', $timestamp),
+            ],
+            default => [],
+        };
+    }
+
+    private function trackingEvent(string $status, string $description, ?string $timestamp): array
+    {
+        return [
+            'id' => 'fallback-' . strtolower($status),
+            'status' => $status,
+            'label' => str($status)->replace('_', ' ')->title()->toString(),
+            'description' => $description,
+            'timestamp' => $timestamp,
+        ];
+    }
+
     public function payNow(GetMidtransSnapTokenAction $snapAction): void
     {
-        if (!$this->canManagePendingPayment) {
+        if (!$this->canManagePendingPayment()) {
             $this->addError('order_action', 'This order can no longer be paid.');
             return;
         }
@@ -70,7 +148,7 @@ class OrderDetailPage extends Component
 
     public function cancelOrder(CancelPendingOrderAction $action, FetchOrderDetailAction $detailAction): void
     {
-        if (!$this->canManagePendingPayment) {
+        if (!$this->canManagePendingPayment()) {
             $this->addError('order_action', 'This order can no longer be cancelled.');
             return;
         }
@@ -87,7 +165,26 @@ class OrderDetailPage extends Component
         $this->dispatch('show-toast', title: 'Order Cancelled', subtitle: 'Pending payment order has been cancelled.', type: 'cart');
     }
 
-    private function refreshOrder(FetchOrderDetailAction $action): void
+    public function confirmOrderReceived(ConfirmOrderReceivedAction $action, FetchOrderDetailAction $detailAction): void
+    {
+        if (!$this->canConfirmReceive()) {
+            $this->addError('order_action', 'This order cannot be confirmed as received.');
+            return;
+        }
+
+        $result = $action->execute((string) Auth::id(), $this->orderId);
+
+        if (!$result['success']) {
+            $this->addError('order_action', $result['message'] ?? 'Failed to confirm order.');
+            return;
+        }
+
+        $this->refreshOrder($detailAction);
+
+        $this->dispatch('show-toast', title: 'Terima kasih!', subtitle: 'Pesanan telah dikonfirmasi.', type: 'cart');
+    }
+
+    public function refreshOrder(FetchOrderDetailAction $action): void
     {
         $result = $action->execute((string) Auth::id(), $this->orderId);
 
@@ -95,6 +192,7 @@ class OrderDetailPage extends Component
             $this->order = $result['order'];
             $this->items = $result['items'];
             $this->address = $result['address'];
+            $this->trackings = $result['trackings'] ?? [];
         }
     }
 
