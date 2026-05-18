@@ -39,7 +39,7 @@ class RequestBiteshipPickupActionTest extends TestCase
 
         Schema::create('products', function (Blueprint $table): void {
             $table->string('id')->primary();
-            $table->integer('weight_gram')->default(500);
+            $table->integer('weight_grams')->default(500);
         });
 
         Schema::create('order_items', function (Blueprint $table): void {
@@ -125,7 +125,7 @@ class RequestBiteshipPickupActionTest extends TestCase
 
         DB::table('products')->insert([
             'id' => 'product-123',
-            'weight_gram' => 500,
+            'weight_grams' => 500,
         ]);
 
         DB::table('order_items')->insert([

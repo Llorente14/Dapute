@@ -26,19 +26,31 @@ class ManualShipmentAction
 
         $order = DB::table('orders')
             ->where('id', $orderId)
-            ->select('id', 'order_status', 'biteship_order_id')
+            ->select('id', 'order_status', 'biteship_order_id', 'tracking_id')
             ->first();
 
         if (!$order) {
             return ['success' => false, 'message' => 'Order not found.'];
         }
 
-        if ($order->order_status !== OrderStatus::PICKUP_REQUESTED->value) {
-            return ['success' => false, 'message' => 'Manual shipment only works for pickup requested orders.'];
-        }
-
         if (!empty($order->biteship_order_id)) {
             return ['success' => false, 'message' => 'This order already has a Biteship pickup.'];
+        }
+
+        if (
+            $order->order_status === OrderStatus::ON_DELIVERY->value
+            && (string) $order->tracking_id === $trackingNumber
+        ) {
+            return [
+                'success' => true,
+                'message' => 'Manual shipment already saved.',
+                'tracking_id' => $trackingNumber,
+                'idempotent' => true,
+            ];
+        }
+
+        if ($order->order_status !== OrderStatus::PICKUP_REQUESTED->value) {
+            return ['success' => false, 'message' => 'Manual shipment only works for pickup requested orders.'];
         }
 
         DB::beginTransaction();

@@ -240,6 +240,39 @@ class AdminOrderQueueTest extends TestCase
         $this->assertNull($order->tracking_id);
     }
 
+    public function test_manual_shipment_is_idempotent_when_same_tracking_already_saved(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
+        DB::table('orders')->where('id', 'order-1')->update(['tracking_id' => 'MANUAL-123']);
+
+        $this->actingAs($this->authUser('admin-123'));
+
+        $result = app(ManualShipmentAction::class)('order-1', ' MANUAL-123 ');
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertTrue($result['success']);
+        $this->assertTrue($result['idempotent']);
+        $this->assertSame(OrderStatus::ON_DELIVERY->value, $order->order_status);
+        $this->assertSame('MANUAL-123', $order->tracking_id);
+        $this->assertNull($order->biteship_order_id);
+    }
+
+    public function test_manual_shipment_rejects_order_that_already_has_biteship_pickup(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+        DB::table('orders')->where('id', 'order-1')->update(['biteship_order_id' => 'BITESHIP-123']);
+
+        $this->actingAs($this->authUser('admin-123'));
+
+        $result = app(ManualShipmentAction::class)('order-1', 'MANUAL-123');
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertFalse($result['success']);
+        $this->assertSame('This order already has a Biteship pickup.', $result['message']);
+        $this->assertSame(OrderStatus::PICKUP_REQUESTED->value, $order->order_status);
+        $this->assertNull($order->tracking_id);
+    }
+
     public function test_manual_shipment_requires_admin_or_employee_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
