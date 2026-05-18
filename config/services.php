@@ -43,8 +43,15 @@ return [
     ],
 
     'biteship' => [
-        'api_key'  => env('BITESHIP_API_KEY'),
+        'api_key' => env('BITESHIP_API_KEY'),
         'base_url' => env('BITESHIP_BASE_URL', 'https://api.biteship.com/v1'),
+        'simulate_insufficient_balance' => env('BITESHIP_SIMULATE_INSUFFICIENT_BALANCE', true),
+    ],
+
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'anon_key' => env('SUPABASE_ANON_KEY'),
+        'service_role_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
     ],
 
 ];
