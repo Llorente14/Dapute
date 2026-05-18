@@ -14,6 +14,7 @@ class OrderDetailPage extends Component
     public array $order = [];
     public array $items = [];
     public ?array $address = null;
+    public array $trackings = [];
 
     public function mount(string $id, FetchOrderDetailAction $action): void
     {
@@ -27,6 +28,7 @@ class OrderDetailPage extends Component
         $this->order = $result['order'];
         $this->items = $result['items'];
         $this->address = $result['address'];
+        $this->trackings = $result['trackings'] ?? [];
     }
 
     public function getStatusLabelProperty(): string
@@ -49,6 +51,70 @@ class OrderDetailPage extends Component
     public function getCanManagePendingPaymentProperty(): bool
     {
         return ($this->order['order_status'] ?? null) === 'PENDING_PAYMENT';
+    }
+
+    public function getCurrentTrackingEventProperty(): ?array
+    {
+        return $this->displayTrackingEvents[0] ?? null;
+    }
+
+    public function getDisplayTrackingEventsProperty(): array
+    {
+        if ($this->trackings !== []) {
+            return $this->trackings;
+        }
+
+        return $this->fallbackTrackingEvents();
+    }
+
+    public function trackingIcon(string $status): string
+    {
+        return match (strtoupper($status)) {
+            'DELIVERED', 'COMPLETED' => 'check_circle',
+            'ON_DELIVERY', 'SHIPPED', 'IN_TRANSIT' => 'local_shipping',
+            'PICKUP_REQUESTED', 'PICKED_UP' => 'inventory_2',
+            'FAILED', 'CANCELLED', 'EXPIRED' => 'cancel',
+            default => 'radio_button_checked',
+        };
+    }
+
+    private function fallbackTrackingEvents(): array
+    {
+        $status = (string) ($this->order['order_status'] ?? 'PENDING_PAYMENT');
+        $timestamp = $this->order['updated_at'] ?? $this->order['order_date'] ?? $this->order['created_at'] ?? null;
+
+        return match ($status) {
+            'PAID_PROCESSING' => [
+                $this->trackingEvent('PAID_PROCESSING', 'Order paid and being prepared before courier pickup.', $timestamp),
+            ],
+            'PICKUP_REQUESTED' => [
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', $timestamp),
+            ],
+            'ON_DELIVERY', 'SHIPPED' => [
+                $this->trackingEvent('ON_DELIVERY', 'Courier is delivering the package.', $timestamp),
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', null),
+            ],
+            'DELIVERED', 'COMPLETED' => [
+                $this->trackingEvent('DELIVERED', 'Package has been marked as delivered.', $timestamp),
+                $this->trackingEvent('ON_DELIVERY', 'Courier delivered the package from pickup point.', null),
+                $this->trackingEvent('PICKUP_REQUESTED', 'Courier pickup request has been created.', null),
+            ],
+            'CANCELLED', 'FAILED', 'EXPIRED' => [
+                $this->trackingEvent($status, 'Delivery tracking is no longer active for this order.', $timestamp),
+            ],
+            default => [],
+        };
+    }
+
+    private function trackingEvent(string $status, string $description, ?string $timestamp): array
+    {
+        return [
+            'id' => 'fallback-' . strtolower($status),
+            'status' => $status,
+            'label' => str($status)->replace('_', ' ')->title()->toString(),
+            'description' => $description,
+            'timestamp' => $timestamp,
+        ];
     }
 
     public function payNow(GetMidtransSnapTokenAction $snapAction): void
@@ -95,6 +161,7 @@ class OrderDetailPage extends Component
             $this->order = $result['order'];
             $this->items = $result['items'];
             $this->address = $result['address'];
+            $this->trackings = $result['trackings'] ?? [];
         }
     }
 
