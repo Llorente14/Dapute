@@ -164,7 +164,7 @@
                         <span wire:loading.remove wire:target="updateProfile">Update Details</span>
                         <span wire:loading wire:target="updateProfile" class="flex items-center gap-2">
                             <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
-                            Menyimpan…
+                            Saving…
                         </span>
                     </button>
                 </div>
@@ -271,59 +271,7 @@
 
         <!-- Right Column: Recent Orders Summary -->
         <div class="lg:col-span-5 anim-in d4">
-            <section class="bg-surface-container-highest neo-border p-6 md:p-8 neo-shadow h-full flex flex-col">
-                <div class="flex items-center gap-4 mb-8 border-b-[3px] border-primary pb-4">
-                    <span class="material-symbols-outlined text-2xl text-primary">receipt_long</span>
-                    <h2 class="font-headline text-2xl font-bold tracking-tight text-primary uppercase">Recent Orders</h2>
-                </div>
-                <div class="flex flex-col gap-6 flex-1">
-                    <!-- Order Item 1 -->
-                    <div class="order-item anim-in bg-surface-container-lowest neo-border p-4 flex gap-4 items-center">
-                        <div class="w-20 h-20 bg-primary-container shrink-0 border-[3px] border-primary flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-primary-container text-3xl">local_florist</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-headline font-bold text-primary truncate pr-2">Monstera Deliciosa</h3>
-                                <span class="font-label font-bold text-primary">$45</span>
-                            </div>
-                            <p class="font-label text-xs text-on-surface-variant uppercase mb-2">Order #8892 • Oct 12</p>
-                            <span class="inline-block bg-tertiary-fixed text-tertiary font-label text-[10px] font-bold uppercase px-2 py-1">Delivered</span>
-                        </div>
-                    </div>
-                    <!-- Order Item 2 -->
-                    <div class="order-item anim-in bg-surface-container-lowest neo-border p-4 flex gap-4 items-center">
-                        <div class="w-20 h-20 bg-primary-container shrink-0 border-[3px] border-primary flex items-center justify-center">
-                            <span class="material-symbols-outlined text-on-primary-container text-3xl">potted_plant</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-headline font-bold text-primary truncate pr-2">Organic Soil Mix</h3>
-                                <span class="font-label font-bold text-primary">$18</span>
-                            </div>
-                            <p class="font-label text-xs text-on-surface-variant uppercase mb-2">Order #8841 • Sep 28</p>
-                            <span class="inline-block bg-secondary-container text-primary font-label text-[10px] font-bold uppercase px-2 py-1 border-[3px] border-primary">Shipped</span>
-                        </div>
-                    </div>
-                    <!-- Order Item 3 -->
-                    <div class="order-item anim-in bg-surface-container-lowest neo-border p-4 flex gap-4 items-center opacity-70">
-                        <div class="w-20 h-20 bg-surface-variant shrink-0 border-[3px] border-outline flex items-center justify-center">
-                            <span class="material-symbols-outlined text-outline text-3xl">yard</span>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="flex justify-between items-start mb-1">
-                                <h3 class="font-headline font-bold text-on-surface-variant truncate pr-2">Terracotta Pots (x3)</h3>
-                                <span class="font-label font-bold text-on-surface-variant">$32</span>
-                            </div>
-                            <p class="font-label text-xs text-outline-variant uppercase mb-2">Order #8710 • Sep 05</p>
-                            <span class="inline-block border-[3px] border-outline text-outline font-label text-[10px] font-bold uppercase px-2 py-1">Delivered</span>
-                        </div>
-                    </div>
-                </div>
-                <button class="mt-8 border-[3px] border-primary bg-transparent text-primary font-label font-bold uppercase px-6 py-4 hover:bg-primary hover:text-on-primary transition-colors w-full text-center">
-                    View All History
-                </button>
-            </section>
+            <livewire:profile.profile-order-history />
         </div>
 
     </div>
