@@ -33,7 +33,7 @@ class OrderDetailPage extends Component
         $this->trackings = $result['trackings'] ?? [];
     }
 
-    public function getStatusLabelProperty(): string
+    public function statusLabel(): string
     {
         return str($this->order['order_status'] ?? 'PENDING_PAYMENT')
             ->replace('_', ' ')
@@ -41,7 +41,7 @@ class OrderDetailPage extends Component
             ->toString();
     }
 
-    public function getStatusToneProperty(): string
+    public function statusTone(): string
     {
         return match ($this->order['order_status'] ?? 'PENDING_PAYMENT') {
             'PAID_PROCESSING', 'PICKUP_REQUESTED', 'ON_DELIVERY', 'SHIPPED', 'DELIVERED', 'COMPLETED' => 'bg-[#D4EF70] text-[#012d1d]',
@@ -50,12 +50,12 @@ class OrderDetailPage extends Component
         };
     }
 
-    public function getCanManagePendingPaymentProperty(): bool
+    public function canManagePendingPayment(): bool
     {
         return ($this->order['order_status'] ?? null) === 'PENDING_PAYMENT';
     }
 
-    public function getCanConfirmReceiveProperty(): bool
+    public function canConfirmReceive(): bool
     {
         $status = $this->order['order_status'] ?? null;
         $shippedStatuses = [OrderStatus::ON_DELIVERY->value, 'SHIPPED'];
@@ -65,12 +65,12 @@ class OrderDetailPage extends Component
         return $isShipped && $isOwner;
     }
 
-    public function getCurrentTrackingEventProperty(): ?array
+    public function currentTrackingEvent(): ?array
     {
-        return $this->displayTrackingEvents[0] ?? null;
+        return $this->displayTrackingEvents()[0] ?? null;
     }
 
-    public function getDisplayTrackingEventsProperty(): array
+    public function displayTrackingEvents(): array
     {
         if ($this->trackings !== []) {
             return $this->trackings;
@@ -131,7 +131,7 @@ class OrderDetailPage extends Component
 
     public function payNow(GetMidtransSnapTokenAction $snapAction): void
     {
-        if (!$this->canManagePendingPayment) {
+        if (!$this->canManagePendingPayment()) {
             $this->addError('order_action', 'This order can no longer be paid.');
             return;
         }
@@ -148,7 +148,7 @@ class OrderDetailPage extends Component
 
     public function cancelOrder(CancelPendingOrderAction $action, FetchOrderDetailAction $detailAction): void
     {
-        if (!$this->canManagePendingPayment) {
+        if (!$this->canManagePendingPayment()) {
             $this->addError('order_action', 'This order can no longer be cancelled.');
             return;
         }
@@ -167,7 +167,7 @@ class OrderDetailPage extends Component
 
     public function confirmOrderReceived(ConfirmOrderReceivedAction $action, FetchOrderDetailAction $detailAction): void
     {
-        if (!$this->canConfirmReceive) {
+        if (!$this->canConfirmReceive()) {
             $this->addError('order_action', 'This order cannot be confirmed as received.');
             return;
         }
@@ -184,7 +184,7 @@ class OrderDetailPage extends Component
         $this->dispatch('show-toast', title: 'Terima kasih!', subtitle: 'Pesanan telah dikonfirmasi.', type: 'cart');
     }
 
-    private function refreshOrder(FetchOrderDetailAction $action): void
+    public function refreshOrder(FetchOrderDetailAction $action): void
     {
         $result = $action->execute((string) Auth::id(), $this->orderId);
 
