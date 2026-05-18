@@ -6,7 +6,12 @@
     $adminFee = max(0, $total - $subtotal - $shipping);
 @endphp
 
-<section class="min-h-screen bg-[#f4fbf7] text-[#012d1d]" x-data="{ showCancelOrderModal: false }">
+<section class="min-h-screen bg-[#f4fbf7] text-[#012d1d]" 
+    x-data="{ showCancelOrderModal: false, showConfirmReceiveModal: false }"
+    @if(!in_array($order['order_status'] ?? '', ['COMPLETED', 'CANCELLED', 'FAILED', 'EXPIRED']))
+        wire:poll.10s="refreshOrder"
+    @endif
+>
     <div class="mx-auto max-w-[1440px] px-4 md:px-8 py-10 md:py-16">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             <div class="lg:col-span-8 flex flex-col gap-8">
@@ -37,8 +42,8 @@
                             </div>
                         </div>
                         <div class="flex flex-col items-start md:items-end gap-3">
-                            <span class="inline-flex border-[3px] border-[#012d1d] px-4 py-2 font-label font-black text-xs uppercase tracking-widest {{ $this->statusTone }}">
-                                {{ $this->statusLabel }}
+                            <span class="inline-flex border-[3px] border-[#012d1d] px-4 py-2 font-label font-black text-xs uppercase tracking-widest {{ $this->statusTone() }}">
+                                {{ $this->statusLabel() }}
                             </span>
                             <span class="font-label font-bold text-xs uppercase tracking-wider text-[#3d6651]">
                                 {{ $createdAt ? \Carbon\Carbon::parse($createdAt)->format('d M Y, H:i') : 'Date unavailable' }}
@@ -46,7 +51,7 @@
                         </div>
                     </div>
 
-                    @if($this->canManagePendingPayment)
+                    @if($this->canManagePendingPayment())
                         <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 border-t-[3px] border-[#012d1d] pt-6">
                             <button
                                 type="button"
@@ -139,21 +144,21 @@
                         </div>
                     </div>
 
-                    @if($this->currentTrackingEvent)
+                    @if($this->currentTrackingEvent())
                         <div class="mb-6 border-[3px] border-[#012d1d] bg-[#D4EF70] p-4 shadow-[4px_4px_0_0_#012d1d]">
                             <div class="flex items-start gap-3">
                                 <span class="material-symbols-outlined text-[28px]">
-                                    {{ $this->trackingIcon($this->currentTrackingEvent['status']) }}
+                                    {{ $this->trackingIcon($this->currentTrackingEvent()['status']) }}
                                 </span>
                                 <div>
                                     <p class="font-label font-black text-xs uppercase tracking-widest text-[#3d6651]">
                                         Current Status
                                     </p>
                                     <h3 class="mt-1 font-headline text-2xl font-black uppercase tracking-tight">
-                                        {{ $this->currentTrackingEvent['label'] }}
+                                        {{ $this->currentTrackingEvent()['label'] }}
                                     </h3>
                                     <p class="mt-2 font-body text-sm font-bold leading-relaxed text-[#012d1d]">
-                                        {{ $this->currentTrackingEvent['description'] }}
+                                        {{ $this->currentTrackingEvent()['description'] }}
                                     </p>
                                 </div>
                             </div>
@@ -161,7 +166,7 @@
                     @endif
 
                     <div class="relative">
-                        @forelse($this->displayTrackingEvents as $index => $tracking)
+                        @forelse($this->displayTrackingEvents() as $index => $tracking)
                             <article class="relative grid grid-cols-[44px_1fr] gap-4 pb-6 last:pb-0">
                                 @if(!$loop->last)
                                     <span class="absolute left-[21px] top-11 h-[calc(100%-44px)] w-[3px] bg-[#012d1d]"></span>
@@ -194,7 +199,7 @@
                                     No Delivery Movement Yet
                                 </p>
                                 <p class="mt-2 font-body text-sm font-semibold text-[#3d6651]">
-                                    Courier has not picked up package yet. Current order status: {{ $this->statusLabel }}.
+                                    Courier has not picked up package yet. Current order status: {{ $this->statusLabel() }}.
                                 </p>
                             </div>
                         @endforelse
@@ -250,7 +255,7 @@
                     <dl class="grid grid-cols-1 gap-3 font-label font-bold text-sm uppercase">
                         <div class="flex justify-between gap-4">
                             <dt>Status</dt>
-                            <dd class="text-right">{{ $this->statusLabel }}</dd>
+                            <dd class="text-right">{{ $this->statusLabel() }}</dd>
                         </div>
                         <div class="flex justify-between gap-4">
                             <dt>Tracking</dt>
@@ -258,7 +263,7 @@
                         </div>
                         <div class="flex justify-between gap-4">
                             <dt>Latest</dt>
-                            <dd class="text-right">{{ $this->currentTrackingEvent['label'] ?? $this->statusLabel }}</dd>
+                            <dd class="text-right">{{ $this->currentTrackingEvent()['label'] ?? $this->statusLabel() }}</dd>
                         </div>
                     </dl>
                     @if(!empty($order['notes']))
@@ -268,11 +273,28 @@
                         </div>
                     @endif
 
-                    @if($this->canManagePendingPayment)
+                    @if($this->canManagePendingPayment())
                         <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
                             <p class="font-label font-black text-xs uppercase tracking-widest mb-2">Payment Required</p>
                             <p class="font-body font-semibold text-sm leading-relaxed">
                                 This order is saved but not paid yet. Pay now to continue processing, or cancel it from this page.
+                            </p>
+                        </div>
+                    @endif
+
+                    @if($this->canConfirmReceive())
+                        <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
+                            <button
+                                type="button"
+                                @click="showConfirmReceiveModal = true"
+                                class="w-full inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-white px-5 py-4 font-label font-black text-xs uppercase tracking-widest text-[#012d1d] shadow-[4px_4px_0_0_#012d1d] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#012d1d]">
+                                Pesanan Diterima
+                            </button>
+                        </div>
+                    @elseif(($order['order_status'] ?? '') === \App\Enums\OrderStatus::COMPLETED->value)
+                        <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
+                            <p class="font-label font-black text-center text-sm uppercase tracking-widest text-[#3d6651]">
+                                Pesanan Selesai
                             </p>
                         </div>
                     @endif
@@ -281,7 +303,7 @@
         </div>
     </div>
 
-    @if($this->canManagePendingPayment)
+    @if($this->canManagePendingPayment())
         <div
             x-show="showCancelOrderModal"
             x-cloak
@@ -348,4 +370,67 @@
             </section>
         </div>
     @endif
+
+    <div
+        x-show="showConfirmReceiveModal"
+        x-cloak
+        @keydown.escape.window="showConfirmReceiveModal = false"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-[#012d1d]/60 p-4"
+        style="display: none;"
+    >
+        <div class="absolute inset-0" @click="showConfirmReceiveModal = false"></div>
+        <section
+            x-show="showConfirmReceiveModal"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-3"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-3"
+            class="relative w-full max-w-[480px] border-[3px] border-[#012d1d] bg-white p-6 shadow-[8px_8px_0_0_#012d1d]"
+        >
+            <div class="mb-5 flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] pb-4">
+                <div>
+                    <h2 class="font-headline text-3xl font-black uppercase leading-none tracking-tighter text-[#012d1d]">
+                        Konfirmasi Pesanan
+                    </h2>
+                </div>
+                <button
+                    type="button"
+                    @click="showConfirmReceiveModal = false"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center border-[3px] border-[#012d1d] bg-[#f4fbf7] shadow-[2px_2px_0_0_#012d1d] hover:bg-[#D4EF70]"
+                    aria-label="Tutup modal"
+                >
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <p class="font-body text-sm font-bold leading-relaxed text-[#3d6651]">
+                Apakah paket sudah kamu terima?
+            </p>
+
+            <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                    type="button"
+                    @click="showConfirmReceiveModal = false"
+                    class="border-[3px] border-[#012d1d] bg-[#f4fbf7] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] hover:bg-[#ffdad6]"
+                >
+                    Belum
+                </button>
+                <button
+                    type="button"
+                    wire:click="confirmOrderReceived"
+                    @click="showConfirmReceiveModal = false"
+                    wire:loading.attr="disabled"
+                    wire:target="confirmOrderReceived"
+                    class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#D4EF70] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#012d1d] disabled:opacity-60 transition-all"
+                >
+                    <span class="material-symbols-outlined text-[18px]" wire:loading.remove wire:target="confirmOrderReceived">check_circle</span>
+                    <span class="material-symbols-outlined text-[18px] animate-spin" wire:loading wire:target="confirmOrderReceived">sync</span>
+                    <span wire:loading.remove wire:target="confirmOrderReceived">Sudah Terima</span>
+                    <span wire:loading wire:target="confirmOrderReceived">Memproses</span>
+                </button>
+            </div>
+        </section>
+    </div>
 </section>
