@@ -93,6 +93,22 @@ class UpdateCartAction
         ];
     }
 
+    public function update(string $cartItemId, string $userId, int $quantity): array
+    {
+        $item = DB::table('carts')->where('id', $cartItemId)->where('user_id', $userId)->first();
+        
+        if (!$item) return ['success' => false, 'message' => 'Item not found.'];
+        
+        $newQty = max(1, min(99, $quantity));
+        DB::table('carts')->where('id', $cartItemId)->update(['quantity' => $newQty, 'updated_at' => now()]);
+
+        return [
+            'success' => true, 
+            'new_quantity' => $newQty, 
+            'cart_count' => $this->getCount($userId)
+        ];
+    }
+
     public function remove(string $cartItemId, string $userId): array
     {
         DB::table('carts')->where('id', $cartItemId)->where('user_id', $userId)->delete();

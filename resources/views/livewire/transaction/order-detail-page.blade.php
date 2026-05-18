@@ -6,7 +6,7 @@
     $adminFee = max(0, $total - $subtotal - $shipping);
 @endphp
 
-<section class="min-h-screen bg-[#f4fbf7] text-[#012d1d]" x-data="{ showCancelOrderModal: false }">
+<section class="min-h-screen bg-[#f4fbf7] text-[#012d1d]" x-data="{ showCancelOrderModal: false, showConfirmReceiveModal: false }">
     <div class="mx-auto max-w-[1440px] px-4 md:px-8 py-10 md:py-16">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
             <div class="lg:col-span-8 flex flex-col gap-8">
@@ -276,6 +276,23 @@
                             </p>
                         </div>
                     @endif
+
+                    @if($this->canConfirmReceive)
+                        <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
+                            <button
+                                type="button"
+                                @click="showConfirmReceiveModal = true"
+                                class="w-full inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-white px-5 py-4 font-label font-black text-xs uppercase tracking-widest text-[#012d1d] shadow-[4px_4px_0_0_#012d1d] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#012d1d]">
+                                Pesanan Diterima
+                            </button>
+                        </div>
+                    @elseif(($order['order_status'] ?? '') === \App\Enums\OrderStatus::COMPLETED->value)
+                        <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
+                            <p class="font-label font-black text-center text-sm uppercase tracking-widest text-[#3d6651]">
+                                Pesanan Selesai
+                            </p>
+                        </div>
+                    @endif
                 </section>
             </aside>
         </div>
@@ -348,4 +365,67 @@
             </section>
         </div>
     @endif
+
+    <div
+        x-show="showConfirmReceiveModal"
+        x-cloak
+        @keydown.escape.window="showConfirmReceiveModal = false"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-[#012d1d]/60 p-4"
+        style="display: none;"
+    >
+        <div class="absolute inset-0" @click="showConfirmReceiveModal = false"></div>
+        <section
+            x-show="showConfirmReceiveModal"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-3"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 translate-y-3"
+            class="relative w-full max-w-[480px] border-[3px] border-[#012d1d] bg-white p-6 shadow-[8px_8px_0_0_#012d1d]"
+        >
+            <div class="mb-5 flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] pb-4">
+                <div>
+                    <h2 class="font-headline text-3xl font-black uppercase leading-none tracking-tighter text-[#012d1d]">
+                        Konfirmasi Pesanan
+                    </h2>
+                </div>
+                <button
+                    type="button"
+                    @click="showConfirmReceiveModal = false"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center border-[3px] border-[#012d1d] bg-[#f4fbf7] shadow-[2px_2px_0_0_#012d1d] hover:bg-[#D4EF70]"
+                    aria-label="Tutup modal"
+                >
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </div>
+
+            <p class="font-body text-sm font-bold leading-relaxed text-[#3d6651]">
+                Apakah paket sudah kamu terima?
+            </p>
+
+            <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                    type="button"
+                    @click="showConfirmReceiveModal = false"
+                    class="border-[3px] border-[#012d1d] bg-[#f4fbf7] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] hover:bg-[#ffdad6]"
+                >
+                    Belum
+                </button>
+                <button
+                    type="button"
+                    wire:click="confirmOrderReceived"
+                    @click="showConfirmReceiveModal = false"
+                    wire:loading.attr="disabled"
+                    wire:target="confirmOrderReceived"
+                    class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#D4EF70] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-[#012d1d] shadow-[3px_3px_0_0_#012d1d] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0_0_#012d1d] disabled:opacity-60 transition-all"
+                >
+                    <span class="material-symbols-outlined text-[18px]" wire:loading.remove wire:target="confirmOrderReceived">check_circle</span>
+                    <span class="material-symbols-outlined text-[18px] animate-spin" wire:loading wire:target="confirmOrderReceived">sync</span>
+                    <span wire:loading.remove wire:target="confirmOrderReceived">Sudah Terima</span>
+                    <span wire:loading wire:target="confirmOrderReceived">Memproses</span>
+                </button>
+            </div>
+        </section>
+    </div>
 </section>

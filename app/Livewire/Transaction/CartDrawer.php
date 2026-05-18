@@ -60,6 +60,17 @@ class CartDrawer extends Component
         $this->loadCart();
     }
 
+    public function updateQty(UpdateCartAction $action, string $cartItemId, $qty)
+    {
+        if (!Auth::check()) return;
+        $qty = (int) $qty;
+        if ($qty < 1) $qty = 1;
+        if ($qty > 99) $qty = 99;
+        
+        $action->update($cartItemId, Auth::id(), $qty);
+        $this->loadCart();
+    }
+
     public function removeItem(UpdateCartAction $action, string $cartItemId)
     {
         if (!Auth::check()) return;

@@ -5,6 +5,8 @@ namespace App\Livewire\Transaction;
 use App\Actions\Payment\GetMidtransSnapTokenAction;
 use App\Actions\Transaction\CancelPendingOrderAction;
 use App\Actions\Transaction\FetchOrderDetailAction;
+use App\Actions\Transaction\ConfirmOrderReceivedAction;
+use App\Enums\OrderStatus;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -51,6 +53,16 @@ class OrderDetailPage extends Component
     public function getCanManagePendingPaymentProperty(): bool
     {
         return ($this->order['order_status'] ?? null) === 'PENDING_PAYMENT';
+    }
+
+    public function getCanConfirmReceiveProperty(): bool
+    {
+        $status = $this->order['order_status'] ?? null;
+        $shippedStatuses = [OrderStatus::ON_DELIVERY->value, 'SHIPPED'];
+        $isShipped = in_array($status, $shippedStatuses, true);
+        $isOwner = Auth::check() && ((string) Auth::id() === (string) ($this->order['customer_id'] ?? $this->order['user_id'] ?? null));
+
+        return $isShipped && $isOwner;
     }
 
     public function getCurrentTrackingEventProperty(): ?array
@@ -151,6 +163,25 @@ class OrderDetailPage extends Component
         $this->refreshOrder($detailAction);
 
         $this->dispatch('show-toast', title: 'Order Cancelled', subtitle: 'Pending payment order has been cancelled.', type: 'cart');
+    }
+
+    public function confirmOrderReceived(ConfirmOrderReceivedAction $action, FetchOrderDetailAction $detailAction): void
+    {
+        if (!$this->canConfirmReceive) {
+            $this->addError('order_action', 'This order cannot be confirmed as received.');
+            return;
+        }
+
+        $result = $action->execute((string) Auth::id(), $this->orderId);
+
+        if (!$result['success']) {
+            $this->addError('order_action', $result['message'] ?? 'Failed to confirm order.');
+            return;
+        }
+
+        $this->refreshOrder($detailAction);
+
+        $this->dispatch('show-toast', title: 'Terima kasih!', subtitle: 'Pesanan telah dikonfirmasi.', type: 'cart');
     }
 
     private function refreshOrder(FetchOrderDetailAction $action): void
