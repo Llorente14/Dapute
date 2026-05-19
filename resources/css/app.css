@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source "../../resources/views/errors";
 
 /* ── Forest Brutalist Design Tokens ─────────────────────── */
 @theme {
