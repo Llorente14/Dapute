@@ -57,7 +57,7 @@ class AdminCreateUserAction
                 'full_name'    => $data['full_name'],
                 'phone_number' => $data['phone_number'] ?? null,
                 'email'        => $data['email'],
-                'role'         => 'staff',
+                'role'         => 'admin',
                 'is_active'    => DB::raw('true'),
                 'created_at'   => now(),
             ]);

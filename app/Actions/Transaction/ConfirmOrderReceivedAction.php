@@ -22,9 +22,9 @@ class ConfirmOrderReceivedAction
                     return ['success' => false, 'message' => 'Order not found.'];
                 }
 
-                // Check if the status is either ON_DELIVERY or SHIPPED string
+                // Customer handshake closes courier delivery after package is received.
                 $status = $order->order_status ?? null;
-                $shippedStatuses = [OrderStatus::ON_DELIVERY->value, 'SHIPPED'];
+                $shippedStatuses = [OrderStatus::ON_DELIVERY->value, OrderStatus::DELIVERED->value, 'SHIPPED'];
                 
                 if (!in_array($status, $shippedStatuses, true)) {
                     return ['success' => false, 'message' => 'Only shipped orders can be confirmed as received.'];

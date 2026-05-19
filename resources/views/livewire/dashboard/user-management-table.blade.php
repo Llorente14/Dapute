@@ -29,26 +29,26 @@
     <div>
         <p class="font-label text-xs uppercase tracking-[0.2em] text-[#414844]">Admin Panel &mdash; Account Management</p>
         <h2 class="font-headline font-black text-5xl md:text-6xl text-[#012d1d] leading-none tracking-tighter mt-1">User Management</h2>
-        <p class="font-body text-[#414844] mt-2 max-w-lg">Manage and monitor all Admin, Employee, and Customer accounts on the Dapute platform.</p>
+        <p class="font-body text-[#414844] mt-2 max-w-lg">Manage and monitor all Owner, Admin, and Customer accounts on the Dapute platform.</p>
     </div>
     <button @click="showCreate = true"
         class="flex items-center gap-2 bg-[#012d1d] text-white border-[3px] border-[#012d1d] font-label font-bold text-xs uppercase tracking-wider px-6 py-4 shadow-[4px_4px_0_0_#012d1d] hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#012d1d] transition-all duration-200">
         <span class="material-symbols-outlined text-base">person_add</span>
-        Add Employee
+        Add Admin
     </button>
 </header>
 
 {{-- ══ STAT CARDS ════════════════════════════════════════════════════ --}}
 @php
     $totalUsers = $users->count();
-    $adminStaffCount = $users->whereIn('role', ['admin', 'staff', 'owner'])->count();
+    $adminStaffCount = $users->whereIn('role', ['admin', 'owner'])->count();
     $customerCount = $users->where('role', 'customer')->count();
     $inactiveCount = $users->where('is_active', false)->count();
 @endphp
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-0 animate-[fadeUp_0.5s_ease_0.1s_forwards]">
     @foreach([
         ['label'=>'Total Users','value'=>$totalUsers,'icon'=>'group','color'=>'bg-[#012d1d] text-white','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
-        ['label'=>'Admin & Employee','value'=>$adminStaffCount,'icon'=>'badge','color'=>'bg-[#d3ee6f] text-[#212a00]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
+        ['label'=>'Owner & Admin','value'=>$adminStaffCount,'icon'=>'badge','color'=>'bg-[#d3ee6f] text-[#212a00]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
         ['label'=>'Customer','value'=>$customerCount,'icon'=>'person','color'=>'bg-[#dde4e0] text-[#012d1d]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
         ['label'=>'Inactive Accounts','value'=>$inactiveCount,'icon'=>'block','color'=>'bg-[#ffdad6] text-[#ba1a1a]','shadow'=>'shadow-[4px_4px_0_0_#ba1a1a] border-[#ba1a1a]'],
     ] as $stat)
@@ -97,7 +97,7 @@
             class="flex-1 bg-transparent px-2 py-3 font-body text-sm text-[#012d1d] focus:outline-none placeholder:text-[#717973]">
     </div>
     <div class="relative z-10"
-         x-data="{ open: false, options: ['All Roles','Admin','Employee','Customer'] }">
+         x-data="{ open: false, options: ['All Roles','Owner','admin','Customer'] }">
         <button @click="open = !open" @click.outside="open = false" type="button"
             class="z-10 bg-white border-[3px] border-[#012d1d] px-4 py-3
                    font-label font-bold text-xs text-[#012d1d] uppercase tracking-wider
@@ -134,7 +134,7 @@
 </div>
 
 {{-- ══ TABLE ═══════════════════════════════════════════════════════ --}}
-<section class="border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d] overflow-hidden opacity-0 animate-[fadeUp_0.5s_ease_0.2s_forwards]">
+<section class="border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d] opacity-0 animate-[fadeUp_0.5s_ease_0.2s_forwards]">
     <div class="px-6 py-4 border-b-[3px] border-[#012d1d] bg-[#dde4e0] flex items-center justify-between">
         <div>
             <h3 class="font-label font-bold text-xs uppercase tracking-widest text-[#012d1d]">User List</h3>
@@ -170,34 +170,51 @@
                 </td>
                 {{-- Role --}}
                 <td class="px-6 py-4 text-center">
-                    <div class="relative inline-block w-full max-w-[120px] text-left" x-data="{ open: false }">
+                    <div class="relative inline-block w-full max-w-[120px] text-left"
+                         x-data="{
+                             open: false,
+                             dropX: 0, dropY: 0, dropW: 0,
+                             toggle(btn) {
+                                 if (!this.open) {
+                                     const r = btn.getBoundingClientRect();
+                                     this.dropX = r.left;
+                                     this.dropY = r.bottom + window.scrollY;
+                                     this.dropW = r.width;
+                                 }
+                                 this.open = !this.open;
+                             }
+                         }">
                         @php
                             $roleOptions = [
                                 'owner' => 'Owner',
-                                'admin' => 'Admin',
-                                'staff' => 'Employee',
+                                'admin' => 'admin',
                                 'customer' => 'Customer'
                             ];
                             $currentLabel = $roleOptions[$user->role] ?? ucfirst($user->role);
                         @endphp
-                        
-                        <button @click="open = !open" @click.outside="open = false" type="button"
+
+                        <button @click="toggle($el)" @click.outside="open = false" type="button"
                             wire:loading.attr="disabled"
                             class="w-full bg-[#eef5f1] border-[2px] border-[#012d1d] px-2 py-1 font-label font-bold text-[10px] uppercase tracking-widest text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#012d1d] transition-all cursor-pointer flex items-center justify-between gap-1 disabled:opacity-50">
                             <span>{{ $currentLabel }}</span>
                             <span class="material-symbols-outlined text-[14px] transition-transform duration-200" :class="open ? 'rotate-180' : ''">expand_more</span>
                         </button>
 
-                        <div x-show="open" style="display:none;"
-                             x-transition.opacity.duration.150ms
-                             class="absolute left-0 z-30 w-full mt-1 bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
-                            @foreach($roleOptions as $val => $label)
-                                <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
-                                     class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
-                                    <span>{{ $label }}</span>
-                                </div>
-                            @endforeach
-                        </div>
+                        {{-- Fixed-position dropdown agar tidak terpotong overflow tabel --}}
+                        <template x-teleport="body">
+                            <div x-show="open" style="display:none;"
+                                 x-transition.opacity.duration.150ms
+                                 @click.outside="open = false"
+                                 :style="`position:fixed; top:${dropY}px; left:${dropX}px; width:${dropW}px; z-index:9999;`"
+                                 class="bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
+                                @foreach($roleOptions as $val => $label)
+                                    <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
+                                         class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
+                                        <span>{{ $label }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </template>
                     </div>
                 </td>
                 {{-- Joined --}}
@@ -248,7 +265,7 @@
          x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
          @click.stop>
         <div class="px-8 py-5 border-b-[3px] border-[#012d1d] bg-[#dde4e0] flex justify-between items-center">
-            <h3 class="font-headline font-black text-2xl text-[#012d1d] uppercase tracking-tighter">Add Employee</h3>
+            <h3 class="font-headline font-black text-2xl text-[#012d1d] uppercase tracking-tighter">Add Admin</h3>
             <button @click="showCreate=false" class="text-[#012d1d] hover:bg-[#012d1d] hover:text-white border-[2px] border-transparent hover:border-[#012d1d] p-1 transition-all"><span class="material-symbols-outlined">close</span></button>
         </div>
         <div class="p-8 flex flex-col gap-5">
@@ -319,7 +336,6 @@
                     <select wire:model="edit_role" class="w-full appearance-none bg-[#eef5f1] border-[3px] border-[#012d1d] px-4 py-3 pr-10 font-label font-bold text-sm text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[4px_4px_0_0_#012d1d] transition-all cursor-pointer">
                         <option value="owner">Owner</option>
                         <option value="admin">Admin</option>
-                        <option value="staff">Employee</option>
                         <option value="customer">Customer</option>
                     </select>
                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#012d1d]">expand_more</span>

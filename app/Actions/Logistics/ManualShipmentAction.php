@@ -3,9 +3,12 @@
 namespace App\Actions\Logistics;
 
 use App\Enums\OrderStatus;
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ManualShipmentAction
@@ -38,7 +41,7 @@ class ManualShipmentAction
         }
 
         if (
-            $order->order_status === OrderStatus::ON_DELIVERY->value
+            in_array($order->order_status, [OrderStatus::ON_DELIVERY->value, OrderStatus::COMPLETED->value], true)
             && (string) $order->tracking_id === $trackingNumber
         ) {
             return [
@@ -56,12 +59,22 @@ class ManualShipmentAction
         DB::beginTransaction();
 
         try {
+            $updateData = [
+                'tracking_id' => $trackingNumber,
+                'updated_at' => now(),
+            ];
+
+            if (Schema::hasColumn('orders', 'shipping_type')) {
+                $updateData['shipping_type'] = ShippingType::INDEPENDENT->value;
+            }
+
+            if (Schema::hasColumn('orders', 'shipping_status')) {
+                $updateData['shipping_status'] = ShippingStatus::ON_DELIVERY->value;
+            }
+
             DB::table('orders')
                 ->where('id', $orderId)
-                ->update([
-                    'tracking_id' => $trackingNumber,
-                    'updated_at' => now(),
-                ]);
+                ->update($updateData);
 
             $statusResult = ($this->updateOrderStatusAction)(
                 $orderId,
@@ -80,9 +93,11 @@ class ManualShipmentAction
                 'tracking_id' => $trackingNumber,
             ]);
 
+            $this->upsertShipment($orderId, $trackingNumber);
+
             return [
                 'success' => true,
-                'message' => 'Manual shipment saved.',
+                'message' => 'Manual delivery started.',
                 'tracking_id' => $trackingNumber,
             ];
         } catch (\Throwable $exception) {
@@ -104,10 +119,35 @@ class ManualShipmentAction
 
     private function authorize(): void
     {
-        $role = auth()->user()?->role;
+        $role = DB::table('users')->where('id', auth()->id())->value('role');
 
-        if (!in_array($role, ['admin', 'karyawan'], true)) {
-            throw new AuthorizationException('Only admin or employee can create manual shipment.');
+        if (!in_array($role, ['owner', 'admin'], true)) {
+            throw new AuthorizationException('Only owner or Admin can create manual shipment.');
         }
+    }
+
+    private function upsertShipment(string $orderId, string $trackingNumber): void
+    {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $now = now();
+        $existingId = DB::table('shipments')->where('order_id', $orderId)->value('id');
+
+        DB::table('shipments')->updateOrInsert(
+            ['order_id' => $orderId],
+            [
+                'id' => $existingId ?: (string) Str::uuid(),
+                'shipping_type' => ShippingType::INDEPENDENT->value,
+                'shipping_status' => ShippingStatus::ON_DELIVERY->value,
+                'provider' => 'independent',
+                'tracking_id' => $trackingNumber,
+                'requested_at' => $now,
+                'picked_up_at' => $now,
+                'updated_at' => $now,
+                'created_at' => $now,
+            ]
+        );
     }
 }

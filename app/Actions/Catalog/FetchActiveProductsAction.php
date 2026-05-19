@@ -14,7 +14,7 @@ class FetchActiveProductsAction
      * @param string|null
      * @return array
      */
-    public function execute(?string $search = null, ?string $sort = 'Terbaru'): array
+    public function execute(?string $search = null, ?string $sort = 'Latest'): array
     {
         try {
             $query = DB::table('products')
@@ -35,13 +35,13 @@ class FetchActiveProductsAction
             }
 
             switch ($sort) {
-                case 'Harga Terendah':
+                case 'Lowest Price':
                     $query->orderBy('price', 'asc');
                     break;
-                case 'Harga Tertinggi':
+                case 'Highest Price':
                     $query->orderBy('price', 'desc');
                     break;
-                case 'Nama A-Z':
+                case 'Name A-Z':
                     $query->orderBy('cake_name', 'asc');
                     break;
                 case 'new':
@@ -50,7 +50,7 @@ class FetchActiveProductsAction
                 case 'all':
                     $query->orderBy('created_at', 'desc')->limit(8);
                     break;
-                case 'Terbaru':
+                case 'Latest':
                 default:
                     $query->orderBy('created_at', 'desc');
                     break;

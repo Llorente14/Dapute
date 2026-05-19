@@ -19,19 +19,79 @@
                 </div>
             @enderror
 
-            <div class="grid grid-cols-2 gap-3">
-                <button type="button"
-                    x-on:click="setCourierType('regular')"
-                    class="border-[3px] border-primary px-4 py-3 font-label font-black text-xs uppercase tracking-widest transition-all shadow-[4px_4px_0_0_#012d1d]"
-                    :class="courierType === 'regular' ? 'bg-primary text-surface' : 'bg-surface-container-lowest text-primary hover:bg-tertiary-fixed'">
-                    Regular
+            <div class="relative z-30" x-data="{ openShipping: false }">
+                <label class="sr-only" for="shipping_type_select">Shipping Type</label>
+                <button id="shipping_type_select" type="button"
+                    @click="openShipping = !openShipping"
+                    @click.outside="openShipping = false"
+                    wire:loading.attr="disabled"
+                    wire:target="setShippingOption,fetchCouriers"
+                    class="group w-full bg-surface-container-lowest border-[3px] border-primary px-4 py-4 shadow-[4px_4px_0_0_#012d1d] hover:shadow-[6px_6px_0_0_#012d1d] hover:-translate-x-0.5 hover:-translate-y-0.5 focus:outline-none focus:shadow-[6px_6px_0_0_#012d1d] transition-all duration-150 flex items-center justify-between gap-4 text-left disabled:cursor-wait disabled:opacity-70">
+                    <span class="flex min-w-0 items-center gap-3">
+                        <span class="material-symbols-outlined text-[22px] transition-transform duration-200 group-hover:-translate-y-0.5">
+                            {{ $shipping_type === 'INDEPENDENT' ? 'storefront' : 'local_shipping' }}
+                        </span>
+                        <span class="min-w-0">
+                            <span class="block font-label text-[10px] font-black uppercase tracking-[0.24em] text-primary/70">
+                                Shipping Type
+                            </span>
+                            <span class="block truncate font-label text-sm font-black uppercase tracking-widest text-primary">
+                                @if($shipping_type === 'INDEPENDENT')
+                                    Self Pickup / Manual Courier
+                                @elseif($courier_type === 'instant')
+                                    Biteship Courier - Instant
+                                @else
+                                    Biteship Courier - Regular
+                                @endif
+                            </span>
+                        </span>
+                    </span>
+                    <span class="material-symbols-outlined shrink-0 text-[22px] transition-transform duration-200"
+                        :class="openShipping ? 'rotate-180 bg-tertiary-fixed' : ''">expand_more</span>
                 </button>
-                <button type="button"
-                    x-on:click="setCourierType('instant')"
-                    class="border-[3px] border-primary px-4 py-3 font-label font-black text-xs uppercase tracking-widest transition-all shadow-[4px_4px_0_0_#012d1d]"
-                    :class="courierType === 'instant' ? 'bg-primary text-surface' : 'bg-surface-container-lowest text-primary hover:bg-tertiary-fixed'">
-                    Instant
-                </button>
+
+                <div x-show="openShipping" style="display:none;"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 -translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-100"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-2"
+                    class="absolute left-0 right-0 mt-2 overflow-hidden bg-white border-[3px] border-primary shadow-[6px_6px_0_0_#012d1d]">
+                    <button type="button"
+                        @click="$wire.setShippingOption('INDEPENDENT'); openShipping = false"
+                        class="group flex w-full items-center justify-between gap-3 border-b-[3px] border-primary px-4 py-4 text-left transition-all hover:bg-tertiary-fixed hover:pl-5 {{ $shipping_type === 'INDEPENDENT' ? 'bg-primary text-surface' : 'text-primary' }}">
+                        <span class="inline-flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px]">storefront</span>
+                            <span class="font-label text-xs font-black uppercase tracking-widest">Self Pickup / Manual Courier</span>
+                        </span>
+                        @if($shipping_type === 'INDEPENDENT')
+                            <span class="material-symbols-outlined text-[18px]">check</span>
+                        @endif
+                    </button>
+                    <button type="button"
+                        @click="$wire.setShippingOption('ONLINE_COURIER', 'regular'); openShipping = false"
+                        class="group flex w-full items-center justify-between gap-3 border-b-[3px] border-primary px-4 py-4 text-left transition-all hover:bg-tertiary-fixed hover:pl-5 {{ $shipping_type === 'ONLINE_COURIER' && $courier_type === 'regular' ? 'bg-primary text-surface' : 'text-primary' }}">
+                        <span class="inline-flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px]">local_shipping</span>
+                            <span class="font-label text-xs font-black uppercase tracking-widest">Biteship Courier - Regular</span>
+                        </span>
+                        @if($shipping_type === 'ONLINE_COURIER' && $courier_type === 'regular')
+                            <span class="material-symbols-outlined text-[18px]">check</span>
+                        @endif
+                    </button>
+                    <button type="button"
+                        @click="$wire.setShippingOption('ONLINE_COURIER', 'instant'); openShipping = false"
+                        class="group flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-all hover:bg-tertiary-fixed hover:pl-5 {{ $shipping_type === 'ONLINE_COURIER' && $courier_type === 'instant' ? 'bg-primary text-surface' : 'text-primary' }}">
+                        <span class="inline-flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[20px]">bolt</span>
+                            <span class="font-label text-xs font-black uppercase tracking-widest">Biteship Courier - Instant</span>
+                        </span>
+                        @if($shipping_type === 'ONLINE_COURIER' && $courier_type === 'instant')
+                            <span class="material-symbols-outlined text-[18px]">check</span>
+                        @endif
+                    </button>
+                </div>
             </div>
 
             <div x-show="addresses.length > 0 && addresses.length <= 3" class="grid grid-cols-1 gap-4">
@@ -186,7 +246,7 @@
                 @enderror
             </div>
 
-            <div x-show="courierType === 'instant'" x-effect="if (courierType === 'instant') initCoordinatePicker()"
+            <div x-show="@js($shipping_type === 'ONLINE_COURIER') && courierType === 'instant'" x-effect="if (@js($shipping_type === 'ONLINE_COURIER') && courierType === 'instant') initCoordinatePicker()"
                 class="bg-surface-container-lowest border-[3px] border-primary p-5 flex flex-col gap-4"
                 style="box-shadow: 4px 4px 0px 0px #012d1d;">
                 <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">

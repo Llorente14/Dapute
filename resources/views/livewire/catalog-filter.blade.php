@@ -15,7 +15,7 @@
                     <input
                         wire:model.live.debounce.300ms="search"
                         type="text"
-                        placeholder="Cari produk..."
+                        placeholder="Search products..."
                         class="w-full pl-11 pr-10 py-3
                                bg-white border-[3px] border-[#012d1d]
                                font-[var(--font-body)] text-sm text-[#012d1d]
@@ -46,7 +46,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                         <path stroke-linecap="square" stroke-linejoin="miter" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
-                    Cari
+                    Search
                 </button>
             </div>
         </div>
@@ -60,14 +60,14 @@
         {{-- Results info bar --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-8">
             <p class="font-[var(--font-body)] text-sm text-[#3d6651]">
-                Menampilkan <span class="font-bold text-[#012d1d]">{{ count($products) }}</span> produk
+                Showing <span class="font-bold text-[#012d1d]">{{ count($products) }}</span> products
             </p>
             {{-- Sort dropdown (Custom Alpine UI) --}}
             <div class="flex items-center gap-2">
                 <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
-                    Urutkan:
+                    Sort by:
                 </span>
-                <div x-data="{ open: false, selected: $wire.entangle('sort').live, options: ['Terbaru', 'Harga Terendah', 'Harga Tertinggi', 'Nama A-Z'] }" class="relative">
+                <div x-data="{ open: false, selected: $wire.entangle('sort').live, options: ['Latest', 'Lowest Price', 'Highest Price', 'Name A-Z'] }" class="relative">
                     <button @click="open = !open" @click.outside="open = false" type="button"
                             class="bg-[#e8f3ec] border-[3px] border-[#012d1d] px-3 py-1.5
                                    font-[var(--font-ui)] text-xs text-[#012d1d] uppercase tracking-wider
@@ -101,10 +101,10 @@
                     </svg>
                 </div>
                 <span class="font-[var(--font-display)] font-bold text-xl text-[#012d1d] block mb-2">
-                    {{ !empty($search) ? 'Produk tidak ditemukan' : 'Belum ada produk' }}
+                    {{ !empty($search) ? 'No products found' : 'No products available' }}
                 </span>
                 <p class="font-[var(--font-body)] text-sm text-[#3d6651]">
-                    {{ !empty($search) ? 'Coba gunakan kata kunci pencarian yang lain.' : 'Produk yang tersedia akan muncul di sini.' }}
+                    {{ !empty($search) ? 'Try using different search keywords.' : 'Available products will appear here.' }}
                 </p>
             </div>
         @else
@@ -125,7 +125,7 @@
                                 {{-- Badge — Aktif chip --}}
                                 @if($product['is_active'])
                                     <div class="absolute top-2.5 left-2.5">
-                                        <x-ui.badge variant="bestseller">Aktif</x-ui.badge>
+                                        <x-ui.badge variant="bestseller">Active</x-ui.badge>
                                     </div>
                                 @endif
                             </a>
@@ -155,7 +155,7 @@
 
                                     {{-- Add to Cart button --}}
                                     <button type="button"
-                                            title="Tambah ke Keranjang"
+                                            title="Add to Cart"
                                             wire:click="addToCart('{{ $product['id'] }}')"
                                             wire:loading.attr="disabled"
                                             class="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center

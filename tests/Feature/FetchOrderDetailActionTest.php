@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Transaction\FetchOrderDetailAction;
 use App\Enums\OrderStatus;
+use App\Enums\ShippingType;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +33,7 @@ class FetchOrderDetailActionTest extends TestCase
             $table->integer('total_payment');
             $table->text('notes')->nullable();
             $table->string('order_status')->default(OrderStatus::PENDING_PAYMENT->value);
+            $table->string('shipping_type')->default(ShippingType::ONLINE_COURIER->value);
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
             $table->string('biteship_order_id')->nullable();
@@ -171,7 +173,22 @@ class FetchOrderDetailActionTest extends TestCase
             ->assertDontSeeText('Courier Has Not Picked Up Package Yet');
     }
 
-    private function seedOrderDetail(string $status = OrderStatus::ON_DELIVERY->value): void
+    public function test_manual_delivery_disables_customer_receive_confirmation(): void
+    {
+        $this->seedOrderDetail(OrderStatus::ON_DELIVERY->value, ShippingType::INDEPENDENT->value);
+
+        $user = new User();
+        $user->id = 'customer-123';
+        $user->exists = true;
+
+        $this->actingAs($user)
+            ->get('/order/order-123')
+            ->assertOk()
+            ->assertSeeText('Store Confirms Manual Delivery')
+            ->assertDontSeeText('Pesanan Diterima');
+    }
+
+    private function seedOrderDetail(string $status = OrderStatus::ON_DELIVERY->value, string $shippingType = ShippingType::ONLINE_COURIER->value): void
     {
         DB::table('orders')->insert([
             'id' => 'order-123',
@@ -181,6 +198,7 @@ class FetchOrderDetailActionTest extends TestCase
             'shipping_fee' => 20000,
             'total_payment' => 122500,
             'order_status' => $status,
+            'shipping_type' => $shippingType,
             'tracking_id' => 'TRACK-123',
             'created_at' => now(),
             'updated_at' => now(),

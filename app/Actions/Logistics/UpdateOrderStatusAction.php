@@ -3,15 +3,17 @@
 namespace App\Actions\Logistics;
 
 use App\Enums\OrderStatus;
+use App\Enums\ShippingStatus;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class UpdateOrderStatusAction
 {
 
 
-    private const ALLOWED_ROLES = ['admin', 'karyawan'];
+    private const ALLOWED_ROLES = ['owner', 'admin'];
 
     private const VALID_TRANSITIONS = [
         OrderStatus::PENDING_PAYMENT->value => [
@@ -28,10 +30,12 @@ class UpdateOrderStatusAction
             OrderStatus::ON_DELIVERY->value,
         ],
         OrderStatus::ON_DELIVERY->value => [
-            OrderStatus::DELIVERED->value,
+            OrderStatus::COMPLETED->value,
+            OrderStatus::CANCELLED->value,
         ],
         OrderStatus::DELIVERED->value => [
             OrderStatus::COMPLETED->value,
+            OrderStatus::CANCELLED->value,
         ],
     ];
 
@@ -43,9 +47,15 @@ class UpdateOrderStatusAction
             return ['success' => false, 'message' => 'Invalid order status.'];
         }
 
+        $selectColumns = ['id', 'order_status'];
+
+        if (Schema::hasColumn('orders', 'notes')) {
+            $selectColumns[] = 'notes';
+        }
+
         $order = DB::table('orders')
             ->where('id', $orderId)
-            ->select('id', 'order_status')
+            ->select($selectColumns)
             ->first();
 
         if (!$order) {
@@ -69,12 +79,32 @@ class UpdateOrderStatusAction
             return ['success' => false, 'message' => 'Invalid status transition.'];
         }
 
+        $updateData = [
+            'order_status' => $nextStatus,
+            'updated_at' => now(),
+        ];
+
+        if (Schema::hasColumn('orders', 'shipping_status')) {
+            $shippingStatus = $this->shippingStatusForOrderStatus($nextStatus);
+
+            if ($shippingStatus) {
+                $updateData['shipping_status'] = $shippingStatus;
+            }
+        }
+
+        if (
+            $nextStatus === OrderStatus::CANCELLED->value
+            && in_array($currentStatus, [OrderStatus::ON_DELIVERY->value, OrderStatus::DELIVERED->value], true)
+            && Schema::hasColumn('orders', 'notes')
+        ) {
+            $updateData['notes'] = $this->appendNote($order->notes ?? null, 'NOTED: Driver gagal kirim');
+        }
+
         DB::table('orders')
             ->where('id', $orderId)
-            ->update([
-                'order_status' => $nextStatus,
-                'updated_at' => now(),
-            ]);
+            ->update($updateData);
+
+        $this->syncShipment($orderId, $nextStatus, $updateData['notes'] ?? null);
 
         Log::info('Order status updated from admin queue.', [
             'order_id' => $orderId,
@@ -92,15 +122,62 @@ class UpdateOrderStatusAction
 
     private function authorize(): void
     {
-        $role = auth()->user()?->role;
+        $role = DB::table('users')->where('id', auth()->id())->value('role');
 
         if (!in_array($role, self::ALLOWED_ROLES, true)) {
-            throw new AuthorizationException('Only admin or employee can update order status.');
+            throw new AuthorizationException('Only owner or Admin can update order status.');
         }
     }
 
     private function canTransition(string $currentStatus, string $nextStatus): bool
     {
         return in_array($nextStatus, self::VALID_TRANSITIONS[$currentStatus] ?? [], true);
+    }
+
+    private function shippingStatusForOrderStatus(string $orderStatus): ?string
+    {
+        return match ($orderStatus) {
+            OrderStatus::PICKUP_REQUESTED->value => ShippingStatus::AWAITING_PICKUP->value,
+            OrderStatus::ON_DELIVERY->value => ShippingStatus::ON_DELIVERY->value,
+            OrderStatus::DELIVERED->value, OrderStatus::COMPLETED->value => ShippingStatus::DELIVERED->value,
+            default => null,
+        };
+    }
+
+    private function appendNote(?string $notes, string $note): string
+    {
+        $notes = trim((string) $notes);
+
+        if (str_contains($notes, $note)) {
+            return $notes;
+        }
+
+        return $notes === '' ? $note : "{$notes}\n{$note}";
+    }
+
+    private function syncShipment(string $orderId, string $orderStatus, ?string $notes): void
+    {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $updateData = ['updated_at' => now()];
+        $shippingStatus = $this->shippingStatusForOrderStatus($orderStatus);
+
+        if ($shippingStatus) {
+            $updateData['shipping_status'] = $shippingStatus;
+        }
+
+        if ($orderStatus === OrderStatus::COMPLETED->value) {
+            $updateData['delivered_at'] = now();
+        }
+
+        if ($notes !== null) {
+            $updateData['notes'] = $notes;
+        }
+
+        DB::table('shipments')
+            ->where('order_id', $orderId)
+            ->update($updateData);
     }
 }

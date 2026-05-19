@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use App\Actions\Logistics\ManualShipmentAction;
 use App\Actions\Logistics\UpdateOrderStatusAction;
 use App\Livewire\Admin\OrderQueue;
@@ -21,6 +23,7 @@ class AdminOrderQueueTest extends TestCase
         parent::setUp();
 
         Schema::dropIfExists('order_items');
+        Schema::dropIfExists('shipments');
         Schema::dropIfExists('order_addresses');
         Schema::dropIfExists('orders');
         Schema::dropIfExists('users');
@@ -37,9 +40,31 @@ class AdminOrderQueueTest extends TestCase
             $table->string('customer_id');
             $table->timestamp('order_date')->nullable();
             $table->integer('total_payment');
+            $table->integer('shipping_fee')->default(20000);
             $table->string('order_status')->default(OrderStatus::PENDING_PAYMENT->value);
+            $table->string('shipping_type')->default(ShippingType::ONLINE_COURIER->value);
+            $table->string('shipping_status')->nullable();
             $table->string('biteship_order_id')->nullable();
             $table->string('tracking_id')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+        });
+
+        Schema::create('shipments', function (Blueprint $table): void {
+            $table->string('id')->primary();
+            $table->string('order_id')->unique();
+            $table->string('shipping_type')->default(ShippingType::ONLINE_COURIER->value);
+            $table->string('shipping_status')->default(ShippingStatus::AWAITING_PICKUP->value);
+            $table->string('provider')->nullable();
+            $table->string('provider_order_id')->nullable();
+            $table->string('courier_company')->nullable();
+            $table->string('courier_type')->nullable();
+            $table->string('tracking_id')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamp('requested_at')->nullable();
+            $table->timestamp('picked_up_at')->nullable();
+            $table->timestamp('delivered_at')->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
@@ -63,17 +88,17 @@ class AdminOrderQueueTest extends TestCase
         });
 
         DB::table('users')->insert([
-            ['id' => 'admin-123', 'full_name' => 'Admin User', 'email' => 'admin@example.test', 'role' => 'admin'],
-            ['id' => 'employee-123', 'full_name' => 'Employee User', 'email' => 'employee@example.test', 'role' => 'karyawan'],
+            ['id' => 'owner-123', 'full_name' => 'Owner User', 'email' => 'owner@example.test', 'role' => 'owner'],
+            ['id' => 'Admin-123', 'full_name' => 'Admin User', 'email' => 'Admin@example.test', 'role' => 'admin'],
             ['id' => 'customer-123', 'full_name' => 'Customer User', 'email' => 'customer@example.test', 'role' => 'customer'],
         ]);
     }
 
-    public function test_admin_order_queue_route_renders_active_orders(): void
+    public function test_staff_order_queue_route_renders_active_orders(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
 
-        $this->actingAs($this->authUser('admin-123'))
+        $this->actingAs($this->authUser('Admin-123'))
             ->get('/admin/orders')
             ->assertOk()
             ->assertSee('Order Queue')
@@ -83,15 +108,46 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Available')
             ->assertSee('Unavailable')
             ->assertSee('Ready to Ship')
-            ->assertSee('Request Pickup')
-            ->assertSee('Manual Shipment');
+            ->assertSee('Request Biteship')
+            ->assertSee('Manual Delivery')
+            ->assertDontSee('Manual Shipment');
     }
 
-    public function test_customer_access_to_admin_order_queue_redirects_home(): void
+    public function test_owner_can_access_order_queue_route(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
+
+        $this->actingAs($this->authUser('owner-123'))
+            ->get('/admin/orders')
+            ->assertOk()
+            ->assertSee('Order Queue');
+    }
+
+    public function test_customer_access_to_admin_order_queue_returns_not_found(): void
     {
         $this->actingAs($this->authUser('customer-123'))
             ->get('/admin/orders')
-            ->assertRedirect('/');
+            ->assertNotFound();
+    }
+
+    public function test_guest_access_to_admin_users_returns_not_found(): void
+    {
+        $this->get('/admin/users')->assertNotFound();
+    }
+
+    public function test_admin_cannot_access_owner_only_admin_pages(): void
+    {
+        $this->actingAs($this->authUser('Admin-123'))
+            ->get('/admin/users')
+            ->assertNotFound();
+
+        $this->actingAs($this->authUser('Admin-123'))
+            ->get('/admin/products')
+            ->assertNotFound();
+
+        $this->actingAs($this->authUser('Admin-123'))
+            ->get('/admin/reports')
+            ->assertNotFound();
     }
 
     public function test_order_queue_filters_expands_and_updates_status(): void
@@ -100,7 +156,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-2', 'customer-123', OrderStatus::PENDING_PAYMENT->value);
         $this->seedOrder('order-3', 'customer-123', OrderStatus::CANCELLED->value);
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->assertSee('Customer User')
             ->assertDontSee('order-3')
@@ -127,7 +183,7 @@ class AdminOrderQueueTest extends TestCase
             );
         }
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->assertSet('totalOrders', 11)
             ->assertCount('orders', 10)
@@ -150,7 +206,7 @@ class AdminOrderQueueTest extends TestCase
             );
         }
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('setPerPage', 5)
             ->assertSet('perPage', 5)
@@ -163,7 +219,7 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PENDING_PAYMENT->value);
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::ON_DELIVERY->value);
 
@@ -174,7 +230,7 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::PICKUP_REQUESTED->value);
 
@@ -185,14 +241,28 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::CANCELLED->value);
 
         $this->assertSame('IN_PROCESSING', DB::table('orders')->where('id', 'order-1')->value('order_status'));
     }
 
-    public function test_status_update_requires_admin_or_employee_role(): void
+    public function test_on_delivery_driver_failed_cancels_order_and_adds_note(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
+
+        Livewire::actingAs($this->authUser('staff-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::CANCELLED->value);
+
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertSame(OrderStatus::CANCELLED->value, $order->order_status);
+        $this->assertStringContainsString('NOTED: Driver gagal kirim', $order->notes);
+    }
+
+    public function test_status_update_requires_owner_or_staff_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
 
@@ -202,12 +272,35 @@ class AdminOrderQueueTest extends TestCase
         app(UpdateOrderStatusAction::class)('order-1', OrderStatus::PICKUP_REQUESTED->value);
     }
 
-    public function test_manual_shipment_saves_tracking_without_biteship_and_moves_to_delivery(): void
+    public function test_self_pickup_order_disables_biteship_action(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+        DB::table('orders')->where('id', 'order-1')->update([
+            'shipping_fee' => 0,
+            'shipping_type' => ShippingType::INDEPENDENT->value,
+        ]);
+
+        $component = Livewire::actingAs($this->authUser('staff-123'))
+            ->test(OrderQueue::class);
+
+        $order = collect($component->get('orders'))->firstWhere('id', 'order-1');
+        $options = collect($component->instance()->actionOptions(
+            $order['order_status'],
+            $order['shipping_type'],
+            $order['shipping_fee'],
+        ));
+
+        $this->assertFalse($options->firstWhere('label', 'Request Biteship')['available']);
+        $this->assertTrue($options->firstWhere('label', 'Manual Delivery')['available']);
+    }
+
+    public function test_manual_delivery_saves_tracking_without_biteship_and_moves_to_delivery(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
+        DB::table('orders')->where('id', 'order-1')->update(['shipping_type' => ShippingType::INDEPENDENT->value]);
         $this->seedOrderAddress('order-1');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('openManualShipmentModal', 'order-1')
             ->assertSet('showManualShipmentModal', true)
@@ -217,9 +310,15 @@ class AdminOrderQueueTest extends TestCase
 
         $order = DB::table('orders')->where('id', 'order-1')->first();
 
+        $shipment = DB::table('shipments')->where('order_id', 'order-1')->first();
+
         $this->assertSame(OrderStatus::ON_DELIVERY->value, $order->order_status);
+        $this->assertSame(ShippingType::INDEPENDENT->value, $order->shipping_type);
+        $this->assertSame(ShippingStatus::ON_DELIVERY->value, $order->shipping_status);
         $this->assertSame('MANUAL-123', $order->tracking_id);
         $this->assertNull($order->biteship_order_id);
+        $this->assertSame(ShippingType::INDEPENDENT->value, $shipment->shipping_type);
+        $this->assertSame(ShippingStatus::ON_DELIVERY->value, $shipment->shipping_status);
     }
 
     public function test_manual_shipment_requires_tracking_number(): void
@@ -227,7 +326,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         $this->seedOrderAddress('order-1');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('Admin-123'))
             ->test(OrderQueue::class)
             ->call('openManualShipmentModal', 'order-1')
             ->set('manualTrackingId', '   ')
@@ -245,7 +344,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
         DB::table('orders')->where('id', 'order-1')->update(['tracking_id' => 'MANUAL-123']);
 
-        $this->actingAs($this->authUser('admin-123'));
+        $this->actingAs($this->authUser('Admin-123'));
 
         $result = app(ManualShipmentAction::class)('order-1', ' MANUAL-123 ');
         $order = DB::table('orders')->where('id', 'order-1')->first();
@@ -262,7 +361,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         DB::table('orders')->where('id', 'order-1')->update(['biteship_order_id' => 'BITESHIP-123']);
 
-        $this->actingAs($this->authUser('admin-123'));
+        $this->actingAs($this->authUser('Admin-123'));
 
         $result = app(ManualShipmentAction::class)('order-1', 'MANUAL-123');
         $order = DB::table('orders')->where('id', 'order-1')->first();
@@ -273,7 +372,7 @@ class AdminOrderQueueTest extends TestCase
         $this->assertNull($order->tracking_id);
     }
 
-    public function test_manual_shipment_requires_admin_or_employee_role(): void
+    public function test_manual_shipment_requires_owner_or_staff_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
 
@@ -281,6 +380,40 @@ class AdminOrderQueueTest extends TestCase
         $this->expectException(AuthorizationException::class);
 
         app(ManualShipmentAction::class)('order-1', 'MANUAL-123');
+    }
+
+    public function test_admin_completes_manual_delivery_after_tracking_saved(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
+        DB::table('orders')->where('id', 'order-1')->update([
+            'shipping_type' => ShippingType::INDEPENDENT->value,
+            'shipping_status' => ShippingStatus::ON_DELIVERY->value,
+            'tracking_id' => 'MANUAL-123',
+        ]);
+        DB::table('shipments')->insert([
+            'id' => 'shipment-order-1',
+            'order_id' => 'order-1',
+            'shipping_type' => ShippingType::INDEPENDENT->value,
+            'shipping_status' => ShippingStatus::ON_DELIVERY->value,
+            'provider' => 'independent',
+            'tracking_id' => 'MANUAL-123',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        Livewire::actingAs($this->authUser('staff-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::COMPLETED->value);
+
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+        $shipment = DB::table('shipments')->where('order_id', 'order-1')->first();
+
+        $this->assertSame(OrderStatus::COMPLETED->value, $order->order_status);
+        $this->assertSame(ShippingType::INDEPENDENT->value, $order->shipping_type);
+        $this->assertSame(ShippingStatus::DELIVERED->value, $order->shipping_status);
+        $this->assertSame(ShippingType::INDEPENDENT->value, $shipment->shipping_type);
+        $this->assertSame(ShippingStatus::DELIVERED->value, $shipment->shipping_status);
+        $this->assertSame('independent', $shipment->provider);
     }
 
     private function seedOrder(string $orderId, string $customerId, string $status, $orderDate = null): void
@@ -292,7 +425,10 @@ class AdminOrderQueueTest extends TestCase
             'customer_id' => $customerId,
             'order_date' => $orderDate,
             'total_payment' => 125000,
+            'shipping_fee' => 20000,
             'order_status' => $status,
+            'shipping_type' => ShippingType::ONLINE_COURIER->value,
+            'shipping_status' => ShippingStatus::AWAITING_PICKUP->value,
             'biteship_order_id' => null,
             'tracking_id' => null,
             'created_at' => now(),

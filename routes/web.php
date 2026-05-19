@@ -25,10 +25,9 @@ Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAct
 })->middleware('auth');
 /*
 |--------------------------------------------------------------------------
-| Owner / Admin — Product CRUD (SCRUM-36)
+| Owner / Admin Admin Routes
 |--------------------------------------------------------------------------
-| TODO: Tambahkan middleware(['auth', 'role:owner|admin']) saat auth siap.
-| Spatie permission sudah terpasang di composer.json.
+| owner can access all admin pages; Admin can access order logistics only.
 */
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Admin\OrderQueue;
@@ -36,19 +35,21 @@ use App\Livewire\Admin\FinancialReportPage;
 use App\Http\Controllers\Admin\FinancialReportExportController;
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    Route::get('/products',              ProductIndex::class)->name('products.index');
-    Route::get('/products/create',       ProductCrudForm::class)->name('products.create');
-    Route::get('/products/{productId}/edit', ProductCrudForm::class)->name('products.edit');
-    Route::get('/users',                 UserManagement::class)->name('users.index');
-    Route::get('/orders',                OrderQueue::class)->middleware(['auth', 'role:admin,karyawan'])->name('orders.index');
-    Route::get('/reports',               FinancialReportPage::class)->middleware(['auth', 'role:owner'])->name('reports.index');
-    Route::get('/reports/export/pdf',    [FinancialReportExportController::class, 'pdf'])->middleware(['auth', 'role:owner'])->name('reports.export.pdf');
-    Route::get('/reports/export/excel',  [FinancialReportExportController::class, 'excel'])->middleware(['auth', 'role:owner'])->name('reports.export.excel');
+    Route::get('/products',              ProductIndex::class)->middleware('role:owner')->name('products.index');
+    Route::get('/products/create',       ProductCrudForm::class)->middleware('role:owner')->name('products.create');
+    Route::get('/products/{productId}/edit', ProductCrudForm::class)->middleware('role:owner')->name('products.edit');
+    Route::get('/users',                 UserManagement::class)->middleware('role:owner')->name('users.index');
+    Route::get('/orders',                OrderQueue::class)->middleware('role:owner,Admin')->name('orders.index');
+    Route::get('/reports',               FinancialReportPage::class)->middleware('role:owner')->name('reports.index');
+    Route::get('/reports/export/pdf',    [FinancialReportExportController::class, 'pdf'])->middleware('role:owner')->name('reports.export.pdf');
+    Route::get('/reports/export/excel',  [FinancialReportExportController::class, 'excel'])->middleware('role:owner')->name('reports.export.excel');
 });
 // ─── Guest Routes ─────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', LoginForm::class)->name('login');
     Route::get('/register', RegisterForm::class)->name('register');
+    Route::get('/forgot-password', \App\Livewire\Auth\ForgotPasswordPage::class)->name('password.request');
+    Route::get('/reset-password', \App\Livewire\Auth\ResetPasswordPage::class)->name('password.reset');
 });
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────

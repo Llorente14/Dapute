@@ -31,6 +31,7 @@ class AdminFinancialReportPageTest extends TestCase
 
         DB::table('users')->insert([
             ['id' => 'owner-123', 'role' => 'owner'],
+            ['id' => 'Admin-123', 'role' => 'admin'],
             ['id' => 'customer-123', 'role' => 'customer'],
         ]);
 
@@ -78,7 +79,11 @@ class AdminFinancialReportPageTest extends TestCase
     {
         $this->actingAs($this->authUser('customer-123'))
             ->get('/admin/reports')
-            ->assertRedirect('/');
+            ->assertNotFound();
+
+        $this->actingAs($this->authUser('Admin-123'))
+            ->get('/admin/reports')
+            ->assertNotFound();
     }
 
     public function test_financial_report_filters_are_livewire_state_only(): void

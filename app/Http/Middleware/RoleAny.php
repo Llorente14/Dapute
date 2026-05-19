@@ -13,7 +13,7 @@ class RoleAny
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
         if (!Auth::check()) {
-            return redirect('/login');
+            abort(404);
         }
 
         $userRole = DB::table('users')->where('id', Auth::id())->value('role');
@@ -25,7 +25,7 @@ class RoleAny
             ->all();
 
         if (!in_array(strtolower((string) $userRole), $allowedRoles, true)) {
-            return redirect('/');
+            abort(404);
         }
 
         return $next($request);
