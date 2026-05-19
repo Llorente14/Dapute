@@ -67,6 +67,18 @@ class CreateOrderAction
 
             DB::table('orders')->insert($orderData);
 
+            if (Schema::hasTable('shipments')) {
+                DB::table('shipments')->insert([
+                    'id' => (string) Str::uuid(),
+                    'order_id' => $orderId,
+                    'shipping_type' => $shippingType,
+                    'shipping_status' => ShippingStatus::AWAITING_PICKUP->value,
+                    'provider' => $shippingType === ShippingType::ONLINE_COURIER->value ? 'biteship' : 'independent',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
             if (!empty($shippingAddress)) {
                 $coordinates = $shippingAddress['coordinates'] ?? null;
                 $latitude = null;

@@ -76,6 +76,8 @@ class ProcessBiteshipWebhookAction
                 ->where('id', $order->id)
                 ->update($updateData);
 
+            $this->syncShipment($order->id, $normalizedStatus, $updateData['notes'] ?? null);
+
             Log::info('Biteship webhook processed.', [
                 'order_id' => $order->id,
                 'shipment_status' => $shipmentStatus,
@@ -175,5 +177,30 @@ class ProcessBiteshipWebhookAction
         }
 
         return $notes === '' ? $note : "{$notes}\n{$note}";
+    }
+
+    private function syncShipment(string $orderId, ?string $normalizedStatus, ?string $notes): void
+    {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $updateData = ['updated_at' => now()];
+
+        if ($normalizedStatus === 'delivered') {
+            $updateData['shipping_status'] = ShippingStatus::DELIVERED->value;
+            $updateData['delivered_at'] = now();
+        } elseif ($normalizedStatus === 'moving') {
+            $updateData['shipping_status'] = ShippingStatus::ON_DELIVERY->value;
+            $updateData['picked_up_at'] = now();
+        }
+
+        if ($notes !== null) {
+            $updateData['notes'] = $notes;
+        }
+
+        DB::table('shipments')
+            ->where('order_id', $orderId)
+            ->update($updateData);
     }
 }

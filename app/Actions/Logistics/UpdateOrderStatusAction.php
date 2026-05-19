@@ -28,7 +28,6 @@ class UpdateOrderStatusAction
         ],
         OrderStatus::PICKUP_REQUESTED->value => [
             OrderStatus::ON_DELIVERY->value,
-            OrderStatus::COMPLETED->value,
         ],
         OrderStatus::ON_DELIVERY->value => [
             OrderStatus::COMPLETED->value,
@@ -105,6 +104,8 @@ class UpdateOrderStatusAction
             ->where('id', $orderId)
             ->update($updateData);
 
+        $this->syncShipment($orderId, $nextStatus, $updateData['notes'] ?? null);
+
         Log::info('Order status updated from admin queue.', [
             'order_id' => $orderId,
             'previous_status' => $currentStatus,
@@ -152,5 +153,31 @@ class UpdateOrderStatusAction
         }
 
         return $notes === '' ? $note : "{$notes}\n{$note}";
+    }
+
+    private function syncShipment(string $orderId, string $orderStatus, ?string $notes): void
+    {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $updateData = ['updated_at' => now()];
+        $shippingStatus = $this->shippingStatusForOrderStatus($orderStatus);
+
+        if ($shippingStatus) {
+            $updateData['shipping_status'] = $shippingStatus;
+        }
+
+        if ($orderStatus === OrderStatus::COMPLETED->value) {
+            $updateData['delivered_at'] = now();
+        }
+
+        if ($notes !== null) {
+            $updateData['notes'] = $notes;
+        }
+
+        DB::table('shipments')
+            ->where('order_id', $orderId)
+            ->update($updateData);
     }
 }

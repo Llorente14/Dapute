@@ -291,6 +291,15 @@
                                 Pesanan Diterima
                             </button>
                         </div>
+                    @elseif($this->isManualDeliveryAwaitingAdminConfirmation())
+                        <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
+                            <button
+                                type="button"
+                                disabled
+                                class="w-full inline-flex cursor-not-allowed items-center justify-center gap-2 border-[3px] border-[#717973] bg-[#eef5f1] px-5 py-4 font-label font-black text-xs uppercase tracking-widest text-[#717973] shadow-none">
+                                Store Confirms Manual Delivery
+                            </button>
+                        </div>
                     @elseif(($order['order_status'] ?? '') === \App\Enums\OrderStatus::COMPLETED->value)
                         <div class="mt-5 pt-5 border-t-[3px] border-[#012d1d]">
                             <p class="font-label font-black text-center text-sm uppercase tracking-widest text-[#3d6651]">

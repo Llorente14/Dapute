@@ -132,7 +132,7 @@
                                 class="absolute right-0 top-full z-30 mt-2 w-[230px] border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d]"
                                 style="display: none;"
                             >
-                                @foreach($this->actionOptions($order['order_status'], $order['shipping_type'] ?? null) as $option)
+                                @foreach($this->actionOptions($order['order_status'], $order['shipping_type'] ?? null, $order['shipping_fee'] ?? null) as $option)
                                     @if($option['available'])
                                         <button
                                             type="button"
@@ -272,7 +272,7 @@
             <div class="w-full max-w-[620px] border-[4px] border-[#012d1d] bg-[#f4fbf7] shadow-[8px_8px_0_0_#012d1d]">
                 <div class="flex items-start justify-between gap-4 border-b-[3px] border-[#012d1d] bg-white p-5">
                     <div>
-                        <p class="font-label text-[11px] font-black uppercase tracking-[0.24em] text-[#414844]">Manual Shipment</p>
+                        <p class="font-label text-[11px] font-black uppercase tracking-[0.24em] text-[#414844]">Manual Delivery</p>
                         <h2 id="manual-shipment-title" class="mt-1 font-headline text-2xl font-black uppercase tracking-tighter text-[#012d1d]">
                             #{{ $manualShipmentOrder['short_id'] }}
                         </h2>
@@ -354,7 +354,7 @@
                                 wire:target="submitManualShipment"
                                 class="inline-flex items-center justify-center gap-2 border-[3px] border-[#012d1d] bg-[#012d1d] px-4 py-3 font-label text-xs font-black uppercase tracking-widest text-white shadow-[3px_3px_0_0_#D4EF70] transition-all hover:bg-[#D4EF70] hover:text-[#012d1d] disabled:cursor-wait disabled:opacity-70"
                             >
-                                <span wire:loading.remove wire:target="submitManualShipment">Save Manual Shipment</span>
+                            <span wire:loading.remove wire:target="submitManualShipment">Start Manual Delivery</span>
                                 <span wire:loading.inline-flex wire:target="submitManualShipment" class="hidden items-center gap-2">
                                     <span class="material-symbols-outlined animate-spin text-[18px]">sync</span>
                                     Processing...

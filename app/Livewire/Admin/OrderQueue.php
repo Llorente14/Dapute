@@ -164,12 +164,12 @@ class OrderQueue extends Component
         $order = $this->findManualShipmentOrder($orderId);
 
         if (!$order) {
-            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Order not found.', type: 'cart');
+            $this->dispatch('show-toast', title: 'Manual Delivery Failed', subtitle: 'Order not found.', type: 'cart');
             return;
         }
 
         if ($order['order_status'] !== OrderStatus::PICKUP_REQUESTED->value) {
-            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Only pickup requested orders can be shipped manually.', type: 'cart');
+            $this->dispatch('show-toast', title: 'Manual Delivery Failed', subtitle: 'Only pickup requested orders can be delivered manually.', type: 'cart');
             return;
         }
 
@@ -192,7 +192,7 @@ class OrderQueue extends Component
     public function submitManualShipment(ManualShipmentAction $action): void
     {
         if (!$this->manualShipmentOrderId) {
-            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: 'Order not selected.', type: 'cart');
+            $this->dispatch('show-toast', title: 'Manual Delivery Failed', subtitle: 'Order not selected.', type: 'cart');
             return;
         }
 
@@ -206,20 +206,20 @@ class OrderQueue extends Component
         try {
             $result = $action($this->manualShipmentOrderId, $trackingId);
         } catch (AuthorizationException $exception) {
-            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: $exception->getMessage(), type: 'cart');
+            $this->dispatch('show-toast', title: 'Manual Delivery Failed', subtitle: $exception->getMessage(), type: 'cart');
             return;
         }
 
         if (!$result['success']) {
-            $this->addError('manualTrackingId', $result['message'] ?? 'Manual shipment failed.');
-            $this->dispatch('show-toast', title: 'Manual Shipment Failed', subtitle: $result['message'] ?? 'Manual shipment failed.', type: 'cart');
+            $this->addError('manualTrackingId', $result['message'] ?? 'Manual delivery failed.');
+            $this->dispatch('show-toast', title: 'Manual Delivery Failed', subtitle: $result['message'] ?? 'Manual delivery failed.', type: 'cart');
             return;
         }
 
         $this->closeManualShipmentModal();
         $this->expandedOrderId = null;
         $this->loadOrders();
-        $this->dispatch('show-toast', title: 'Manual Shipment Saved', subtitle: 'Tracking number saved and order moved to delivery.', type: 'success');
+        $this->dispatch('show-toast', title: 'Manual Delivery Started', subtitle: 'Tracking number saved. Admin must confirm delivery when finished.', type: 'success');
     }
 
     public function statusLabel(string $status): string
@@ -257,10 +257,12 @@ class OrderQueue extends Component
         ];
     }
 
-    public function actionOptions(string $status, ?string $shippingType = null): array
+    public function actionOptions(string $status, ?string $shippingType = null, ?int $shippingFee = null): array
     {
-        $isOnlineCourier = $shippingType === ShippingType::ONLINE_COURIER->value || $shippingType === null;
-        $isIndependent = $shippingType === ShippingType::INDEPENDENT->value || $shippingType === null;
+        $isIndependent = $shippingType === ShippingType::INDEPENDENT->value || $shippingFee === 0;
+        $isOnlineCourier = !$isIndependent && (
+            $shippingType === ShippingType::ONLINE_COURIER->value || $shippingType === null
+        );
 
         return [
             [
@@ -281,14 +283,14 @@ class OrderQueue extends Component
                 'available' => in_array($status, ['IN_PROCESSING', OrderStatus::PAID_PROCESSING->value], true),
             ],
             [
-                'label' => 'Request Pickup',
+                'label' => 'Request Biteship',
                 'status' => null,
                 'action' => 'pickup',
                 'icon' => 'local_shipping',
                 'available' => $status === OrderStatus::PICKUP_REQUESTED->value && $isOnlineCourier,
             ],
             [
-                'label' => 'Manual Shipment',
+                'label' => 'Manual Delivery',
                 'status' => null,
                 'action' => 'manual',
                 'icon' => 'receipt_long',
@@ -394,6 +396,12 @@ class OrderQueue extends Component
             $selectColumns[] = 'orders.shipping_type';
         }
 
+        $hasShippingFee = Schema::hasColumn('orders', 'shipping_fee');
+
+        if ($hasShippingFee) {
+            $selectColumns[] = 'orders.shipping_fee';
+        }
+
         $rows = $query
             ->select($selectColumns)
             ->orderByDesc('orders.order_date')
@@ -411,6 +419,7 @@ class OrderQueue extends Component
                 'total_payment' => (int) $order->total_payment,
                 'order_status' => $order->order_status,
                 'shipping_type' => $order->shipping_type ?? null,
+                'shipping_fee' => $hasShippingFee ? (int) ($order->shipping_fee ?? 0) : null,
                 'order_date' => $order->order_date ?? $order->created_at,
             ])
             ->values()
@@ -458,6 +467,12 @@ class OrderQueue extends Component
             $selectColumns[] = 'orders.shipping_type';
         }
 
+        $hasShippingFee = Schema::hasColumn('orders', 'shipping_fee');
+
+        if ($hasShippingFee) {
+            $selectColumns[] = 'orders.shipping_fee';
+        }
+
         $order = DB::table('orders')
             ->leftJoin('users', 'orders.customer_id', '=', 'users.id')
             ->leftJoin('order_addresses', 'orders.id', '=', 'order_addresses.order_id')
@@ -474,6 +489,7 @@ class OrderQueue extends Component
             'short_id' => strtoupper(substr((string) $order->id, 0, 8)),
             'order_status' => $order->order_status,
             'shipping_type' => $order->shipping_type ?? null,
+            'shipping_fee' => $hasShippingFee ? (int) ($order->shipping_fee ?? 0) : null,
             'customer_name' => $order->customer_name ?: 'Unknown Customer',
             'customer_email' => $order->customer_email,
             'recipient_name' => $order->recipient_name,

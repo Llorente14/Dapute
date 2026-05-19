@@ -44,10 +44,6 @@ class ManualShipmentAction
             in_array($order->order_status, [OrderStatus::ON_DELIVERY->value, OrderStatus::COMPLETED->value], true)
             && (string) $order->tracking_id === $trackingNumber
         ) {
-            if ($order->order_status === OrderStatus::ON_DELIVERY->value) {
-                ($this->updateOrderStatusAction)($orderId, OrderStatus::COMPLETED->value);
-            }
-
             return [
                 'success' => true,
                 'message' => 'Manual shipment already saved.',
@@ -73,7 +69,7 @@ class ManualShipmentAction
             }
 
             if (Schema::hasColumn('orders', 'shipping_status')) {
-                $updateData['shipping_status'] = ShippingStatus::DELIVERED->value;
+                $updateData['shipping_status'] = ShippingStatus::ON_DELIVERY->value;
             }
 
             DB::table('orders')
@@ -82,7 +78,7 @@ class ManualShipmentAction
 
             $statusResult = ($this->updateOrderStatusAction)(
                 $orderId,
-                OrderStatus::COMPLETED->value
+                OrderStatus::ON_DELIVERY->value
             );
 
             if (!$statusResult['success']) {
@@ -97,9 +93,11 @@ class ManualShipmentAction
                 'tracking_id' => $trackingNumber,
             ]);
 
+            $this->upsertShipment($orderId, $trackingNumber);
+
             return [
                 'success' => true,
-                'message' => 'Manual shipment completed.',
+                'message' => 'Manual delivery started.',
                 'tracking_id' => $trackingNumber,
             ];
         } catch (\Throwable $exception) {
@@ -126,5 +124,30 @@ class ManualShipmentAction
         if (!in_array($role, ['owner', 'staff'], true)) {
             throw new AuthorizationException('Only owner or staff can create manual shipment.');
         }
+    }
+
+    private function upsertShipment(string $orderId, string $trackingNumber): void
+    {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $now = now();
+        $existingId = DB::table('shipments')->where('order_id', $orderId)->value('id');
+
+        DB::table('shipments')->updateOrInsert(
+            ['order_id' => $orderId],
+            [
+                'id' => $existingId ?: (string) Str::uuid(),
+                'shipping_type' => ShippingType::INDEPENDENT->value,
+                'shipping_status' => ShippingStatus::ON_DELIVERY->value,
+                'provider' => 'independent',
+                'tracking_id' => $trackingNumber,
+                'requested_at' => $now,
+                'picked_up_at' => $now,
+                'updated_at' => $now,
+                'created_at' => $now,
+            ]
+        );
     }
 }
