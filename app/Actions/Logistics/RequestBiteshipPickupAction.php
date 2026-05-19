@@ -171,7 +171,7 @@ class RequestBiteshipPickupAction
             'tracking_id' => $trackingId,
         ]);
 
-        $this->updateStatusAction->execute($orderId, UpdateOrderStatusAction::STATUS_SHIPPED);
+        $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
         DB::commit();
 
