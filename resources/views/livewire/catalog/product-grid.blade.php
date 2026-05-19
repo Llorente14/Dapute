@@ -28,8 +28,7 @@
                     </h1>
                     <div class="w-16 h-[3px] bg-[#D4EF70] mt-5 mb-5"></div>
                     <p class="font-[var(--font-body)] text-[15px] md:text-base text-[#b8e0c8] leading-relaxed max-w-md">
-                        Setiap produk dibangun dengan bahan pilihan dan teknik presisi. Tidak ada kompromi, tidak ada
-                        filler.
+                        Crafted with premium ingredients and precision techniques. No compromises, no fillers.
                     </p>
                 </div>
 
@@ -41,7 +40,7 @@
                         </span>
                     </div>
                     <span class="font-[var(--font-ui)] uppercase tracking-widest text-[11px] text-[#b8e0c8]">
-                        Produk<br>Tersedia
+                        Products<br>Available
                     </span>
                 </div>
             </div>
@@ -66,11 +65,10 @@
                 {{-- Left: Brand statement --}}
                 <div class="max-w-md">
                     <h2 class="font-[var(--font-display)] font-bold text-xl md:text-2xl text-[#012d1d] mb-3">
-                        Dibangun dengan Presisi
+                        Built with Precision
                     </h2>
                     <p class="font-[var(--font-body)] text-[13px] text-[#3d6651] leading-relaxed">
-                        Setiap produk Dapute melewati proses seleksi bahan baku ketat dan teknik produksi yang presisi.
-                        Kami percaya bahwa kualitas adalah fondasi, bukan dekorasi.
+                        Every Dapute product goes through strict ingredient selection and precise production techniques. We believe quality is a foundation, not a decoration.
                     </p>
                 </div>
 
@@ -81,7 +79,7 @@
                             100%
                         </span>
                         <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
-                            Bahan Pilihan
+                            Premium Ingredients
                         </span>
                     </div>
                     <div class="w-[3px] bg-[#012d1d]"></div>
@@ -99,7 +97,7 @@
                             0%
                         </span>
                         <span class="font-[var(--font-ui)] uppercase tracking-widest text-[10px] text-[#3d6651]">
-                            Kompromi
+                            Compromises
                         </span>
                     </div>
                 </div>

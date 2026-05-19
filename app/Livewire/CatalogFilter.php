@@ -13,7 +13,7 @@ class CatalogFilter extends Component
     #[Url(except: '')]
     public $search = '';
 
-    public $sort = 'Terbaru';
+    public $sort = 'Latest';
 
     public function addToCart(UpdateCartAction $action, string $productId)
     {
