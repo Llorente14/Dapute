@@ -85,7 +85,7 @@
                         <label class="block font-label font-bold text-base text-primary uppercase tracking-wider"
                             for="password">Password</label>
                         <a class="font-label font-bold text-sm text-primary underline decoration-2 underline-offset-4 hover:text-primary-container"
-                            href="#">Forgot Password?</a>
+                            href="/forgot-password">Forgot Password?</a>
                     </div>
                     <div class="relative group">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">
@@ -112,10 +112,16 @@
                 </div>
 
                 <div class="pt-4">
-                    <button
-                        class="w-full bg-primary text-on-primary border-[3px] border-primary font-label font-bold text-xl uppercase tracking-wider py-5 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-[2px] hover:-translate-x-[2px] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none flex items-center justify-center gap-2"
+                    <button wire:loading.attr="disabled"
+                        wire:loading.class="opacity-70 cursor-not-allowed shadow-none translate-x-0 translate-y-0"
+                        wire:target="login"
+                        class="w-full bg-primary text-on-primary border-[3px] border-primary font-label font-bold text-xl uppercase tracking-wider py-5 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-[2px] hover:-translate-x-[2px] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none flex items-center justify-center gap-2 disabled:pointer-events-none"
                         type="submit">
-                        <span>Sign In</span>
+                        <span wire:loading.remove wire:target="login">Sign In</span>
+                        <span wire:loading.inline-flex wire:target="login" class="hidden items-center gap-2">
+                            <span class="material-symbols-outlined text-[22px] animate-spin">sync</span>
+                            <span>Checking</span>
+                        </span>
                     </button>
                 </div>
                 <div class="mt-8 pt-8 border-t-[3px] border-surface-dim text-center">
@@ -141,3 +147,4 @@
             icon.textContent = isHidden ? 'visibility' : 'visibility_off';
         }
     </script>
+</div>

@@ -134,7 +134,7 @@
 </div>
 
 {{-- ══ TABLE ═══════════════════════════════════════════════════════ --}}
-<section class="border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d] overflow-hidden opacity-0 animate-[fadeUp_0.5s_ease_0.2s_forwards]">
+<section class="border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d] opacity-0 animate-[fadeUp_0.5s_ease_0.2s_forwards]">
     <div class="px-6 py-4 border-b-[3px] border-[#012d1d] bg-[#dde4e0] flex items-center justify-between">
         <div>
             <h3 class="font-label font-bold text-xs uppercase tracking-widest text-[#012d1d]">User List</h3>
@@ -170,7 +170,20 @@
                 </td>
                 {{-- Role --}}
                 <td class="px-6 py-4 text-center">
-                    <div class="relative inline-block w-full max-w-[120px] text-left" x-data="{ open: false }">
+                    <div class="relative inline-block w-full max-w-[120px] text-left"
+                         x-data="{
+                             open: false,
+                             dropX: 0, dropY: 0, dropW: 0,
+                             toggle(btn) {
+                                 if (!this.open) {
+                                     const r = btn.getBoundingClientRect();
+                                     this.dropX = r.left;
+                                     this.dropY = r.bottom + window.scrollY;
+                                     this.dropW = r.width;
+                                 }
+                                 this.open = !this.open;
+                             }
+                         }">
                         @php
                             $roleOptions = [
                                 'owner' => 'Owner',
@@ -179,24 +192,29 @@
                             ];
                             $currentLabel = $roleOptions[$user->role] ?? ucfirst($user->role);
                         @endphp
-                        
-                        <button @click="open = !open" @click.outside="open = false" type="button"
+
+                        <button @click="toggle($el)" @click.outside="open = false" type="button"
                             wire:loading.attr="disabled"
                             class="w-full bg-[#eef5f1] border-[2px] border-[#012d1d] px-2 py-1 font-label font-bold text-[10px] uppercase tracking-widest text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[2px_2px_0_0_#012d1d] transition-all cursor-pointer flex items-center justify-between gap-1 disabled:opacity-50">
                             <span>{{ $currentLabel }}</span>
                             <span class="material-symbols-outlined text-[14px] transition-transform duration-200" :class="open ? 'rotate-180' : ''">expand_more</span>
                         </button>
 
-                        <div x-show="open" style="display:none;"
-                             x-transition.opacity.duration.150ms
-                             class="absolute left-0 z-30 w-full mt-1 bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
-                            @foreach($roleOptions as $val => $label)
-                                <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
-                                     class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
-                                    <span>{{ $label }}</span>
-                                </div>
-                            @endforeach
-                        </div>
+                        {{-- Fixed-position dropdown agar tidak terpotong overflow tabel --}}
+                        <template x-teleport="body">
+                            <div x-show="open" style="display:none;"
+                                 x-transition.opacity.duration.150ms
+                                 @click.outside="open = false"
+                                 :style="`position:fixed; top:${dropY}px; left:${dropX}px; width:${dropW}px; z-index:9999;`"
+                                 class="bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
+                                @foreach($roleOptions as $val => $label)
+                                    <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"
+                                         class="px-2 py-1.5 font-label font-bold text-[10px] uppercase tracking-widest cursor-pointer transition-colors {{ $user->role === $val ? 'bg-[#012d1d] text-white' : 'text-[#012d1d] hover:bg-[#012d1d] hover:text-white' }}">
+                                        <span>{{ $label }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </template>
                     </div>
                 </td>
                 {{-- Joined --}}
