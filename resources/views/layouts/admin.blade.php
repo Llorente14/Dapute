@@ -34,6 +34,51 @@
 
     </style>
 </head>
+@php
+    $adminRole = strtolower((string) auth()->user()?->role);
+    $roleLabel = match ($adminRole) {
+        'owner' => 'Owner Workspace',
+        'staff' => 'Staff Workspace',
+        default => 'Restricted Workspace',
+    };
+
+    $menuItems = [
+        [
+            'label' => 'Orders',
+            'route' => 'admin.orders.index',
+            'pattern' => 'admin.orders*',
+            'icon' => 'pending_actions',
+            'roles' => ['owner', 'staff'],
+        ],
+        [
+            'label' => 'Products',
+            'route' => 'admin.products.index',
+            'pattern' => 'admin.products*',
+            'icon' => 'inventory_2',
+            'roles' => ['owner'],
+            'filled' => true,
+        ],
+        [
+            'label' => 'Reports',
+            'route' => 'admin.reports.index',
+            'pattern' => 'admin.reports*',
+            'icon' => 'analytics',
+            'roles' => ['owner'],
+        ],
+        [
+            'label' => 'Users',
+            'route' => 'admin.users.index',
+            'pattern' => 'admin.users*',
+            'icon' => 'group',
+            'roles' => ['owner'],
+        ],
+    ];
+
+    $visibleMenuItems = collect($menuItems)
+        ->filter(fn (array $item) => in_array($adminRole, $item['roles'], true))
+        ->values();
+@endphp
+
 <body class="font-body bg-[#f4fbf7] text-[#161d1b] antialiased min-h-screen flex flex-col md:flex-row selection:bg-[#d3ee6f] selection:text-[#212a00]" x-data="{ sidebarOpen: window.innerWidth >= 768 }">
 
 
@@ -47,8 +92,8 @@
          :class="sidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full md:translate-x-0 md:w-20'">
         <div class="border-b-4 border-[#012d1d] flex items-center transition-all duration-300" :class="sidebarOpen ? 'p-6 justify-between' : 'py-6 px-0 justify-center'">
             <div class="transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 overflow-hidden'">
-                <h1 class="font-headline font-black text-xl text-[#012d1d] leading-none whitespace-nowrap">Bakery Admin</h1>
-                <p class="text-[10px] font-label text-[#414844] uppercase tracking-wider mt-1.5 whitespace-nowrap">Management Portal</p>
+                <h1 class="font-headline font-black text-xl text-[#012d1d] leading-none whitespace-nowrap">Dapute Admin</h1>
+                <p class="text-[10px] font-label text-[#414844] uppercase tracking-wider mt-1.5 whitespace-nowrap">{{ $roleLabel }}</p>
             </div>
             <!-- Desktop Toggle -->
             <button @click="sidebarOpen = !sidebarOpen" class="w-10 h-10 shrink-0 hidden md:flex items-center justify-center border-[3px] border-[#012d1d] bg-[#ffffff] hover:bg-[#012d1d] hover:text-[#ffffff] transition-all shadow-[2px_2px_0px_0px_rgba(1,45,29,1)] active:translate-y-0.5 active:translate-x-0.5 active:shadow-none text-[#012d1d]">
@@ -60,26 +105,23 @@
             </button>
         </div>
         <div class="flex-1 overflow-y-auto py-4 flex flex-col gap-0.5 font-body font-semibold overflow-x-hidden">
-            <a href="#" class="text-[#012d1d] flex items-center gap-3 py-3.5 hover:bg-[#d8e2dc] transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
-                <span class="material-symbols-outlined text-xl shrink-0">dashboard</span>
-                <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Overview</span>
-            </a>
-            <a href="/admin/orders" class="{{ request()->is('admin/orders') ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
-                <span class="material-symbols-outlined text-xl shrink-0">pending_actions</span>
-                <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Live Orders</span>
-            </a>
-            <a href="/admin/products" class="{{ request()->is('admin/products*') ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
-                <span class="material-symbols-outlined text-xl material-symbols-filled shrink-0">inventory_2</span>
-                <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Inventory</span>
-            </a>
-            <a href="/admin/reports" class="{{ request()->is('admin/reports*') ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
-                <span class="material-symbols-outlined text-xl shrink-0">analytics</span>
-                <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Analytics</span>
-            </a>
-            <a href="#" class="text-[#012d1d] flex items-center gap-3 py-3.5 hover:bg-[#d8e2dc] transition-all duration-300" :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'">
-                <span class="material-symbols-outlined text-xl shrink-0">settings</span>
-                <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">Settings</span>
-            </a>
+            @forelse ($visibleMenuItems as $item)
+                @php
+                    $isActive = request()->routeIs($item['pattern']);
+                @endphp
+                <a href="{{ route($item['route']) }}"
+                   class="{{ $isActive ? 'bg-[#012d1d] text-white border-y-2 border-[#012d1d]' : 'text-[#012d1d] hover:bg-[#d8e2dc]' }} flex items-center gap-3 py-3.5 transition-all duration-300"
+                   :class="sidebarOpen ? 'px-6 hover:translate-x-1' : 'px-0 justify-center hover:translate-x-0'"
+                   title="{{ $item['label'] }}">
+                    <span class="material-symbols-outlined text-xl {{ ($item['filled'] ?? false) ? 'material-symbols-filled' : '' }} shrink-0">{{ $item['icon'] }}</span>
+                    <span class="whitespace-nowrap transition-all duration-300" :class="sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
+                </a>
+            @empty
+                <div class="mx-4 border-[3px] border-[#012d1d] bg-white p-4 text-center text-[#012d1d] shadow-[4px_4px_0_0_#012d1d]"
+                     :class="sidebarOpen ? 'block' : 'hidden'">
+                    <p class="font-label text-[10px] font-bold uppercase tracking-widest">No admin access</p>
+                </div>
+            @endforelse
         </div>
     </nav>
 
