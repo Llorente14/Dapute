@@ -48,6 +48,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', LoginForm::class)->name('login');
     Route::get('/register', RegisterForm::class)->name('register');
+    Route::get('/forgot-password', \App\Livewire\Auth\ForgotPasswordPage::class)->name('password.request');
+    Route::get('/reset-password', \App\Livewire\Auth\ResetPasswordPage::class)->name('password.reset');
 });
 
 // ─── Authenticated Routes ─────────────────────────────────────────────────────
