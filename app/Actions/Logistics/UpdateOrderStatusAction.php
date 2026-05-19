@@ -11,7 +11,7 @@ class UpdateOrderStatusAction
 {
 
 
-    private const ALLOWED_ROLES = ['admin', 'karyawan'];
+    private const ALLOWED_ROLES = ['owner', 'staff'];
 
     private const VALID_TRANSITIONS = [
         OrderStatus::PENDING_PAYMENT->value => [
@@ -92,10 +92,10 @@ class UpdateOrderStatusAction
 
     private function authorize(): void
     {
-        $role = auth()->user()?->role;
+        $role = DB::table('users')->where('id', auth()->id())->value('role');
 
         if (!in_array($role, self::ALLOWED_ROLES, true)) {
-            throw new AuthorizationException('Only admin or employee can update order status.');
+            throw new AuthorizationException('Only owner or staff can update order status.');
         }
     }
 

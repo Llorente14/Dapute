@@ -29,26 +29,26 @@
     <div>
         <p class="font-label text-xs uppercase tracking-[0.2em] text-[#414844]">Admin Panel &mdash; Account Management</p>
         <h2 class="font-headline font-black text-5xl md:text-6xl text-[#012d1d] leading-none tracking-tighter mt-1">User Management</h2>
-        <p class="font-body text-[#414844] mt-2 max-w-lg">Manage and monitor all Admin, Employee, and Customer accounts on the Dapute platform.</p>
+        <p class="font-body text-[#414844] mt-2 max-w-lg">Manage and monitor all Owner, Staff, and Customer accounts on the Dapute platform.</p>
     </div>
     <button @click="showCreate = true"
         class="flex items-center gap-2 bg-[#012d1d] text-white border-[3px] border-[#012d1d] font-label font-bold text-xs uppercase tracking-wider px-6 py-4 shadow-[4px_4px_0_0_#012d1d] hover:-translate-y-1 hover:-translate-x-1 hover:shadow-[6px_6px_0_0_#012d1d] transition-all duration-200">
         <span class="material-symbols-outlined text-base">person_add</span>
-        Add Employee
+        Add Staff
     </button>
 </header>
 
 {{-- ══ STAT CARDS ════════════════════════════════════════════════════ --}}
 @php
     $totalUsers = $users->count();
-    $adminStaffCount = $users->whereIn('role', ['admin', 'staff', 'owner'])->count();
+    $adminStaffCount = $users->whereIn('role', ['staff', 'owner'])->count();
     $customerCount = $users->where('role', 'customer')->count();
     $inactiveCount = $users->where('is_active', false)->count();
 @endphp
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-0 animate-[fadeUp_0.5s_ease_0.1s_forwards]">
     @foreach([
         ['label'=>'Total Users','value'=>$totalUsers,'icon'=>'group','color'=>'bg-[#012d1d] text-white','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
-        ['label'=>'Admin & Employee','value'=>$adminStaffCount,'icon'=>'badge','color'=>'bg-[#d3ee6f] text-[#212a00]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
+        ['label'=>'Owner & Staff','value'=>$adminStaffCount,'icon'=>'badge','color'=>'bg-[#d3ee6f] text-[#212a00]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
         ['label'=>'Customer','value'=>$customerCount,'icon'=>'person','color'=>'bg-[#dde4e0] text-[#012d1d]','shadow'=>'shadow-[4px_4px_0_0_#012d1d]'],
         ['label'=>'Inactive Accounts','value'=>$inactiveCount,'icon'=>'block','color'=>'bg-[#ffdad6] text-[#ba1a1a]','shadow'=>'shadow-[4px_4px_0_0_#ba1a1a] border-[#ba1a1a]'],
     ] as $stat)
@@ -97,7 +97,7 @@
             class="flex-1 bg-transparent px-2 py-3 font-body text-sm text-[#012d1d] focus:outline-none placeholder:text-[#717973]">
     </div>
     <div class="relative z-10"
-         x-data="{ open: false, options: ['All Roles','Admin','Employee','Customer'] }">
+         x-data="{ open: false, options: ['All Roles','Owner','Staff','Customer'] }">
         <button @click="open = !open" @click.outside="open = false" type="button"
             class="z-10 bg-white border-[3px] border-[#012d1d] px-4 py-3
                    font-label font-bold text-xs text-[#012d1d] uppercase tracking-wider
@@ -174,8 +174,7 @@
                         @php
                             $roleOptions = [
                                 'owner' => 'Owner',
-                                'admin' => 'Admin',
-                                'staff' => 'Employee',
+                                'staff' => 'Staff',
                                 'customer' => 'Customer'
                             ];
                             $currentLabel = $roleOptions[$user->role] ?? ucfirst($user->role);
@@ -248,7 +247,7 @@
          x-transition:enter="transition ease-out duration-200 delay-75" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
          @click.stop>
         <div class="px-8 py-5 border-b-[3px] border-[#012d1d] bg-[#dde4e0] flex justify-between items-center">
-            <h3 class="font-headline font-black text-2xl text-[#012d1d] uppercase tracking-tighter">Add Employee</h3>
+            <h3 class="font-headline font-black text-2xl text-[#012d1d] uppercase tracking-tighter">Add Staff</h3>
             <button @click="showCreate=false" class="text-[#012d1d] hover:bg-[#012d1d] hover:text-white border-[2px] border-transparent hover:border-[#012d1d] p-1 transition-all"><span class="material-symbols-outlined">close</span></button>
         </div>
         <div class="p-8 flex flex-col gap-5">
@@ -318,8 +317,7 @@
                 <div class="relative">
                     <select wire:model="edit_role" class="w-full appearance-none bg-[#eef5f1] border-[3px] border-[#012d1d] px-4 py-3 pr-10 font-label font-bold text-sm text-[#012d1d] focus:outline-none focus:bg-white focus:shadow-[4px_4px_0_0_#012d1d] transition-all cursor-pointer">
                         <option value="owner">Owner</option>
-                        <option value="admin">Admin</option>
-                        <option value="staff">Employee</option>
+                        <option value="staff">Staff</option>
                         <option value="customer">Customer</option>
                     </select>
                     <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#012d1d]">expand_more</span>

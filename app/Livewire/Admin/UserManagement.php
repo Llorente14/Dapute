@@ -158,7 +158,7 @@ class UserManagement extends Component
         }
 
         if ($this->filterRole !== 'All Roles') {
-            if ($this->filterRole === 'Employee') {
+            if ($this->filterRole === 'Staff') {
                 $query->where('role', 'staff');
             } else {
                 $query->where('role', strtolower($this->filterRole));

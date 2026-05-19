@@ -14,9 +14,9 @@ class UpdateUserRoleAction
     public function update(string $userId, string $role, bool $status): array
     {
         try {
-            $allowedRoles = ['customer', 'admin', 'owner', 'staff'];
+            $allowedRoles = ['customer', 'owner', 'staff'];
             if (!in_array($role, $allowedRoles)) {
-                return ['success' => false, 'message' => 'Invalid role. Must be owner, admin, staff, or customer.'];
+                return ['success' => false, 'message' => 'Invalid role. Must be owner, staff, or customer.'];
             }
 
             DB::table('users')->where('id', $userId)->update([

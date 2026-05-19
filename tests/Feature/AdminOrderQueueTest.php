@@ -63,17 +63,17 @@ class AdminOrderQueueTest extends TestCase
         });
 
         DB::table('users')->insert([
-            ['id' => 'admin-123', 'full_name' => 'Admin User', 'email' => 'admin@example.test', 'role' => 'admin'],
-            ['id' => 'employee-123', 'full_name' => 'Employee User', 'email' => 'employee@example.test', 'role' => 'karyawan'],
+            ['id' => 'owner-123', 'full_name' => 'Owner User', 'email' => 'owner@example.test', 'role' => 'owner'],
+            ['id' => 'staff-123', 'full_name' => 'Staff User', 'email' => 'staff@example.test', 'role' => 'staff'],
             ['id' => 'customer-123', 'full_name' => 'Customer User', 'email' => 'customer@example.test', 'role' => 'customer'],
         ]);
     }
 
-    public function test_admin_order_queue_route_renders_active_orders(): void
+    public function test_staff_order_queue_route_renders_active_orders(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
 
-        $this->actingAs($this->authUser('admin-123'))
+        $this->actingAs($this->authUser('staff-123'))
             ->get('/admin/orders')
             ->assertOk()
             ->assertSee('Order Queue')
@@ -87,11 +87,41 @@ class AdminOrderQueueTest extends TestCase
             ->assertSee('Manual Shipment');
     }
 
-    public function test_customer_access_to_admin_order_queue_redirects_home(): void
+    public function test_owner_can_access_order_queue_route(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
+
+        $this->actingAs($this->authUser('owner-123'))
+            ->get('/admin/orders')
+            ->assertOk()
+            ->assertSee('Order Queue');
+    }
+
+    public function test_customer_access_to_admin_order_queue_returns_not_found(): void
     {
         $this->actingAs($this->authUser('customer-123'))
             ->get('/admin/orders')
-            ->assertRedirect('/');
+            ->assertNotFound();
+    }
+
+    public function test_guest_access_to_admin_users_returns_not_found(): void
+    {
+        $this->get('/admin/users')->assertNotFound();
+    }
+
+    public function test_staff_cannot_access_owner_only_admin_pages(): void
+    {
+        $this->actingAs($this->authUser('staff-123'))
+            ->get('/admin/users')
+            ->assertNotFound();
+
+        $this->actingAs($this->authUser('staff-123'))
+            ->get('/admin/products')
+            ->assertNotFound();
+
+        $this->actingAs($this->authUser('staff-123'))
+            ->get('/admin/reports')
+            ->assertNotFound();
     }
 
     public function test_order_queue_filters_expands_and_updates_status(): void
@@ -100,7 +130,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-2', 'customer-123', OrderStatus::PENDING_PAYMENT->value);
         $this->seedOrder('order-3', 'customer-123', OrderStatus::CANCELLED->value);
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->assertSee('Customer User')
             ->assertDontSee('order-3')
@@ -127,7 +157,7 @@ class AdminOrderQueueTest extends TestCase
             );
         }
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->assertSet('totalOrders', 11)
             ->assertCount('orders', 10)
@@ -150,7 +180,7 @@ class AdminOrderQueueTest extends TestCase
             );
         }
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('setPerPage', 5)
             ->assertSet('perPage', 5)
@@ -163,7 +193,7 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PENDING_PAYMENT->value);
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::ON_DELIVERY->value);
 
@@ -174,7 +204,7 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::PICKUP_REQUESTED->value);
 
@@ -185,14 +215,14 @@ class AdminOrderQueueTest extends TestCase
     {
         $this->seedOrder('order-1', 'customer-123', 'IN_PROCESSING');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('updateStatus', 'order-1', OrderStatus::CANCELLED->value);
 
         $this->assertSame('IN_PROCESSING', DB::table('orders')->where('id', 'order-1')->value('order_status'));
     }
 
-    public function test_status_update_requires_admin_or_employee_role(): void
+    public function test_status_update_requires_owner_or_staff_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
 
@@ -207,7 +237,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         $this->seedOrderAddress('order-1');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('openManualShipmentModal', 'order-1')
             ->assertSet('showManualShipmentModal', true)
@@ -227,7 +257,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         $this->seedOrderAddress('order-1');
 
-        Livewire::actingAs($this->authUser('admin-123'))
+        Livewire::actingAs($this->authUser('staff-123'))
             ->test(OrderQueue::class)
             ->call('openManualShipmentModal', 'order-1')
             ->set('manualTrackingId', '   ')
@@ -245,7 +275,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
         DB::table('orders')->where('id', 'order-1')->update(['tracking_id' => 'MANUAL-123']);
 
-        $this->actingAs($this->authUser('admin-123'));
+        $this->actingAs($this->authUser('staff-123'));
 
         $result = app(ManualShipmentAction::class)('order-1', ' MANUAL-123 ');
         $order = DB::table('orders')->where('id', 'order-1')->first();
@@ -262,7 +292,7 @@ class AdminOrderQueueTest extends TestCase
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         DB::table('orders')->where('id', 'order-1')->update(['biteship_order_id' => 'BITESHIP-123']);
 
-        $this->actingAs($this->authUser('admin-123'));
+        $this->actingAs($this->authUser('staff-123'));
 
         $result = app(ManualShipmentAction::class)('order-1', 'MANUAL-123');
         $order = DB::table('orders')->where('id', 'order-1')->first();
@@ -273,7 +303,7 @@ class AdminOrderQueueTest extends TestCase
         $this->assertNull($order->tracking_id);
     }
 
-    public function test_manual_shipment_requires_admin_or_employee_role(): void
+    public function test_manual_shipment_requires_owner_or_staff_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
 
