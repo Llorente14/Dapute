@@ -9,6 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use App\Actions\Auth\LoginUserAction;
+use Illuminate\Validation\ValidationException;
 
 #[Layout('layouts.guest')]
 class LoginForm extends Component
@@ -23,13 +24,19 @@ class LoginForm extends Component
 
     public function login(LoginUserAction $action)
     {
-        $this->validate();
+        try {
+            $this->validate();
+        } catch (ValidationException $e) {
+            $this->reset('password');
+            throw $e;
+        }
 
         $throttleKey = strtolower($this->email) . '|' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
-            $this->addError('email', "Terlalu banyak percobaan login. Silakan coba lagi dalam {$seconds} detik.");
+            $this->addError('email', "Too many login attempts. Please try again in {$seconds} seconds.");
+            $this->reset('password');
             return;
         }
 
@@ -38,7 +45,8 @@ class LoginForm extends Component
         if (!$result['success']) {
             RateLimiter::hit($throttleKey);
             $this->addError('email', $result['message']);
-            $this->addError('password', 'Periksa kembali password Anda.');
+            $this->addError('password', 'Please double-check your password.');
+            $this->reset('password');
             return;
         }
 

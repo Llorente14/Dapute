@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Session;
 class LoginUserAction
 {
     /**
-     * Mengeksekusi login via Supabase Auth dan pengecekan status aktif.
+     * Executes login via Supabase Auth and checks the user's active status.
      */
     public function execute(string $email, string $password): array
     {
@@ -27,7 +27,7 @@ class LoginUserAction
         if (!$response->successful()) {
             return [
                 'success' => false,
-                'message' => 'Email atau password salah',
+                'message' => 'Incorrect email or password.',
             ];
         }
 
@@ -39,14 +39,14 @@ class LoginUserAction
         if (!$userProfile) {
             return [
                 'success' => false,
-                'message' => 'Profil pengguna tidak ditemukan.',
+                'message' => 'User profile not found.',
             ];
         }
 
         if (!$userProfile->is_active) {
             return [
                 'success' => false,
-                'message' => 'Akun Anda dinonaktifkan',
+                'message' => 'Your account has been deactivated.',
             ];
         }
 

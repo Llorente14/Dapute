@@ -1,95 +1,5 @@
 <div>
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@800;900&amp;family=Manrope:wght@400;500;600&amp;family=Space+Grotesk:wght@500;700&amp;display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-    
-    <!-- Script Tailwind & Config dari layout referensi -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "surface-variant": "#dde4e0",
-                        "secondary": "#57615c",
-                        "on-primary-container": "#86af99",
-                        "on-error-container": "#93000a",
-                        "primary-fixed-dim": "#a5d0b9",
-                        "on-surface-variant": "#414844",
-                        "on-background": "#161d1b",
-                        "on-primary": "#ffffff",
-                        "tertiary-container": "#354100",
-                        "on-surface": "#161d1b",
-                        "error": "#ba1a1a",
-                        "error-container": "#ffdad6",
-                        "secondary-fixed-dim": "#bfc9c3",
-                        "surface-bright": "#f4fbf7",
-                        "surface-container": "#e8efec",
-                        "primary": "#012d1d",
-                        "secondary-container": "#d8e2dc",
-                        "inverse-surface": "#2b322f",
-                        "tertiary-fixed": "#d3ee6f",
-                        "surface-container-high": "#e3eae6",
-                        "primary-container": "#1b4332",
-                        "on-secondary-fixed": "#151d1a",
-                        "on-tertiary-fixed": "#171e00",
-                        "on-error": "#ffffff",
-                        "on-primary-fixed": "#002114",
-                        "outline-variant": "#c1c8c2",
-                        "on-tertiary-container": "#98b139",
-                        "surface": "#f4fbf7",
-                        "tertiary-fixed-dim": "#b8d256",
-                        "surface-dim": "#d5dcd8",
-                        "on-secondary-container": "#5b6560",
-                        "inverse-on-surface": "#ebf2ee",
-                        "inverse-primary": "#a5d0b9",
-                        "surface-container-highest": "#dde4e0",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-tint": "#3f6653",
-                        "background": "#f4fbf7",
-                        "secondary-fixed": "#dbe5df",
-                        "outline": "#717973",
-                        "tertiary": "#212a00",
-                        "primary-fixed": "#c1ecd4",
-                        "on-tertiary-fixed-variant": "#3e4c00",
-                        "on-secondary-fixed-variant": "#3f4945",
-                        "surface-container-low": "#eef5f1",
-                        "on-secondary": "#ffffff",
-                        "on-primary-fixed-variant": "#274e3d",
-                        "on-tertiary": "#ffffff"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0px",
-                        "lg": "0px",
-                        "xl": "0px",
-                        "full": "0px"
-                    },
-                    "fontFamily": {
-                        "headline": ["Epilogue", "sans-serif"],
-                        "body": ["Manrope", "sans-serif"],
-                        "label": ["Space Grotesk", "sans-serif"]
-                    }
-                },
-            },
-        }
-    </script>
     <style>
-        .hard-shadow {
-            box-shadow: 4px 4px 0px 0px #012d1d;
-        }
-        .hard-shadow-hover:hover {
-            transform: translate(-2px, -2px);
-            box-shadow: 6px 6px 0px 0px #012d1d;
-            transition: all 0.2s ease-in-out;
-        }
-        .input-border {
-            border: 3px solid #012d1d;
-        }
-        .input-focus:focus {
-            background-color: #c1ecd4;
-            outline: none;
-        }
         /* Hide native browser password reveal button (Edge, IE, Chrome) */
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear {
@@ -98,278 +8,274 @@
         input[type="password"]::-webkit-credentials-auto-fill-button {
             display: none;
         }
-        @keyframes error-pop {
-            0% { opacity: 0; transform: translateY(-4px) scale(0.98); }
-            100% { opacity: 1; transform: translateY(0) scale(1); }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
-        .error-anim {
-            animation: error-pop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
+        .animate-slide-down {
+            animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
     </style>
 
-    <main class="flex-grow flex items-center justify-center p-4 sm:p-8 bg-[#f4fbf7] text-on-surface font-body min-h-screen antialiased selection:bg-tertiary-fixed selection:text-on-tertiary-fixed">
-        <div class="w-full max-w-6xl h-[850px] grid grid-cols-1 md:grid-cols-2 bg-[#f4fbf7] input-border hard-shadow">
-            
-            {{-- Left Panel – wire:ignore prevents re-render on every keystroke --}}
-            <div wire:ignore class="hidden md:block relative h-full border-r-[3px] border-[#012d1d]">
-                <img alt="Architectural Bakery Background" class="absolute inset-0 w-full h-full object-cover filter contrast-125 saturate-50 grayscale-[20%]" data-alt="dramatic architectural shot of artisan bread loaves on steel shelves inside a modern brutalist greenhouse bakery setting with high contrast natural lighting" src="{{ asset('images/register-bg.webp') }}"/>
-                <div class="absolute inset-0 bg-gradient-to-t from-[#012d1d] via-[#012d1d]/80 via-0% to-transparent to-50%"></div>
-                
-                <div class="absolute bottom-10 left-8 pr-8 z-10">
-                    <h2 class="font-headline font-black text-[28px] text-white tracking-tight leading-[1.1] mb-2 uppercase">
-                        ARCHITECTURAL<br/>COOKIES
+    {{-- Mobile: full-screen bg + centered card --}}
+    <main class="min-h-screen flex items-center justify-center bg-surface-container-low p-4 sm:p-6 md:bg-[#f4fbf7] md:py-10">
+
+        <div class="w-full max-w-[1200px] grid md:grid-cols-2 md:gap-0 bg-surface-container-lowest border-[3px] border-primary shadow-brutal md:m-auto">
+
+            {{-- Left Panel (desktop only) --}}
+            <div wire:ignore class="hidden md:block w-full h-full min-h-[600px] border-r-[3px] border-primary relative overflow-hidden bg-surface-container-low">
+                <img
+                    alt="Architectural Bakery Background"
+                    class="w-full h-full object-cover grayscale opacity-80 mix-blend-multiply"
+                    src="{{ asset('images/register-bg.webp') }}"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-primary/90 to-primary-container/40 p-12 flex flex-col justify-end">
+                    <h2 class="font-headline font-black text-7xl text-surface-container-lowest tracking-tighter leading-tight mb-4">
+                        Dapute
                     </h2>
-                    <p class="font-headline font-bold text-[#d5dcd8] text-[9px] tracking-[0.2em] uppercase mt-4">
-                        DESIGNED FOR THE PERFECT BITE.
+                    <p class="font-body text-surface-container-highest text-xl max-w-md">
+                        Architectural baking. Raw ingredients. Structural honesty.
                     </p>
                 </div>
             </div>
 
             {{-- Right Panel --}}
-            <div class="p-6 sm:px-14 sm:py-4 flex flex-col justify-center bg-[#f4fbf7]">
-                <div class="mb-4">
-                    <a class="inline-block font-headline font-black text-lg text-primary tracking-tight uppercase mb-2" href="/">
-                        Dapute
-                    </a>
-                    <h1 class="font-headline font-black text-3xl sm:text-[2rem] text-primary tracking-tight mb-2 uppercase">
+            <div class="w-full p-6 sm:p-8 lg:p-14 flex flex-col justify-center relative bg-surface-container-lowest">
+
+                {{-- Mobile Brand Header --}}
+                <div class="md:hidden mb-3">
+                    <h1 class="font-headline font-black text-4xl text-primary tracking-tighter">Dapute</h1>
+                </div>
+
+                {{-- Header --}}
+                <div class="mb-5">
+                    <h2 class="font-headline font-black text-3xl sm:text-4xl text-primary tracking-tight mb-1 uppercase">
                         Create Account
-                    </h1>
-                    <p class="font-body text-[#5b6560] text-sm leading-relaxed max-w-sm">
-                        Create an account to join the Architectural Cookie Collection. Start by crafting your own profile.
+                    </h2>
+                    <p class="font-body text-sm text-on-surface-variant">
+                        Join the Architectural Cookie Collection.
                     </p>
                 </div>
 
-                {{-- Error banner dari Action (misal: email duplikat, Supabase error) --}}
+                {{-- Action Error Banner --}}
                 @if($actionError)
-                    <div class="mb-4 p-3 bg-[#ffdad6] border border-[#ba1a1a] text-[#93000a] font-body text-sm leading-snug" role="alert">
+                    <div class="mb-4 p-3 bg-error-container border-[2px] border-error text-on-error-container font-body text-xs leading-snug flex items-start gap-2" role="alert">
+                        <span class="material-symbols-outlined text-[16px] leading-none shrink-0 mt-0.5">error</span>
                         {{ $actionError }}
                     </div>
                 @endif
-                
+
                 <form wire:submit.prevent="register" class="space-y-3">
+
                     {{-- Full Name --}}
-                    <div>
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="name">
+                    <div class="relative pb-5">
+                        <label class="block font-label font-bold text-xs text-primary uppercase tracking-wider mb-1.5" for="name">
                             Full Name
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[20px] leading-none">
-                                    person
-                                </span>
-                            </div>
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <span class="material-symbols-outlined text-[20px]">person</span>
+                            </span>
                             <input
                                 wire:model.live.debounce.2s="full_name"
-                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('full_name') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                class="w-full bg-surface-container-lowest border-[2px] @error('full_name') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
                                 id="name"
                                 name="full_name"
                                 placeholder="Master Baker"
                                 type="text"
                             />
                         </div>
-                        {{-- Inline error: Full Name --}}
-                        <div class="h-[28px] flex items-start pt-1 overflow-hidden">
-                            @if($full_name !== '' && mb_strlen(trim($full_name)) < 2)
-                                <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                    Minimum 2 characters
+                        @if($full_name !== '' && mb_strlen(trim($full_name)) < 2)
+                            <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                Minimum 2 characters
+                            </p>
+                        @else
+                            @error('full_name')
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                    {{ $message }}
                                 </p>
-                            @elseif($full_name === '')
-                                @error('full_name')
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        Minimum 2 characters
-                                    </p>
-                                @enderror
-                            @endif
-                        </div>
+                            @enderror
+                        @endif
                     </div>
 
-                    {{-- Email --}}
-                    <div>
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="email">
+                    {{-- Email Address --}}
+                    <div class="relative pb-5">
+                        <label class="block font-label font-bold text-xs text-primary uppercase tracking-wider mb-1.5" for="email">
                             Email Address
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[18px] leading-none">
-                                    mail
-                                </span>
-                            </div>
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <span class="material-symbols-outlined text-[20px]">mail</span>
+                            </span>
                             <input
                                 wire:model.live.debounce.2s="email"
-                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('email') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                class="w-full bg-surface-container-lowest border-[2px] @error('email') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
                                 id="email"
                                 name="email"
                                 placeholder="baker@greenhouse.com"
                                 type="email"
                             />
                         </div>
-                        {{-- Inline error: Email --}}
-                        <div class="h-[28px] flex items-start pt-1 overflow-hidden">
-                            @if($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL))
-                                <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                    Invalid email format
+                        @if($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL))
+                            <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                Invalid email format
+                            </p>
+                        @else
+                            @error('email')
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                    {{ $message }}
                                 </p>
-                            @elseif($email === '')
-                                @error('email')
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        Invalid email format
-                                    </p>
-                                @enderror
-                            @endif
-                        </div>
+                            @enderror
+                        @endif
                     </div>
 
                     {{-- Phone Number --}}
-                    <div>
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="phone">
-                            Phone Number <span class="text-[#717973] font-normal lowercase tracking-normal">(optional)</span>
+                    <div class="relative pb-5">
+                        <label class="block font-label font-bold text-xs text-primary uppercase tracking-wider mb-1.5" for="phone">
+                            Phone Number
+                            <span class="text-on-surface-variant font-normal lowercase tracking-normal normal-case">(optional)</span>
                         </label>
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span aria-hidden="true" class="material-symbols-outlined text-primary text-[18px] leading-none">
-                                    call
-                                </span>
-                            </div>
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <span class="material-symbols-outlined text-[20px]">call</span>
+                            </span>
                             <input
                                 wire:model.live.debounce.2s="phone_number"
-                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-10 pr-4 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('phone_number') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                class="w-full bg-surface-container-lowest border-[2px] @error('phone_number') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
                                 id="phone"
                                 name="phone_number"
                                 placeholder="08xxxxxxxxxx"
                                 type="tel"
                             />
                         </div>
-                        {{-- Inline error: Phone Number --}}
-                        <div class="h-[28px] flex items-start pt-1 overflow-hidden">
-                            @error('phone_number')
-                                <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                    Invalid phone number
-                                </p>
-                            @enderror
-                        </div>
+                        @error('phone_number')
+                            <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                {{ $message }}
+                            </p>
+                        @enderror
                     </div>
 
                     {{-- Password --}}
-                    <div>
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="password">
+                    <div class="relative pb-5">
+                        <label class="block font-label font-bold text-xs text-primary uppercase tracking-wider mb-1.5" for="password">
                             Password
                         </label>
                         <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <span class="material-symbols-outlined text-[20px]">lock</span>
+                            </span>
                             <input
                                 wire:model.live.debounce.2s="password"
-                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-4 pr-10 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('password') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                class="w-full bg-surface-container-lowest border-[2px] @error('password') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
                                 id="password"
                                 name="password"
                                 placeholder="••••••••"
                                 type="password"
                             />
-                            {{-- Eye toggle: only visible on hover --}}
-                            <button
-                                type="button"
-                                tabindex="-1"
-                                aria-label="Toggle password visibility"
+                            {{-- Eye toggle --}}
+                            <button type="button" tabindex="-1" aria-label="Toggle password visibility"
                                 onclick="togglePassword('password', 'eye-pw')"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer"
-                            >
-                                <span id="eye-pw" class="material-symbols-outlined text-[#717973] hover:text-primary text-[18px] leading-none select-none">visibility_off</span>
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer">
+                                <span id="eye-pw" class="material-symbols-outlined text-outline hover:text-primary text-[20px] leading-none select-none">visibility_off</span>
                             </button>
                         </div>
-                        {{-- Inline error: Password (3 levels) --}}
-                        <div class="h-[28px] flex items-start pt-1 overflow-hidden">
-                            @if($password !== '')
-                                @php
-                                    $pwShort  = mb_strlen($password) < 8;
-                                    $pwWeak   = !$pwShort && !preg_match('/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@!,\.\?\/]).+$/', $password);
-                                @endphp
-                                @if($pwShort)
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        Minimum 8 characters
-                                    </p>
-                                @elseif($pwWeak)
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        Use letters, numbers & symbols (@!,.?/).
-                                    </p>
-                                @endif
-                            @else
-                                @error('password')
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                        @if($password !== '')
+                            @php
+                                $pwShort = mb_strlen($password) < 8;
+                                $pwWeak  = !$pwShort && !preg_match('/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@!,\.\?\/]).+$/', $password);
+                            @endphp
+                            @if($pwShort)
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                    Minimum 8 characters
+                                </p>
+                            @elseif($pwWeak)
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                    Use letters, numbers &amp; symbols (@!,.?/).
+                                </p>
                             @endif
-                        </div>
+                        @else
+                            @error('password')
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        @endif
                     </div>
 
                     {{-- Confirm Password --}}
-                    <div>
-                        <label class="block font-headline text-[10px] font-bold text-primary uppercase tracking-widest mb-1.5" for="password_confirmation">
+                    <div class="relative pb-5">
+                        <label class="block font-label font-bold text-xs text-primary uppercase tracking-wider mb-1.5" for="password_confirmation">
                             Confirm Password
                         </label>
                         <div class="relative group">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
+                                <span class="material-symbols-outlined text-[20px]">lock_reset</span>
+                            </span>
                             <input
                                 wire:model.live.debounce.2s="password_confirmation"
-                                class="w-full bg-white border border-[#c1c8c2] text-primary font-body text-sm py-3 pl-4 pr-10 placeholder:text-[#717973] focus:border-primary focus:ring-1 focus:ring-primary transition-colors {{ $errors->has('password_confirmation') ? 'border-[#ba1a1a] focus:border-[#ba1a1a] focus:ring-[#ba1a1a]' : '' }}"
+                                class="w-full bg-surface-container-lowest border-[2px] @error('password_confirmation') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
                                 id="password_confirmation"
                                 name="password_confirmation"
                                 placeholder="••••••••"
                                 type="password"
                             />
-                            {{-- Eye toggle: only visible on hover --}}
-                            <button
-                                type="button"
-                                tabindex="-1"
-                                aria-label="Toggle confirm password visibility"
+                            {{-- Eye toggle --}}
+                            <button type="button" tabindex="-1" aria-label="Toggle confirm password visibility"
                                 onclick="togglePassword('password_confirmation', 'eye-pc')"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer"
-                            >
-                                <span id="eye-pc" class="material-symbols-outlined text-[#717973] hover:text-primary text-[18px] leading-none select-none">visibility_off</span>
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity duration-150 cursor-pointer">
+                                <span id="eye-pc" class="material-symbols-outlined text-outline hover:text-primary text-[20px] leading-none select-none">visibility_off</span>
                             </button>
                         </div>
-                        {{-- Inline error: Confirm Password --}}
-                        <div class="h-[28px] flex items-start pt-1 overflow-hidden">
-                            @if($password_confirmation !== '' && $password_confirmation !== $password)
-                                <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                    <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
+                        @if($password_confirmation !== '' && $password_confirmation !== $password)
+                            <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
+                                Passwords do not match
+                            </p>
+                        @else
+                            @error('password_confirmation')
+                                <p class="absolute -bottom-0 left-0 flex items-center gap-1 font-body text-[10px] text-error animate-slide-down">
+                                    <span class="material-symbols-outlined text-[11px] leading-none">cancel</span>
                                     Passwords do not match
                                 </p>
-                            @elseif($password_confirmation === '')
-                                @error('password_confirmation')
-                                    <p class="flex items-center gap-1 font-body text-[10px] text-[#ba1a1a] error-anim">
-                                        <span class="material-symbols-outlined text-[12px] leading-none">cancel</span>
-                                        Passwords do not match
-                                    </p>
-                                @enderror
-                            @endif
-                        </div>
+                            @enderror
+                        @endif
                     </div>
 
-                    {{-- Submit button: disabled & pulse ONLY during the 'register' action --}}
-                    <button
-                        wire:loading.attr="disabled" wire:target="register"
-                        wire:loading.class="animate-pulse opacity-75 cursor-not-allowed" wire:target="register"
-                        class="w-full bg-primary text-white font-headline font-bold text-[13px] py-4 uppercase tracking-[0.15em] mt-2 cursor-pointer input-border hard-shadow hover:bg-[#1b4332] transition-colors"
-                        type="submit"
-                    >
-                        SIGN UP
-                    </button>
+                    {{-- Submit --}}
+                    <div class="pt-2">
+                        <button
+                            wire:loading.attr="disabled"
+                            wire:loading.class="opacity-70 cursor-not-allowed shadow-none translate-x-0 translate-y-0"
+                            wire:target="register"
+                            class="w-full bg-primary text-on-primary border-[3px] border-primary font-label font-bold text-base uppercase tracking-wider py-4 shadow-brutal hover:shadow-brutal-hover hover:-translate-y-[2px] hover:-translate-x-[2px] transition-all active:translate-y-0 active:translate-x-0 active:shadow-none flex items-center justify-center gap-2 disabled:pointer-events-none"
+                            type="submit"
+                        >
+                            <span wire:loading.remove wire:target="register">Sign Up</span>
+                            <span wire:loading.inline-flex wire:target="register" class="hidden items-center gap-2">
+                                <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                                <span>Creating</span>
+                            </span>
+                        </button>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-t-[3px] border-surface-dim text-center">
+                        <p class="font-body text-sm text-on-surface-variant font-semibold">
+                            Already have an account?
+                            <a href="/login"
+                                class="font-label font-bold text-primary underline decoration-[3px] underline-offset-[4px] hover:text-primary-container px-1 transition-colors ml-1 uppercase">Sign In</a>
+                        </p>
+                    </div>
                 </form>
-                
-                <div class="mt-4 text-center">
-                    <p class="font-body text-[#5b6560] text-xs">
-                        Already have an account? 
-                        <a class="font-headline font-bold text-primary uppercase tracking-widest underline decoration-2 underline-offset-4 transition-colors ml-1 cursor-pointer hover:text-opacity-80" href="/login">
-                            SIGN IN
-                        </a>
-                    </p>
-                </div>
             </div>
         </div>
     </main>
