@@ -85,7 +85,7 @@
                         <label class="block font-label font-bold text-base text-primary uppercase tracking-wider"
                             for="password">Password</label>
                         <a class="font-label font-bold text-sm text-primary underline decoration-2 underline-offset-4 hover:text-primary-container"
-                            href="/forgot-password">Forgot Password?</a>
+                            href="{{ route('password.request') }}">Forgot Password?</a>
                     </div>
                     <div class="relative group">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-primary">

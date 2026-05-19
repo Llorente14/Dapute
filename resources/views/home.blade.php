@@ -32,6 +32,15 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
+        // Handle Supabase Auth hash redirects that fall back to the home page
+        if (window.location.hash) {
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            if (hashParams.get('type') === 'recovery' || hashParams.get('error_code') === 'otp_expired') {
+                window.location.href = '/reset-password' + window.location.hash;
+                return;
+            }
+        }
+
         gsap.registerPlugin(ScrollTrigger);
         let mm = gsap.matchMedia();
 
