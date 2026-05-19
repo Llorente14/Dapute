@@ -11,8 +11,8 @@ class AdminUpdateUserAction
     public function execute(string $userId, array $data): array
     {
         try {
-            if (isset($data['role']) && !in_array($data['role'], ['owner', 'staff', 'customer'], true)) {
-                return ['success' => false, 'message' => 'Invalid role. Must be owner, staff, or customer.'];
+            if (isset($data['role']) && !in_array($data['role'], ['owner', 'admin', 'customer'], true)) {
+                return ['success' => false, 'message' => 'Invalid role. Must be owner, Admin, or customer.'];
             }
 
             $supabaseUrl = config('services.supabase.url');

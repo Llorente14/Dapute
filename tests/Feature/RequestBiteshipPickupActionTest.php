@@ -61,7 +61,7 @@ class RequestBiteshipPickupActionTest extends TestCase
         });
 
         DB::table('users')->insert([
-            ['id' => 'staff-123', 'role' => 'staff'],
+            ['id' => 'Admin-123', 'role' => 'admin'],
         ]);
 
         $this->seedPickupOrder();
@@ -80,7 +80,7 @@ class RequestBiteshipPickupActionTest extends TestCase
             ]),
         ]);
 
-        $this->actingAs($this->authUser('staff-123'));
+        $this->actingAs($this->authUser('Admin-123'));
 
         $result = app(RequestBiteshipPickupAction::class)->execute('order-123', 'jne', 'reg');
         $order = DB::table('orders')->where('id', 'order-123')->first();
@@ -102,7 +102,7 @@ class RequestBiteshipPickupActionTest extends TestCase
             ]),
         ]);
 
-        $this->actingAs($this->authUser('staff-123'));
+        $this->actingAs($this->authUser('Admin-123'));
 
         $result = app(RequestBiteshipPickupAction::class)->execute('order-123', 'jne', 'reg');
         $order = DB::table('orders')->where('id', 'order-123')->first();

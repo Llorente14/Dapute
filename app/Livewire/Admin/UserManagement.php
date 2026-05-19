@@ -26,7 +26,7 @@ class UserManagement extends Component
     public $edit_full_name = '';
     public $edit_email = '';
     public $edit_phone_number = '';
-    public $edit_role = 'staff';
+    public $edit_role = 'admin';
     public $edit_is_active = true;
 
     public function resetCreateForm()
@@ -158,8 +158,8 @@ class UserManagement extends Component
         }
 
         if ($this->filterRole !== 'All Roles') {
-            if ($this->filterRole === 'Staff') {
-                $query->where('role', 'staff');
+            if ($this->filterRole === 'admin') {
+                $query->where('role', 'admin');
             } else {
                 $query->where('role', strtolower($this->filterRole));
             }

@@ -14,7 +14,7 @@ class RoleOwner
     {
         // Pastiin user sudah login
         if (!Auth::check()) {
-            abort(403, 'Akses Ditolak: Silakan login terlebih dahulu.');
+            abort(404);
         }
 
         // Cek role secara real-time ke tabel Supabase (public.users)
@@ -22,7 +22,7 @@ class RoleOwner
         $userRole = DB::table('users')->where('id', Auth::id())->value('role');
 
         if ($userRole !== 'owner') {
-            abort(403, 'Akses Ditolak: Hanya Owner yang diizinkan mengakses halaman ini.');
+            abort(404);
         }
 
         return $next($request);
