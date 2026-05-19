@@ -6,6 +6,7 @@ use App\Actions\Cart\UpdateCartAction;
 use App\Actions\Checkout\FetchBiteshipRatesAction;
 use App\Actions\Transaction\CreateOrderAction;
 use App\Actions\Payment\GetMidtransSnapTokenAction;
+use App\Enums\ShippingType;
 use App\Helpers\AddressManager;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -179,7 +180,14 @@ class CheckoutPage extends Component
         $notes = trim($this->notes) ?: null;
 
         $action ??= app(CreateOrderAction::class);
-        $result = $action->execute((string) Auth::id(), $this->shippingCost, $notes, $this->adminFee, $this->selected_address);
+        $result = $action->execute(
+            (string) Auth::id(),
+            $this->shippingCost,
+            $notes,
+            $this->adminFee,
+            $this->selected_address,
+            $this->selectedShippingType($selectedCourier)
+        );
 
         $this->isProcessing = false;
 
@@ -223,6 +231,15 @@ class CheckoutPage extends Component
             'price' => $price,
             'icon' => 'local_shipping',
         ];
+    }
+
+    private function selectedShippingType(array $selectedCourier): string
+    {
+        $courierCode = strtolower((string) str($selectedCourier['id'] ?? '')->before(':'));
+
+        return $courierCode === 'local'
+            ? ShippingType::INDEPENDENT->value
+            : ShippingType::ONLINE_COURIER->value;
     }
 
     private function hasDestinationCoordinate(): bool

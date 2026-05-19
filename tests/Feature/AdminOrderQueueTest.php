@@ -40,6 +40,7 @@ class AdminOrderQueueTest extends TestCase
             $table->string('order_status')->default(OrderStatus::PENDING_PAYMENT->value);
             $table->string('biteship_order_id')->nullable();
             $table->string('tracking_id')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
@@ -222,6 +223,20 @@ class AdminOrderQueueTest extends TestCase
         $this->assertSame('IN_PROCESSING', DB::table('orders')->where('id', 'order-1')->value('order_status'));
     }
 
+    public function test_on_delivery_driver_failed_cancels_order_and_adds_note(): void
+    {
+        $this->seedOrder('order-1', 'customer-123', OrderStatus::ON_DELIVERY->value);
+
+        Livewire::actingAs($this->authUser('staff-123'))
+            ->test(OrderQueue::class)
+            ->call('updateStatus', 'order-1', OrderStatus::CANCELLED->value);
+
+        $order = DB::table('orders')->where('id', 'order-1')->first();
+
+        $this->assertSame(OrderStatus::CANCELLED->value, $order->order_status);
+        $this->assertStringContainsString('NOTED: Driver gagal kirim', $order->notes);
+    }
+
     public function test_status_update_requires_owner_or_staff_role(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PAID_PROCESSING->value);
@@ -232,7 +247,7 @@ class AdminOrderQueueTest extends TestCase
         app(UpdateOrderStatusAction::class)('order-1', OrderStatus::PICKUP_REQUESTED->value);
     }
 
-    public function test_manual_shipment_saves_tracking_without_biteship_and_moves_to_delivery(): void
+    public function test_manual_shipment_saves_tracking_without_biteship_and_completes_order(): void
     {
         $this->seedOrder('order-1', 'customer-123', OrderStatus::PICKUP_REQUESTED->value);
         $this->seedOrderAddress('order-1');
@@ -247,7 +262,7 @@ class AdminOrderQueueTest extends TestCase
 
         $order = DB::table('orders')->where('id', 'order-1')->first();
 
-        $this->assertSame(OrderStatus::ON_DELIVERY->value, $order->order_status);
+        $this->assertSame(OrderStatus::COMPLETED->value, $order->order_status);
         $this->assertSame('MANUAL-123', $order->tracking_id);
         $this->assertNull($order->biteship_order_id);
     }
@@ -282,7 +297,7 @@ class AdminOrderQueueTest extends TestCase
 
         $this->assertTrue($result['success']);
         $this->assertTrue($result['idempotent']);
-        $this->assertSame(OrderStatus::ON_DELIVERY->value, $order->order_status);
+        $this->assertSame(OrderStatus::COMPLETED->value, $order->order_status);
         $this->assertSame('MANUAL-123', $order->tracking_id);
         $this->assertNull($order->biteship_order_id);
     }

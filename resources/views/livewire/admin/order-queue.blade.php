@@ -132,7 +132,7 @@
                                 class="absolute right-0 top-full z-30 mt-2 w-[230px] border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d]"
                                 style="display: none;"
                             >
-                                @foreach($this->actionOptions($order['order_status']) as $option)
+                                @foreach($this->actionOptions($order['order_status'], $order['shipping_type'] ?? null) as $option)
                                     @if($option['available'])
                                         <button
                                             type="button"

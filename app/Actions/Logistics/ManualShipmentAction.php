@@ -3,9 +3,12 @@
 namespace App\Actions\Logistics;
 
 use App\Enums\OrderStatus;
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ManualShipmentAction
@@ -38,9 +41,13 @@ class ManualShipmentAction
         }
 
         if (
-            $order->order_status === OrderStatus::ON_DELIVERY->value
+            in_array($order->order_status, [OrderStatus::ON_DELIVERY->value, OrderStatus::COMPLETED->value], true)
             && (string) $order->tracking_id === $trackingNumber
         ) {
+            if ($order->order_status === OrderStatus::ON_DELIVERY->value) {
+                ($this->updateOrderStatusAction)($orderId, OrderStatus::COMPLETED->value);
+            }
+
             return [
                 'success' => true,
                 'message' => 'Manual shipment already saved.',
@@ -56,16 +63,26 @@ class ManualShipmentAction
         DB::beginTransaction();
 
         try {
+            $updateData = [
+                'tracking_id' => $trackingNumber,
+                'updated_at' => now(),
+            ];
+
+            if (Schema::hasColumn('orders', 'shipping_type')) {
+                $updateData['shipping_type'] = ShippingType::INDEPENDENT->value;
+            }
+
+            if (Schema::hasColumn('orders', 'shipping_status')) {
+                $updateData['shipping_status'] = ShippingStatus::DELIVERED->value;
+            }
+
             DB::table('orders')
                 ->where('id', $orderId)
-                ->update([
-                    'tracking_id' => $trackingNumber,
-                    'updated_at' => now(),
-                ]);
+                ->update($updateData);
 
             $statusResult = ($this->updateOrderStatusAction)(
                 $orderId,
-                OrderStatus::ON_DELIVERY->value
+                OrderStatus::COMPLETED->value
             );
 
             if (!$statusResult['success']) {
@@ -82,7 +99,7 @@ class ManualShipmentAction
 
             return [
                 'success' => true,
-                'message' => 'Manual shipment saved.',
+                'message' => 'Manual shipment completed.',
                 'tracking_id' => $trackingNumber,
             ];
         } catch (\Throwable $exception) {

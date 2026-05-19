@@ -2,9 +2,12 @@
 
 namespace App\Actions\Logistics;
 
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Exception;
 
 class RequestBiteshipPickupAction
@@ -128,10 +131,20 @@ class RequestBiteshipPickupAction
 
             DB::beginTransaction();
 
-            DB::table('orders')->where('id', $orderId)->update([
+            $updateData = [
                 'biteship_order_id' => $biteshipOrderId,
-                'tracking_id'       => $trackingId
-            ]);
+                'tracking_id'       => $trackingId,
+            ];
+
+            if (Schema::hasColumn('orders', 'shipping_type')) {
+                $updateData['shipping_type'] = ShippingType::ONLINE_COURIER->value;
+            }
+
+            if (Schema::hasColumn('orders', 'shipping_status')) {
+                $updateData['shipping_status'] = ShippingStatus::PICKED_UP->value;
+            }
+
+            DB::table('orders')->where('id', $orderId)->update($updateData);
 
             $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
@@ -166,10 +179,20 @@ class RequestBiteshipPickupAction
 
         $trackingId = 'SIMULATED-' . strtoupper($courierCompany) . '-' . now()->format('YmdHis');
 
-        DB::table('orders')->where('id', $orderId)->update([
+        $updateData = [
             'biteship_order_id' => 'SIMULATED-BITESHIP-' . $orderId,
             'tracking_id' => $trackingId,
-        ]);
+        ];
+
+        if (Schema::hasColumn('orders', 'shipping_type')) {
+            $updateData['shipping_type'] = ShippingType::ONLINE_COURIER->value;
+        }
+
+        if (Schema::hasColumn('orders', 'shipping_status')) {
+            $updateData['shipping_status'] = ShippingStatus::PICKED_UP->value;
+        }
+
+        DB::table('orders')->where('id', $orderId)->update($updateData);
 
         $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
