@@ -38,7 +38,7 @@
     $adminRole = strtolower((string) auth()->user()?->role);
     $roleLabel = match ($adminRole) {
         'owner' => 'Owner Workspace',
-        'staff' => 'Staff Workspace',
+        'admin' => 'Admin Workspace',
         default => 'Restricted Workspace',
     };
 
@@ -48,7 +48,7 @@
             'route' => 'admin.orders.index',
             'pattern' => 'admin.orders*',
             'icon' => 'pending_actions',
-            'roles' => ['owner', 'staff'],
+            'roles' => ['owner', 'admin'],
         ],
         [
             'label' => 'Products',

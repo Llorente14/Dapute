@@ -25,9 +25,9 @@ Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAct
 })->middleware('auth');
 /*
 |--------------------------------------------------------------------------
-| Owner / Staff Admin Routes
+| Owner / Admin Admin Routes
 |--------------------------------------------------------------------------
-| owner can access all admin pages; staff can access order logistics only.
+| owner can access all admin pages; Admin can access order logistics only.
 */
 use App\Livewire\Admin\UserManagement;
 use App\Livewire\Admin\OrderQueue;
@@ -39,7 +39,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/products/create',       ProductCrudForm::class)->middleware('role:owner')->name('products.create');
     Route::get('/products/{productId}/edit', ProductCrudForm::class)->middleware('role:owner')->name('products.edit');
     Route::get('/users',                 UserManagement::class)->middleware('role:owner')->name('users.index');
-    Route::get('/orders',                OrderQueue::class)->middleware('role:owner,staff')->name('orders.index');
+    Route::get('/orders',                OrderQueue::class)->middleware('role:owner,Admin')->name('orders.index');
     Route::get('/reports',               FinancialReportPage::class)->middleware('role:owner')->name('reports.index');
     Route::get('/reports/export/pdf',    [FinancialReportExportController::class, 'pdf'])->middleware('role:owner')->name('reports.export.pdf');
     Route::get('/reports/export/excel',  [FinancialReportExportController::class, 'excel'])->middleware('role:owner')->name('reports.export.excel');

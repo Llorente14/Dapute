@@ -121,8 +121,8 @@ class ManualShipmentAction
     {
         $role = DB::table('users')->where('id', auth()->id())->value('role');
 
-        if (!in_array($role, ['owner', 'staff'], true)) {
-            throw new AuthorizationException('Only owner or staff can create manual shipment.');
+        if (!in_array($role, ['owner', 'admin'], true)) {
+            throw new AuthorizationException('Only owner or Admin can create manual shipment.');
         }
     }
 
