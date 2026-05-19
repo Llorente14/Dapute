@@ -6,6 +6,7 @@ use App\Actions\Cart\UpdateCartAction;
 use App\Actions\Checkout\FetchBiteshipRatesAction;
 use App\Actions\Transaction\CreateOrderAction;
 use App\Actions\Payment\GetMidtransSnapTokenAction;
+use App\Enums\ShippingType;
 use App\Helpers\AddressManager;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -19,6 +20,7 @@ class CheckoutPage extends Component
 
     public array $couriers = [];
     public ?string $selected_courier = null;
+    public string $shipping_type = 'ONLINE_COURIER';
     public string $courier_type = 'regular';
     public int $shippingCost = 0;
     public int $adminFee = 2500;
@@ -60,7 +62,7 @@ class CheckoutPage extends Component
             $this->fetchCouriers();
         }
 
-        if ($property === 'courier_type') {
+        if ($property === 'courier_type' || $property === 'shipping_type') {
             $this->selected_courier = null;
             $this->shippingCost = 0;
             $this->fetchCouriers();
@@ -81,6 +83,14 @@ class CheckoutPage extends Component
             $this->shippingCost = 0;
             $this->courierError = null;
             $this->calculateTotal();
+            return;
+        }
+
+        if ($this->shipping_type === ShippingType::INDEPENDENT->value) {
+            $this->couriers = $this->independentCourierOptions();
+            $this->courierError = null;
+            $this->selected_courier ??= $this->couriers[0]['id'] ?? null;
+            $this->applySelectedCourier();
             return;
         }
 
@@ -134,6 +144,32 @@ class CheckoutPage extends Component
         $this->total = $this->subtotal + $this->shippingCost + $this->adminFee;
     }
 
+    public function setShippingType(string $shippingType): void
+    {
+        $this->shipping_type = ShippingType::tryFrom($shippingType)?->value
+            ?? ShippingType::ONLINE_COURIER->value;
+
+        $this->selected_courier = null;
+        $this->shippingCost = 0;
+        $this->fetchCouriers();
+    }
+
+    public function setShippingOption(string $shippingType, ?string $courierType = null): void
+    {
+        $this->shipping_type = ShippingType::tryFrom($shippingType)?->value
+            ?? ShippingType::ONLINE_COURIER->value;
+
+        if ($courierType) {
+            $this->courier_type = in_array($courierType, ['regular', 'instant'], true)
+                ? $courierType
+                : 'regular';
+        }
+
+        $this->selected_courier = null;
+        $this->shippingCost = 0;
+        $this->fetchCouriers();
+    }
+
     public function placeOrder(?CreateOrderAction $action = null, ?GetMidtransSnapTokenAction $snapAction = null): void
     {
         if ($this->isProcessing) {
@@ -150,7 +186,7 @@ class CheckoutPage extends Component
             return;
         }
 
-        if ($this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
+        if ($this->shipping_type === ShippingType::ONLINE_COURIER->value && $this->courier_type === 'instant' && !$this->hasDestinationCoordinate()) {
             $this->addError('selected_address.coordinates', 'Pick a map pin for instant courier delivery.');
             return;
         }
@@ -179,7 +215,14 @@ class CheckoutPage extends Component
         $notes = trim($this->notes) ?: null;
 
         $action ??= app(CreateOrderAction::class);
-        $result = $action->execute((string) Auth::id(), $this->shippingCost, $notes, $this->adminFee, $this->selected_address);
+        $result = $action->execute(
+            (string) Auth::id(),
+            $this->shippingCost,
+            $notes,
+            $this->adminFee,
+            $this->selected_address,
+            $this->selectedShippingType()
+        );
 
         $this->isProcessing = false;
 
@@ -223,6 +266,26 @@ class CheckoutPage extends Component
             'price' => $price,
             'icon' => 'local_shipping',
         ];
+    }
+
+    private function independentCourierOptions(): array
+    {
+        return [
+            [
+                'id' => 'independent:self-pickup:0:0',
+                'name' => 'Independent Driver',
+                'service' => 'Self Pickup / Manual Courier',
+                'estimate' => 'Handled by Dapute',
+                'price' => 0,
+                'icon' => 'storefront',
+            ],
+        ];
+    }
+
+    private function selectedShippingType(): string
+    {
+        return ShippingType::tryFrom($this->shipping_type)?->value
+            ?? ShippingType::ONLINE_COURIER->value;
     }
 
     private function hasDestinationCoordinate(): bool

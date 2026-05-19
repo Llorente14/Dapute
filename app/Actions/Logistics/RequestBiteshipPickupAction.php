@@ -2,10 +2,14 @@
 
 namespace App\Actions\Logistics;
 
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Exception;
+use Illuminate\Support\Str;
 
 class RequestBiteshipPickupAction
 {
@@ -128,10 +132,30 @@ class RequestBiteshipPickupAction
 
             DB::beginTransaction();
 
-            DB::table('orders')->where('id', $orderId)->update([
+            $updateData = [
                 'biteship_order_id' => $biteshipOrderId,
-                'tracking_id'       => $trackingId
-            ]);
+                'tracking_id'       => $trackingId,
+            ];
+
+            if (Schema::hasColumn('orders', 'shipping_type')) {
+                $updateData['shipping_type'] = ShippingType::ONLINE_COURIER->value;
+            }
+
+            if (Schema::hasColumn('orders', 'shipping_status')) {
+                $updateData['shipping_status'] = ShippingStatus::PICKED_UP->value;
+            }
+
+            DB::table('orders')->where('id', $orderId)->update($updateData);
+
+            $this->upsertShipment(
+                $orderId,
+                'biteship',
+                ShippingStatus::PICKED_UP->value,
+                $biteshipOrderId,
+                $courierCompany,
+                $courierType,
+                $trackingId
+            );
 
             $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
@@ -166,10 +190,30 @@ class RequestBiteshipPickupAction
 
         $trackingId = 'SIMULATED-' . strtoupper($courierCompany) . '-' . now()->format('YmdHis');
 
-        DB::table('orders')->where('id', $orderId)->update([
+        $updateData = [
             'biteship_order_id' => 'SIMULATED-BITESHIP-' . $orderId,
             'tracking_id' => $trackingId,
-        ]);
+        ];
+
+        if (Schema::hasColumn('orders', 'shipping_type')) {
+            $updateData['shipping_type'] = ShippingType::ONLINE_COURIER->value;
+        }
+
+        if (Schema::hasColumn('orders', 'shipping_status')) {
+            $updateData['shipping_status'] = ShippingStatus::PICKED_UP->value;
+        }
+
+        DB::table('orders')->where('id', $orderId)->update($updateData);
+
+        $this->upsertShipment(
+            $orderId,
+            'biteship',
+            ShippingStatus::PICKED_UP->value,
+            'SIMULATED-BITESHIP-' . $orderId,
+            $courierCompany,
+            'instant',
+            $trackingId
+        );
 
         $this->updateStatusAction->execute($orderId, \App\Enums\OrderStatus::ON_DELIVERY->value);
 
@@ -188,5 +232,40 @@ class RequestBiteshipPickupAction
     {
         return (bool) config('services.biteship.simulate_insufficient_balance')
             && ! app()->environment('production');
+    }
+
+    private function upsertShipment(
+        string $orderId,
+        string $provider,
+        string $shippingStatus,
+        ?string $providerOrderId,
+        string $courierCompany,
+        string $courierType,
+        ?string $trackingId
+    ): void {
+        if (!Schema::hasTable('shipments')) {
+            return;
+        }
+
+        $now = now();
+        $existingId = DB::table('shipments')->where('order_id', $orderId)->value('id');
+
+        DB::table('shipments')->updateOrInsert(
+            ['order_id' => $orderId],
+            [
+                'id' => $existingId ?: (string) Str::uuid(),
+                'shipping_type' => ShippingType::ONLINE_COURIER->value,
+                'shipping_status' => $shippingStatus,
+                'provider' => $provider,
+                'provider_order_id' => $providerOrderId,
+                'courier_company' => strtolower($courierCompany),
+                'courier_type' => strtolower($courierType),
+                'tracking_id' => $trackingId,
+                'requested_at' => $now,
+                'picked_up_at' => $now,
+                'updated_at' => $now,
+                'created_at' => $now,
+            ]
+        );
     }
 }

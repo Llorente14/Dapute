@@ -2,14 +2,17 @@
 
 namespace App\Actions\Transaction;
 
+use App\Enums\ShippingStatus;
+use App\Enums\ShippingType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class CreateOrderAction
 {
-    public function execute(string $userId, int $shippingFee, ?string $notes = null, int $adminFee = 0, array $shippingAddress = []): array
+    public function execute(string $userId, int $shippingFee, ?string $notes = null, int $adminFee = 0, array $shippingAddress = [], ?string $shippingType = null): array
     {
         // Cegah double click dengan Cache Lock (10 detik)
         $lock = Cache::lock("create_order_lock_{$userId}", 10);
@@ -38,8 +41,11 @@ class CreateOrderAction
             $totalPayment = $subtotalAmount + $shippingFee + $adminFee;
             $orderId = (string) Str::uuid();
 
+            $shippingType = ShippingType::tryFrom((string) $shippingType)?->value
+                ?? ShippingType::ONLINE_COURIER->value;
+
             // Insert ke tabel orders
-            DB::table('orders')->insert([
+            $orderData = [
                 'id' => $orderId,
                 'customer_id' => $userId,
                 'subtotal_amount' => $subtotalAmount,
@@ -49,7 +55,29 @@ class CreateOrderAction
                 'order_status' => 'PENDING_PAYMENT',
                 'created_at' => now(),
                 'order_date' => now(),
-            ]);
+            ];
+
+            if (Schema::hasColumn('orders', 'shipping_type')) {
+                $orderData['shipping_type'] = $shippingType;
+            }
+
+            if (Schema::hasColumn('orders', 'shipping_status')) {
+                $orderData['shipping_status'] = ShippingStatus::AWAITING_PICKUP->value;
+            }
+
+            DB::table('orders')->insert($orderData);
+
+            if (Schema::hasTable('shipments')) {
+                DB::table('shipments')->insert([
+                    'id' => (string) Str::uuid(),
+                    'order_id' => $orderId,
+                    'shipping_type' => $shippingType,
+                    'shipping_status' => ShippingStatus::AWAITING_PICKUP->value,
+                    'provider' => $shippingType === ShippingType::ONLINE_COURIER->value ? 'biteship' : 'independent',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
 
             if (!empty($shippingAddress)) {
                 $coordinates = $shippingAddress['coordinates'] ?? null;

@@ -7,6 +7,7 @@ use App\Actions\Transaction\CancelPendingOrderAction;
 use App\Actions\Transaction\FetchOrderDetailAction;
 use App\Actions\Transaction\ConfirmOrderReceivedAction;
 use App\Enums\OrderStatus;
+use App\Enums\ShippingType;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -61,8 +62,15 @@ class OrderDetailPage extends Component
         $shippedStatuses = [OrderStatus::ON_DELIVERY->value, 'SHIPPED'];
         $isShipped = in_array($status, $shippedStatuses, true);
         $isOwner = Auth::check() && ((string) Auth::id() === (string) ($this->order['customer_id'] ?? $this->order['user_id'] ?? null));
+        $isIndependent = ($this->order['shipping_type'] ?? null) === ShippingType::INDEPENDENT->value;
 
-        return $isShipped && $isOwner;
+        return $isShipped && $isOwner && !$isIndependent;
+    }
+
+    public function isManualDeliveryAwaitingAdminConfirmation(): bool
+    {
+        return ($this->order['shipping_type'] ?? null) === ShippingType::INDEPENDENT->value
+            && ($this->order['order_status'] ?? null) === OrderStatus::ON_DELIVERY->value;
     }
 
     public function currentTrackingEvent(): ?array
