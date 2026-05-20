@@ -141,17 +141,21 @@
                             Phone Number
                             <span class="text-on-surface-variant font-normal lowercase tracking-normal normal-case">(optional)</span>
                         </label>
-                        <div class="relative">
+                        <div class="relative flex items-center border-[2px] @error('phone_number') border-error focus-within:border-error focus-within:ring-[2px] focus-within:ring-inset focus-within:ring-error @else border-primary focus-within:border-primary focus-within:ring-[2px] focus-within:ring-inset focus-within:ring-primary @enderror bg-surface-container-lowest transition-all">
                             <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-primary">
                                 <span class="material-symbols-outlined text-[20px]">call</span>
                             </span>
+                            <span class="pl-10 pr-2 font-label text-sm font-black text-primary">+62</span>
                             <input
                                 wire:model.live.debounce.2s="phone_number"
-                                class="w-full bg-surface-container-lowest border-[2px] @error('phone_number') border-error focus:border-error focus:ring-[2px] focus:ring-inset focus:ring-error @else border-primary focus:border-primary focus:ring-[2px] focus:ring-inset focus:ring-primary @enderror text-primary font-body text-sm px-4 py-3 pl-10 focus:outline-none transition-all"
+                                class="w-full bg-transparent border-0 py-3 pr-4 pl-0 text-primary font-body text-sm focus:outline-none focus:ring-0"
                                 id="phone"
                                 name="phone_number"
-                                placeholder="08xxxxxxxxxx"
+                                placeholder="81234567890"
                                 type="tel"
+                                inputmode="numeric"
+                                maxlength="11"
+                                pattern="[0-9]{8,11}"
                             />
                         </div>
                         @error('phone_number')

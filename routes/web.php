@@ -20,7 +20,7 @@ Route::get('/', function () {
 
 Route::post('/checkout/rates', function (Request $request, FetchBiteshipRatesAction $action) {
     // Memastikan user sudah auth di level route/middleware
-    $request->validate(['postal_code' => 'required']);
+    $request->validate(['postal_code' => 'required|digits:5']);
     return response()->json($action->execute((string) auth()->id(), $request->postal_code, $request->all(), $request->input('courier_type', 'regular')));
 })->middleware('auth');
 /*
