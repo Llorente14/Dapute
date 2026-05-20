@@ -3,13 +3,19 @@
     <div class="lg:col-span-7 flex flex-col gap-12 md:gap-16 relative z-50">
         <!-- Address Input Section -->
         <section class="flex flex-col gap-6" x-data="checkoutAddressSelector(@js((string) auth()->id()), @js($recipient_name), $wire.entangle('selected_address').live, $wire.entangle('courier_type').live)" x-init="init($wire)">
-            <header class="flex items-baseline justify-between mb-2">
+            <header class="flex flex-col gap-3 mb-2">
+                <div class="flex items-center justify-between gap-3">
+                    <a href="{{ route('catalog.index') }}"
+                        class="inline-flex min-w-[88px] items-center justify-center border-[3px] border-primary bg-surface-container-lowest px-3 py-2 font-label text-xs font-bold uppercase tracking-wider text-primary shadow-[4px_4px_0_0_#012d1d] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-tertiary-fixed hover:shadow-[6px_6px_0_0_#012d1d] focus:outline-none focus:shadow-[6px_6px_0_0_#012d1d]">
+                        Back
+                    </a>
+                    <a href="/profile"
+                        class="inline-flex min-w-[88px] items-center justify-center border-[3px] border-primary bg-surface-container-lowest px-3 py-2 font-label text-xs font-bold uppercase tracking-wider text-primary shadow-[4px_4px_0_0_#012d1d] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-tertiary-fixed hover:shadow-[6px_6px_0_0_#012d1d] focus:outline-none focus:shadow-[6px_6px_0_0_#012d1d]">
+                        Manage
+                    </a>
+                </div>
                 <h1 class="font-headline font-bold text-3xl md:text-4xl uppercase tracking-tight text-primary">Shipping
                     Details</h1>
-                <a href="/profile"
-                    class="font-label text-xs font-bold uppercase text-primary border-[3px] border-primary px-3 py-2 hover:bg-tertiary-fixed transition-colors">
-                    Manage
-                </a>
             </header>
 
             @error('selected_address')
@@ -178,16 +184,19 @@
                     <label class="sr-only" for="manual_recipient_name">Recipient Name</label>
                     <input x-model="manual.recipient_name" x-on:input="syncManual()"
                         class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5"
-                        id="manual_recipient_name" placeholder="RECIPIENT NAME" type="text" />
+                        id="manual_recipient_name" placeholder="RECIPIENT NAME" type="text" required minlength="2" />
                     @error('selected_address.recipient_name')
                         <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>
                     <label class="sr-only" for="manual_recipient_phone">Phone Number</label>
-                    <input x-model="manual.recipient_phone" x-on:input="syncManual()"
-                        class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5"
-                        id="manual_recipient_phone" placeholder="PHONE NUMBER" type="tel" />
+                    <div class="flex items-center gap-2 bg-surface-container-lowest border-[3px] border-primary p-4 transition-all duration-200 hover:-translate-y-0.5 focus-within:-translate-y-0.5">
+                        <span class="font-label text-sm font-black uppercase text-primary">+62</span>
+                        <input x-model="manual.recipient_phone" x-on:input="cleanManualPhone(); syncManual()"
+                            class="w-full bg-transparent border-0 p-0 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:outline-none focus:ring-0"
+                            id="manual_recipient_phone" placeholder="PHONE NUMBER" type="tel" inputmode="numeric" maxlength="11" pattern="[0-9]{8,11}" required />
+                    </div>
                     @error('selected_address.recipient_phone')
                         <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                     @enderror
@@ -196,7 +205,7 @@
                     <label class="sr-only" for="manual_address">Street Address</label>
                     <textarea x-model="manual.address" x-on:input="syncManual()"
                         class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5 resize-none"
-                        id="manual_address" placeholder="STREET ADDRESS" rows="3"></textarea>
+                        id="manual_address" placeholder="STREET ADDRESS" rows="3" required minlength="5"></textarea>
                     @error('selected_address.address')
                         <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                     @enderror
@@ -205,23 +214,23 @@
                     <label class="sr-only" for="manual_city">City</label>
                     <input x-model="manual.city" x-on:input="syncManual()"
                         class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5"
-                        id="manual_city" placeholder="CITY" type="text" />
+                        id="manual_city" placeholder="CITY" type="text" required minlength="2" />
                     @error('selected_address.city')
                         <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                     @enderror
                 </div>
                 <div>
                     <label class="sr-only" for="manual_postal_code">Postal Code</label>
-                    <input x-model="manual.postal_code" x-on:input="syncManual()"
+                    <input x-model="manual.postal_code" x-on:input="cleanManualPostalCode(); syncManual()"
                         class="w-full bg-surface-container-lowest border-[3px] border-primary p-4 font-label text-sm font-bold uppercase text-primary placeholder-primary/40 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 transition-all duration-200 hover:-translate-y-0.5 focus:-translate-y-0.5"
-                        id="manual_postal_code" placeholder="POSTAL CODE" type="text" inputmode="numeric" />
+                        id="manual_postal_code" placeholder="POSTAL CODE" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" required />
                     @error('selected_address.postal_code')
                         <p class="mt-2 font-body text-xs font-bold text-error">{{ $message }}</p>
                     @enderror
                 </div>
                 <div
                     class="md:col-span-2 bg-tertiary-fixed border-[3px] border-primary p-4 font-label text-xs font-bold uppercase text-primary">
-                    No saved address found. This checkout address is sent directly to Livewire.
+                    No saved address found.
                 </div>
             </div>
 

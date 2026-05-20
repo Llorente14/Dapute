@@ -37,6 +37,13 @@ class NotFoundPageTest extends TestCase
             ->assertDontSee('vendor\\laravel');
     }
 
+    public function test_about_route_stays_not_found(): void
+    {
+        $this->get('/about')
+            ->assertNotFound()
+            ->assertSee('Page Not Found');
+    }
+
     public function test_customer_admin_access_renders_not_found_page(): void
     {
         $this->actingAs($this->authUser('customer-123'))

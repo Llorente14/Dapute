@@ -77,11 +77,11 @@ class CheckoutPage extends Component
     {
         $postalCode = (string) ($this->selected_address['postal_code'] ?? '');
 
-        if (!preg_match('/^\d{4,10}$/', $postalCode)) {
+        if (!preg_match('/^\d{5}$/', $postalCode)) {
             $this->couriers = [];
             $this->selected_courier = null;
             $this->shippingCost = 0;
-            $this->courierError = null;
+            $this->courierError = $postalCode === '' ? null : 'Postal code must contain exactly 5 digits.';
             $this->calculateTotal();
             return;
         }
@@ -181,6 +181,23 @@ class CheckoutPage extends Component
             return;
         }
 
+        $this->resetErrorBag();
+
+        $addressValidation = AddressManager::validateAddress($this->selected_address);
+        if (!$addressValidation['valid']) {
+            $this->addError('selected_address', 'Please complete a valid shipping address.');
+
+            foreach ($addressValidation['errors'] as $field => $messages) {
+                $this->addError('selected_address.'.$field, $messages[0] ?? 'Invalid value.');
+            }
+
+            return;
+        }
+
+        $this->selected_address['recipient_phone'] = AddressManager::normalizePhoneNumber(
+            (string) ($this->selected_address['recipient_phone'] ?? '')
+        );
+
         if (!$this->selected_courier) {
             $this->addError('selected_courier', 'Pilih kurir terlebih dahulu.');
             return;
@@ -191,18 +208,6 @@ class CheckoutPage extends Component
             return;
         }
 
-        $addressValidation = AddressManager::validateAddress($this->selected_address);
-        if (!$addressValidation['valid']) {
-            $this->resetErrorBag();
-            $this->addError('selected_address', 'Please complete a valid shipping address.');
-
-            foreach ($addressValidation['errors'] as $field => $messages) {
-                $this->addError('selected_address.'.$field, $messages[0] ?? 'Invalid value.');
-            }
-
-            return;
-        }
-
         $selectedCourier = collect($this->couriers)->firstWhere('id', $this->selected_courier);
         if (!$selectedCourier) {
             $this->addError('selected_courier', 'Kurir tidak valid.');
@@ -210,7 +215,6 @@ class CheckoutPage extends Component
         }
 
         $this->isProcessing = true;
-        $this->resetErrorBag();
 
         $notes = trim($this->notes) ?: null;
 

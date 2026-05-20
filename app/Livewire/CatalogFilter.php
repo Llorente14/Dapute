@@ -15,6 +15,11 @@ class CatalogFilter extends Component
 
     public $sort = 'Latest';
 
+    public function searchNow(): void
+    {
+        $this->search = trim((string) $this->search);
+    }
+
     public function addToCart(UpdateCartAction $action, string $productId)
     {
         if (!Auth::check()) {

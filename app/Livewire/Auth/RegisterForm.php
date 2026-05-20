@@ -3,6 +3,7 @@
 namespace App\Livewire\Auth;
 
 use App\Actions\Auth\RegisterUserAction;
+use App\Helpers\AddressManager;
 use Livewire\Attributes\Layout;
 
 use Livewire\Attributes\Validate;
@@ -44,8 +45,8 @@ class RegisterForm extends Component
     public string $password_confirmation = '';
 
     // Optional field – validated only for format when filled
-    #[Validate('nullable|regex:/^[0-9+\-\s]{6,20}$/', message: [
-        'regex' => 'Invalid phone number.',
+    #[Validate('nullable|regex:/^\d{8,11}$/', message: [
+        'regex' => 'Enter 8 to 11 digits after +62.',
     ])]
     public string $phone_number = '';
 
@@ -84,6 +85,7 @@ class RegisterForm extends Component
 
     public function updatedPhoneNumber(): void
     {
+        $this->phone_number = AddressManager::localPhoneNumber($this->phone_number);
         $this->validateOnly('phone_number');
     }
 
@@ -93,6 +95,7 @@ class RegisterForm extends Component
     {
         // Reset error Action sebelumnya
         $this->actionError = '';
+        $this->phone_number = AddressManager::localPhoneNumber($this->phone_number);
 
         // Full validation sebelum memanggil Action
         $this->validate();
@@ -102,7 +105,7 @@ class RegisterForm extends Component
             'full_name'    => $this->full_name,
             'email'        => $this->email,
             'password'     => $this->password,
-            'phone_number' => $this->phone_number ?: null,
+            'phone_number' => $this->phone_number ? AddressManager::normalizePhoneNumber($this->phone_number) : null,
         ]);
 
         if (! $result['success']) {

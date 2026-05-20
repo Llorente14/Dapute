@@ -38,10 +38,40 @@ document.addEventListener('alpine:init', () => {
             return this.addresses.length >= 5;
         },
 
+        digitsOnly(value, limit = null) {
+            const digits = String(value || '').replace(/\D/g, '');
+            return limit ? digits.slice(0, limit) : digits;
+        },
+
+        phoneLocalDigits(value) {
+            let digits = this.digitsOnly(value);
+            if (digits.startsWith('62')) digits = digits.slice(2);
+            if (digits.startsWith('0')) digits = digits.slice(1);
+            return digits.slice(0, 11);
+        },
+
+        fullIndonesianPhone(value) {
+            const local = this.phoneLocalDigits(value);
+            return local ? `+62${local}` : '';
+        },
+
+        cleanPhoneNumber() {
+            this.form.recipient_phone = this.phoneLocalDigits(this.form.recipient_phone);
+        },
+
+        cleanPostalCode() {
+            this.form.postal_code = this.digitsOnly(this.form.postal_code, 5);
+        },
+
         load() {
             try {
                 const stored = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-                this.addresses = Array.isArray(stored) ? stored : [];
+                this.addresses = Array.isArray(stored)
+                    ? stored.map((address) => ({
+                        ...address,
+                        recipient_phone: this.fullIndonesianPhone(address.recipient_phone || ''),
+                    }))
+                    : [];
             } catch {
                 this.addresses = [];
             }
@@ -77,7 +107,7 @@ document.addEventListener('alpine:init', () => {
             this.form = {
                 label: address.label || '',
                 recipient_name: address.recipient_name || '',
-                recipient_phone: address.recipient_phone || '',
+                recipient_phone: this.phoneLocalDigits(address.recipient_phone || ''),
                 address: address.address || '',
                 city: address.city || '',
                 postal_code: address.postal_code || '',
@@ -102,8 +132,14 @@ document.addEventListener('alpine:init', () => {
                 }
             });
 
-            if (this.form.postal_code && !/^\d+$/.test(String(this.form.postal_code))) {
-                errors.postal_code = 'Numeric only';
+            const phone = String(this.form.recipient_phone || '').trim();
+            if (!errors.recipient_phone && !/^\d{8,11}$/.test(phone)) {
+                errors.recipient_phone = 'Use 8-11 digits after +62';
+            }
+
+            const postalCode = String(this.form.postal_code || '').trim();
+            if (!errors.postal_code && !/^\d{5}$/.test(postalCode)) {
+                errors.postal_code = 'Use exactly 5 digits';
             }
 
             this.errors = errors;
@@ -116,10 +152,10 @@ document.addEventListener('alpine:init', () => {
             const payload = {
                 label: this.form.label.trim(),
                 recipient_name: this.form.recipient_name.trim(),
-                recipient_phone: this.form.recipient_phone.trim(),
+                recipient_phone: this.fullIndonesianPhone(this.form.recipient_phone),
                 address: this.form.address.trim(),
                 city: this.form.city.trim(),
-                postal_code: String(this.form.postal_code).trim(),
+                postal_code: this.digitsOnly(this.form.postal_code, 5),
                 is_default: Boolean(this.form.is_default),
             };
 
@@ -182,6 +218,7 @@ document.addEventListener('alpine:init', () => {
         map: null,
         mapElement: null,
         marker: null,
+        leafletLoading: null,
         coordinateStatus: '',
         manual: {
             label: 'Checkout',
@@ -217,7 +254,12 @@ document.addEventListener('alpine:init', () => {
         load() {
             try {
                 const stored = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-                this.addresses = Array.isArray(stored) ? stored : [];
+                this.addresses = Array.isArray(stored)
+                    ? stored.map((address) => ({
+                        ...address,
+                        recipient_phone: this.fullIndonesianPhone(address.recipient_phone || ''),
+                    }))
+                    : [];
             } catch {
                 this.addresses = [];
             }
@@ -227,7 +269,7 @@ document.addEventListener('alpine:init', () => {
             return {
                 label: address.label || 'Checkout',
                 recipient_name: address.recipient_name || '',
-                recipient_phone: address.recipient_phone || '',
+                recipient_phone: this.fullIndonesianPhone(address.recipient_phone || ''),
                 address: address.address || '',
                 city: address.city || '',
                 postal_code: String(address.postal_code || ''),
@@ -257,6 +299,31 @@ document.addEventListener('alpine:init', () => {
 
         isInstant() {
             return this.courierType === 'instant';
+        },
+
+        digitsOnly(value, limit = null) {
+            const digits = String(value || '').replace(/\D/g, '');
+            return limit ? digits.slice(0, limit) : digits;
+        },
+
+        phoneLocalDigits(value) {
+            let digits = this.digitsOnly(value);
+            if (digits.startsWith('62')) digits = digits.slice(2);
+            if (digits.startsWith('0')) digits = digits.slice(1);
+            return digits.slice(0, 11);
+        },
+
+        fullIndonesianPhone(value) {
+            const local = this.phoneLocalDigits(value);
+            return local ? `+62${local}` : '';
+        },
+
+        cleanManualPhone() {
+            this.manual.recipient_phone = this.phoneLocalDigits(this.manual.recipient_phone);
+        },
+
+        cleanManualPostalCode() {
+            this.manual.postal_code = this.digitsOnly(this.manual.postal_code, 5);
         },
 
         setCourierType(type) {
@@ -305,16 +372,68 @@ document.addEventListener('alpine:init', () => {
                 : null;
         },
 
-        initCoordinatePicker() {
+        ensureLeaflet() {
+            if (window.L) return Promise.resolve();
+            if (this.leafletLoading) return this.leafletLoading;
+
+            this.coordinateStatus = 'Loading map...';
+
+            this.leafletLoading = new Promise((resolve, reject) => {
+                if (!document.querySelector('link[data-dapute-leaflet]')) {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    link.setAttribute('data-dapute-leaflet', 'true');
+                    document.head.appendChild(link);
+                }
+
+                const finish = () => {
+                    if (window.L) {
+                        resolve();
+                    } else {
+                        reject(new Error('Leaflet did not load.'));
+                    }
+                };
+
+                const existingScript = document.querySelector('script[data-dapute-leaflet]');
+                if (existingScript) {
+                    existingScript.addEventListener('load', finish, { once: true });
+                    existingScript.addEventListener('error', reject, { once: true });
+                    setTimeout(finish, 800);
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.defer = true;
+                script.setAttribute('data-dapute-leaflet', 'true');
+                script.onload = finish;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+
+            return this.leafletLoading;
+        },
+
+        initCoordinatePicker(attempt = 0) {
             if (!this.isInstant()) return;
 
             if (!window.L) {
-                this.coordinateStatus = 'Map library is still loading. Try again in a moment.';
+                this.ensureLeaflet()
+                    .then(() => this.initCoordinatePicker(attempt + 1))
+                    .catch(() => {
+                        this.coordinateStatus = 'Map failed to load. Check the connection, then try again.';
+                    });
                 return;
             }
 
             const mapElement = this.$refs.coordinateMap;
-            if (!mapElement || !mapElement.isConnected || mapElement.offsetParent === null) return;
+            if (!mapElement || !mapElement.isConnected || mapElement.offsetParent === null) {
+                if (attempt < 12) {
+                    setTimeout(() => this.initCoordinatePicker(attempt + 1), 150);
+                }
+                return;
+            }
 
             const coords = this.currentCoordinates() || { latitude: -6.2, longitude: 106.816666 };
             this.coordinateStatus = this.currentCoordinates()
@@ -323,7 +442,12 @@ document.addEventListener('alpine:init', () => {
 
             setTimeout(() => {
                 const liveMapElement = this.$refs.coordinateMap;
-                if (!liveMapElement || !liveMapElement.isConnected || liveMapElement.offsetParent === null) return;
+                if (!liveMapElement || !liveMapElement.isConnected || liveMapElement.offsetParent === null) {
+                    if (attempt < 12) {
+                        setTimeout(() => this.initCoordinatePicker(attempt + 1), 150);
+                    }
+                    return;
+                }
 
                 if (this.map && this.mapElement !== liveMapElement) {
                     this.map.remove();
@@ -346,15 +470,21 @@ document.addEventListener('alpine:init', () => {
                         this.updateCoordinate(point.lat, point.lng, 'Pin moved.');
                     });
                 } else {
-                    this.map.invalidateSize();
                     this.map.setView([coords.latitude, coords.longitude], 15);
-                    this.marker.setLatLng([coords.latitude, coords.longitude]);
+                    if (this.marker) {
+                        this.marker.setLatLng([coords.latitude, coords.longitude]);
+                    }
                 }
+
+                requestAnimationFrame(() => {
+                    this.map.invalidateSize();
+                    setTimeout(() => this.map?.invalidateSize(), 250);
+                });
 
                 if (!this.currentCoordinates()) {
                     this.geocodeAddress(false);
                 }
-            }, 80);
+            }, 120);
         },
 
         updateCoordinate(latitude, longitude, message = 'Coordinate selected.') {
@@ -450,6 +580,8 @@ document.addEventListener('alpine:init', () => {
         },
 
         syncManual() {
+            this.cleanManualPhone();
+            this.cleanManualPostalCode();
             this.sync(this.manual);
         },
     }));

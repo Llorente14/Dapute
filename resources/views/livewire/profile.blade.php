@@ -152,7 +152,10 @@
                     {{-- Phone Number --}}
                     <div class="flex flex-col gap-2 input-wrap transition-colors p-2 -m-2 relative pb-6 {{ $errors->has('phone_number') ? 'input-error' : '' }}">
                         <label class="font-label text-sm font-bold text-on-surface-variant uppercase tracking-wider">Phone Number</label>
-                        <input wire:model="phone_number" name="phone_number" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="tel" placeholder="+62 8..."/>
+                        <div class="flex items-center gap-2 border-b-[3px] border-primary pb-2">
+                            <span class="font-label text-lg font-black text-primary">+62</span>
+                            <input wire:model.live.debounce.300ms="phone_number" name="phone_number" class="w-full bg-transparent border-0 p-0 text-lg font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold transition-colors" type="tel" inputmode="numeric" maxlength="11" pattern="[0-9]{8,11}" placeholder="81234567890"/>
+                        </div>
                         @error('phone_number')
                             <p class="error-msg absolute bottom-0 left-0 flex items-center gap-1 font-body text-[12px] text-error font-semibold">
                                 <span class="material-symbols-outlined text-[14px]">cancel</span> {{ $message }}
@@ -199,7 +202,10 @@
                             </div>
                             <div class="flex flex-col gap-1.5 input-wrap">
                                 <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Recipient Phone</label>
-                                <input x-model="form.recipient_phone" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="tel" placeholder="+62 8..."/>
+                                <div class="flex items-center gap-2 border-b-[3px] border-primary pb-2">
+                                    <span class="font-label text-base font-black text-primary">+62</span>
+                                    <input x-model="form.recipient_phone" x-on:input="cleanPhoneNumber()" class="w-full bg-transparent border-0 p-0 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="tel" inputmode="numeric" maxlength="11" pattern="[0-9]{8,11}" placeholder="81234567890"/>
+                                </div>
                                 <p x-show="errors.recipient_phone" x-text="errors.recipient_phone" class="error-msg font-body text-[12px] text-error font-semibold"></p>
                             </div>
                         </div>
@@ -221,7 +227,7 @@
                             </div>
                             <div class="flex flex-col gap-1.5 input-wrap">
                                 <label class="font-label text-xs font-bold text-on-surface-variant uppercase tracking-wider">Postal Code</label>
-                                <input x-model="form.postal_code" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" inputmode="numeric" placeholder="12345"/>
+                                <input x-model="form.postal_code" x-on:input="cleanPostalCode()" class="w-full bg-transparent border-0 border-b-[3px] border-primary pb-2 text-base font-body focus:outline-none focus:ring-0 placeholder:text-outline-variant text-primary font-semibold" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" placeholder="12345"/>
                                 <p x-show="errors.postal_code" x-text="errors.postal_code" class="error-msg font-body text-[12px] text-error font-semibold"></p>
                             </div>
                         </div>
@@ -242,9 +248,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <template x-for="address in addresses" :key="address.id">
                         <div class="address-card bg-surface-container-lowest border-[3px] border-primary p-6 relative group hover:bg-surface-container-low" style="box-shadow: 4px 4px 0px 0px #012d1d;">
-                            <div class="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button x-on:click="openEdit(address)" type="button" class="p-1 hover:bg-primary hover:text-on-primary transition-colors border-[3px] border-transparent hover:border-primary cursor-pointer"><span class="material-symbols-outlined text-sm">edit</span></button>
-                                <button x-on:click="remove(address.id)" type="button" class="p-1 hover:bg-error hover:text-on-error transition-colors border-[3px] border-transparent hover:border-error text-error cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
+                            <div class="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button x-on:click="openEdit(address)" type="button" aria-label="Edit address" class="p-2 bg-surface-container-lowest md:bg-transparent hover:bg-primary hover:text-on-primary transition-colors border-[3px] border-primary md:border-transparent hover:border-primary cursor-pointer"><span class="material-symbols-outlined text-sm">edit</span></button>
+                                <button x-on:click="remove(address.id)" type="button" aria-label="Delete address" class="p-2 bg-surface-container-lowest md:bg-transparent hover:bg-error hover:text-on-error transition-colors border-[3px] border-error md:border-transparent hover:border-error text-error cursor-pointer"><span class="material-symbols-outlined text-sm">delete</span></button>
                             </div>
                             <div class="flex flex-wrap items-center gap-2 mb-4 pr-20">
                                 <span class="inline-block bg-[#D4EF70] text-primary font-label text-xs font-bold uppercase px-2 py-1" x-text="address.is_default ? 'Default' : address.label"></span>
