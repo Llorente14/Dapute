@@ -173,8 +173,6 @@
                     <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ $ordersActive ? 'active' : '' }}"
                         href="/order">Orders</a>
                 @endif
-                <a class="font-headline font-black tracking-tight uppercase text-[#012d1d] nav-link {{ str_starts_with($currentPath, 'about') ? 'active' : '' }}"
-                    href="/about">About</a>
             </div>
         </div>
 
@@ -204,7 +202,7 @@
 
     {{-- Mobile Bottom Nav --}}
     <nav
-        class="md:hidden fixed bottom-0 left-0 w-full z-50 grid h-16 bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-5' : 'grid-cols-4' }}">
+        class="md:hidden fixed inset-x-0 bottom-0 w-full z-50 grid h-16 justify-items-stretch bg-[#f4fbf7] border-t-4 border-[#012d1d] {{ $isLoggedIn ? 'grid-cols-5' : 'grid-cols-3' }}">
         <a class="mobile-nav-item flex flex-col items-center justify-center text-[#012d1d] py-2 h-full {{ $currentPath === '/' ? 'active' : 'opacity-60' }}"
             href="/">
             <span class="material-symbols-outlined mb-1 text-xl">home</span>
