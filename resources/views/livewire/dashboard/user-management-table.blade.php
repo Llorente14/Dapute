@@ -177,7 +177,7 @@
                              toggle(btn) {
                                  if (!this.open) {
                                      const r = btn.getBoundingClientRect();
-                                     this.dropX = r.left;
+                                     this.dropX = r.left + window.scrollX;
                                      this.dropY = r.bottom + window.scrollY;
                                      this.dropW = r.width;
                                  }
@@ -205,7 +205,7 @@
                             <div x-show="open" style="display:none;"
                                  x-transition.opacity.duration.150ms
                                  @click.outside="open = false"
-                                 :style="`position:fixed; top:${dropY}px; left:${dropX}px; width:${dropW}px; z-index:9999;`"
+                                 :style="`position:absolute; top:${dropY}px; left:${dropX}px; width:${dropW}px; z-index:9999;`"
                                  class="bg-white border-[2px] border-[#012d1d] shadow-[2px_2px_0_0_#012d1d]">
                                 @foreach($roleOptions as $val => $label)
                                     <div @click="openConfirmRole('{{ $user->id }}', '{{ $val }}', null); open = false"

@@ -453,4 +453,138 @@ document.addEventListener('alpine:init', () => {
             this.sync(this.manual);
         },
     }));
+
+    Alpine.data('adminOrderActionDropdown', (config = {}) => ({
+        open: false,
+        menuMaxHeight: null,
+        placement: 'bottom',
+        viewportHandler: null,
+        pageHeightBeforeOpen: null,
+        allowFlipUp: Boolean(config.allowFlipUp),
+        queuedMetricsUpdate: false,
+
+        init() {
+            this.viewportHandler = () => {
+                if (!this.open) return;
+
+                this.$nextTick(() => this.queueMetricsUpdate());
+            };
+
+            window.addEventListener('resize', this.viewportHandler);
+            window.addEventListener('scroll', this.viewportHandler, { passive: true });
+
+            this.$watch('open', (value) => {
+                if (value) {
+                    this.$nextTick(() => this.queueMetricsUpdate());
+                    return;
+                }
+
+                this.menuMaxHeight = null;
+                this.placement = 'bottom';
+                this.pageHeightBeforeOpen = null;
+            });
+        },
+
+        destroy() {
+            if (!this.viewportHandler) return;
+
+            window.removeEventListener('resize', this.viewportHandler);
+            window.removeEventListener('scroll', this.viewportHandler);
+        },
+
+        get menuStyles() {
+            const hasMaxHeight = this.menuMaxHeight !== null;
+
+            return {
+                maxHeight: hasMaxHeight ? `${this.menuMaxHeight}px` : '',
+                overflowY: hasMaxHeight ? 'auto' : '',
+                overscrollBehavior: hasMaxHeight ? 'contain' : '',
+            };
+        },
+
+        toggle() {
+            if (!this.open) {
+                this.pageHeightBeforeOpen = Math.max(
+                    document.body?.scrollHeight || 0,
+                    document.documentElement.scrollHeight || 0,
+                );
+            }
+
+            this.open = !this.open;
+        },
+
+        close() {
+            this.open = false;
+        },
+
+        queueMetricsUpdate() {
+            if (this.queuedMetricsUpdate) return;
+
+            this.queuedMetricsUpdate = true;
+
+            requestAnimationFrame(() => {
+                this.queuedMetricsUpdate = false;
+                this.updateMenuMetrics();
+            });
+        },
+
+        updateMenuMetrics() {
+            const trigger = this.$refs.trigger;
+            const menu = this.$refs.menu;
+
+            if (!trigger || !menu) return;
+
+            const triggerRect = trigger.getBoundingClientRect();
+            const menuHeight = menu.scrollHeight;
+            const menuGap = 8;
+            const viewportPadding = 16;
+            const minUsefulHeight = 128;
+            const viewportSpaceBelow = Math.max(0, window.innerHeight - viewportPadding - triggerRect.bottom - menuGap);
+            const paginationSpaceBelow = this.availableSpaceBeforePagination(triggerRect, menuGap);
+            const pageSpaceBelow = this.availableSpaceBeforePageEnd(triggerRect, menuGap, viewportPadding);
+            const spaceBelow = Math.min(viewportSpaceBelow, paginationSpaceBelow, pageSpaceBelow);
+            const spaceAbove = Math.max(0, triggerRect.top - viewportPadding - menuGap);
+
+            let nextPlacement = 'bottom';
+            let nextMaxHeight = null;
+
+            if (this.allowFlipUp && spaceBelow < minUsefulHeight && spaceAbove > spaceBelow) {
+                nextPlacement = 'top';
+                nextMaxHeight = menuHeight > spaceAbove ? Math.floor(spaceAbove) : null;
+            } else if (menuHeight > spaceBelow) {
+                nextMaxHeight = Math.floor(spaceBelow);
+            }
+
+            this.placement = nextPlacement;
+            this.menuMaxHeight = nextMaxHeight;
+        },
+
+        availableSpaceBeforePagination(triggerRect, menuGap) {
+            const pagination = this.$root
+                ?.closest('section')
+                ?.querySelector('[data-order-pagination]');
+
+            if (!pagination) return Number.POSITIVE_INFINITY;
+
+            const paginationTop = pagination.getBoundingClientRect().top;
+
+            if (paginationTop <= triggerRect.bottom) {
+                return 0;
+            }
+
+            return Math.max(0, paginationTop - triggerRect.bottom - menuGap);
+        },
+
+        availableSpaceBeforePageEnd(triggerRect, menuGap, viewportPadding) {
+            if (!this.pageHeightBeforeOpen) return Number.POSITIVE_INFINITY;
+
+            const pageBottomInViewport = this.pageHeightBeforeOpen - window.scrollY;
+
+            if (pageBottomInViewport <= triggerRect.bottom) {
+                return 0;
+            }
+
+            return Math.max(0, pageBottomInViewport - triggerRect.bottom - menuGap - viewportPadding);
+        },
+    }));
 });

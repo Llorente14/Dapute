@@ -109,11 +109,16 @@
                             <p class="font-body text-sm font-bold text-[#414844]">{{ $formatDate($order['order_date']) }}</p>
                         </div>
 
-                        <div class="relative overflow-visible lg:justify-self-end" x-data="{ open: false }">
+                        <div
+                            class="relative overflow-visible lg:justify-self-end"
+                            x-data="adminOrderActionDropdown({ allowFlipUp: {{ $loop->last ? 'true' : 'false' }} })"
+                            @keydown.escape.window="close"
+                            @click.outside="close"
+                        >
                             <button
+                                x-ref="trigger"
                                 type="button"
-                                @click="open = !open"
-                                @click.outside="open = false"
+                                @click="toggle"
                                 class="inline-flex w-full min-w-[168px] items-center justify-between gap-3 border-[3px] border-[#012d1d] bg-white px-3 py-2 font-label text-[11px] font-black uppercase tracking-widest text-[#012d1d] shadow-[2px_2px_0_0_#012d1d] transition-all hover:bg-[#D4EF70] lg:w-auto"
                             >
                                 <span>Actions</span>
@@ -121,6 +126,7 @@
                             </button>
 
                             <div
+                                x-ref="menu"
                                 x-show="open"
                                 x-cloak
                                 x-transition:enter="transition ease-out duration-100"
@@ -129,7 +135,9 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="opacity-100 translate-y-0"
                                 x-transition:leave-end="opacity-0 -translate-y-1"
-                                class="absolute right-0 top-full z-30 mt-2 w-[230px] border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d]"
+                                :class="placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'"
+                                :style="menuStyles"
+                                class="absolute right-0 z-30 w-[230px] border-[3px] border-[#012d1d] bg-white shadow-[4px_4px_0_0_#012d1d]"
                                 style="display: none;"
                             >
                                 @foreach($this->actionOptions($order['order_status'], $order['shipping_type'] ?? null, $order['shipping_fee'] ?? null) as $option)
@@ -218,7 +226,7 @@
         </div>
 
         @if($totalOrders > 0)
-            <div class="flex flex-col gap-4 border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4 md:flex-row md:items-center md:justify-between">
+            <div data-order-pagination class="flex flex-col gap-4 border-t-[3px] border-[#012d1d] bg-[#eef5f1] p-4 md:flex-row md:items-center md:justify-between">
                 <p class="font-label text-xs font-black uppercase tracking-widest text-[#414844]">
                     Showing {{ $this->pageStart() }}-{{ $this->pageEnd() }} of {{ $totalOrders }} orders
                 </p>
